@@ -1,0 +1,61 @@
+{
+  "schema": "llamacode.q209-sheet-launch-readback.v1",
+  "timestamp_utc": "2026-11-15T15:42:23Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "PASS",
+  "expected_launch_receipt_sha256": "c9b20b5b711886ffb417ce2b792d7f2a880d11d393474591a4c5f7c932294bb2",
+  "ranges": [
+    {
+      "title": "Resultados",
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            [
+              "Q209 Q173 PARTIAL · 8K/32K/64K complete; 128K worker active; 261888 pending. 64K P443.236/D4.801, TTFT147.926s n=1. 131072×1 launched 2026-11-15T15:42:23Z as detached bounded systemd worker q209-maya-q173-pp131072-worker-a01; no result yet. Launcher exited independently."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            [
+              "Q209 131072×1 worker ACTIVE. Outer user-systemd controller RuntimeMaxSec3900s/MemoryMax8G/Swap0; Maya child RuntimeMaxSec3600s/MemoryMax96G/Swap0; exact cleanup hook. Launch receipt SHA-256 c9b20b5b711886ffb417ce2b792d7f2a880d11d393474591a4c5f7c932294bb2. Detached from Codex/chat; completion result pending."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            [
+              "131K launch receipt SHA-256 c9b20b5b711886ffb417ce2b792d7f2a880d11d393474591a4c5f7c932294bb2; worker q209-maya-q173-pp131072-worker-a01; engine q209-maya-q173-pp131072-a01. Preflight PASS receipt 668a519293a5265ce6ca3270d4283e6b74e4ac4d7cae449ce8f0490d925bdeac; bounded detached worker."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Modelos locales por peso",
+      "data": [
+        {
+          "startRow": 5,
+          "startColumn": 25,
+          "rowData": [
+            [
+              "Q209 Q173 8K/32K/64K complete, provisional P/D 459.101/20.627. 131K×1 detached worker active; 261888 pending. Q172 89.33 separate; TC-92 fail. Launch receipt c9b20b5b711886ffb417ce2b792d7f2a880d11d393474591a4c5f7c932294bb2; no result yet."
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "verified": [
+    "Resultados!E496",
+    "Resultados!AD496",
+    "Resultados!AF496",
+    "Modelos locales por peso!Z6"
+  ]
+}

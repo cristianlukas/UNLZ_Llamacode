@@ -1,0 +1,50 @@
+{
+  "schema": "llamacode.q209-maya-q173-context-failure.v1",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "context_tokens": 65536,
+  "status": "NO_RESULT_CONTROLLER_ABSENT_ENGINE_RUNTIME_TIMEOUT",
+  "started_local": "2026-11-15T04:59:10-03:00",
+  "api_ready_local": "2026-11-15T05:04:30-03:00",
+  "terminated_local": "2026-11-15T06:59:10-03:00",
+  "systemd_failed_local": "2026-11-15T06:59:14-03:00",
+  "engine_unit": "q209-maya-q173-pp65536.service",
+  "systemd_result": "timeout",
+  "systemd_reason": "Service reached runtime time limit after RuntimeMaxSec=7200; ExecMainStatus=0 is wrapper exit status, not benchmark success.",
+  "resource_summary": {
+    "cpu_time": "41min 29.229s",
+    "memory_peak": "87.4G",
+    "swap_peak": "0B",
+    "compute_gpu_uuids": [
+      "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049"
+    ],
+    "compute_process_seen_on_both": true,
+    "after_cleanup_compute_apps": [],
+    "after_cleanup_mem_available_bytes": 124766175232
+  },
+  "measurement": {
+    "request_sent": "not evidenced",
+    "prefill_tps": null,
+    "decode_tps": null,
+    "quality": null,
+    "run_json": "absent",
+    "events_jsonl": "absent",
+    "captured_stdout_bytes": 0,
+    "captured_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "result_classification": "not a Q173 measurement; exclude from averages"
+  },
+  "controller_observation": {
+    "exec_session_poll": "Unknown process id 48222",
+    "runner_process_afterward": "absent",
+    "interpretation": "Consistent with the parent test controller/session disappearing while the separately systemd-run Maya server continued. The direct cause of the Codex app close is not independently proven by this receipt."
+  },
+  "evidence": {
+    "journal_receipt": "systemd-journal-context-65536.txt",
+    "engine_log": "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173/logs/maya-q173-engine.log",
+    "systemd_unit_status": "Result=timeout; ActiveState=failed; SubState=failed; ExecMainStatus=0",
+    "engine_startup": "Maya reached API ready at 05:04:30 local; this is not a measured TTFT or cold/hot init.",
+    "postcondition": "No inference server, no compute app, port18628 free; MemAvailable≈116.2GiB."
+  },
+  "next_action": "Do not rerun until the Q173 controller is detached from the Codex process, has a bounded systemd worker unit, cleanup of the nested engine on worker exit, and a local durable result receipt. Validate the detachment/cleanup with CPU-only fake jobs before any GPU run."
+}

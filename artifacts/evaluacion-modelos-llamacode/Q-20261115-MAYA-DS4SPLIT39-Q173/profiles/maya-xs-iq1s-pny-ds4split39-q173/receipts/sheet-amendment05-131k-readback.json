@@ -1,0 +1,61 @@
+{
+  "schema": "llamacode.q209-sheet-q173-131k-and-amend05-readback.v1",
+  "timestamp_utc": "2026-11-15T15:50:16Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "PASS",
+  "amendment05_prereg_sha256": "45697213b9c7a818af203407ad6fd378869313c0c8c29c8bd8436b8b10337981",
+  "ranges": [
+    {
+      "title": "Resultados",
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            [
+              "Q209 Q173 PARTIAL · 8K/32K/64K/131072 complete; final 261888×1 pending. 131K PASS: P603.845/D18.513 tok/s; TTFT217.112s; startup30.391s (not cold/hot). Detached worker+engine exited 0. Amendment05 preregisters only 261888; 523904 excluded."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            [
+              "Q209 131K clean close: detached worker+engine exit0/inactive; both GPUs verified; postflight no inference/compute apps, port free, MemAvailable123142356992 B, OOMKill0. Sheet readback passed. Next only 261888 after fresh no-compute/live gates; no 523904."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            [
+              "131K summary SHA 82a2dbb452ed3cfbb7a5ea7ac0b41507b19953d1b199a0fc0dece79fb2dfddf1; raw d4beaf60c9fff84ee238c94a1fe918f4d196325cd50ba90d1b4a8ac0fde9a9a5; events 0798c32fca432e5d991bcc8c059eba3c105f412e086fad374d365f04d3979d4d; postflight 33cefab9443bc42a1a69068d867bb6a28223e8c12d4d146572f0062979c6bd93; Sheet corrected readback 66dba9ab4380c6232edc535d82f1156fd8c54674c1b43f4cacfe16cef1c3a425; amendment05 prereg 45697213b9c7a818af203407ad6fd378869313c0c8c29c8bd8436b8b10337981."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Modelos locales por peso",
+      "data": [
+        {
+          "startRow": 5,
+          "startColumn": 25,
+          "rowData": [
+            [
+              "Q209 Q173 131K a01 valid: P603.845/D18.513; TTFT217.112s; startup30.391s (not cold/hot). Equal-weight 8K/32K/64K/131K mean P495.287/D20.099. Q172=89.33 separate; TC-92 fail. Detached worker+engine exit0, clean postflight. Amendment05: final test 261888×1 preregistered; 523904 excluded. Results/readback SHA 66dba9ab4380c6232edc535d82f1156fd8c54674c1b43f4cacfe16cef1c3a425; prereg SHA 45697213b9c7a818af203407ad6fd378869313c0c8c29c8bd8436b8b10337981."
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "verified": [
+    "Resultados!E496",
+    "Resultados!AD496",
+    "Resultados!AF496",
+    "Modelos locales por peso!Z6"
+  ]
+}

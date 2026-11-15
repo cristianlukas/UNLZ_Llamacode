@@ -1,0 +1,70 @@
+{
+  "schema": "llamacode.q209-detached-cleanup-amend02-result.v1",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "test_id": "Q209-CONTROLLER-DETACHED-CPU-02",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "completed_utc": "2026-11-15T15:30:54+00:00",
+  "status": "PASS",
+  "resource_scope": "CPU-only user systemd fake units; GPU/model/network/inference server not used",
+  "checks": {
+    "launcher_returned_without_waiting_for_worker": true,
+    "worker_continued_after_launcher_process_exit": true,
+    "worker_timeout_was_bounded": true,
+    "worker_exit_hook_stopped_exact_child_unit": true,
+    "repeat_cleanup_after_normal_child_exit_is_safe_noop": true,
+    "gpu_used": false,
+    "model_used": false
+  },
+  "worker_result": "timeout",
+  "worker_final_state": "failed",
+  "fake_child_final_state": "inactive",
+  "active_child_cleanup": {
+    "schema": "llamacode.q209-detached-worker-cleanup.v1",
+    "timestamp_utc": "2026-11-15T15:30:42+00:00",
+    "unit": "q209-lifecycle-smoke-b56885ecb29c-child",
+    "expected_description": "Q209-CPU-SMOKE-CHILD|b56885ecb29c",
+    "actual_description": "Q209-CPU-SMOKE-CHILD|b56885ecb29c",
+    "service_result": "timeout",
+    "exit_code": "killed",
+    "exit_status": "TERM",
+    "before": {
+      "load_state": "loaded",
+      "active_state": "active"
+    },
+    "stop_returncode": 0,
+    "stop_stdout": "",
+    "stop_stderr": "",
+    "after": {
+      "load_state": "not-found",
+      "active_state": "inactive"
+    },
+    "status": "PASS_STOPPED",
+    "stop_attempted": true
+  },
+  "repeat_cleanup_with_description_mismatch": {
+    "schema": "llamacode.q209-detached-worker-cleanup.v1",
+    "timestamp_utc": "2026-11-15T15:30:54+00:00",
+    "unit": "q209-lifecycle-smoke-b56885ecb29c-child",
+    "expected_description": "Q209-MAYA-Q173|d9029f6b-c649-4291-b0be-f14d77dc737e|q209-lifecycle-smoke-b56885ecb29c-child",
+    "actual_description": "q209-lifecycle-smoke-b56885ecb29c-child.service",
+    "service_result": null,
+    "exit_code": null,
+    "exit_status": null,
+    "before": {
+      "load_state": "not-found",
+      "active_state": "inactive"
+    },
+    "status": "PASS_ALREADY_STOPPED",
+    "stop_attempted": false
+  },
+  "interpretation": "Normal completion left no engine unit; cleanup now treats not-found/inactive/failed as already stopped without signaling. Active units still require exact description before systemctl stop. Both old active-child timeout path and no-op path pass.",
+  "artifacts": {
+    "smoke_sha256": "5d5cb07646277abc660ed2a57c4a5955ae7d723d09dd2d86c695953726e1efa4",
+    "active_cleanup_sha256": "49916c482ddef2277edcba07f91b9674e5ccec6df429a5f609631be832c54663",
+    "already_stopped_cleanup_sha256": "90863cf5b17749f1c203f33c43fca7d27520b3f66707ad1f1c0bea9a31e754c1",
+    "amendment_sha256": "81cd21858c5fda155914a2643bc73e9b0fbe47bda7ad223e255e237180bbe1d4",
+    "cleanup_script_sha256": "abffa62a85b247be623215a8030b3588806603db92252bf122d58b7a87ed6442",
+    "lifecycle_test_sha256": "9975154c691d5925d129fa68dac96e851b18e011c444e166c95c9b4b3c251b4a",
+    "syntax_receipt_sha256": "a01694e64ab324f1dbcc73cd1c05d76d3ae2dab5556af168c3d89ebad8afef99"
+  }
+}

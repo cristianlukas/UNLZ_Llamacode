@@ -1,0 +1,21 @@
+{
+  "timestamp_utc": "2026-11-15T06:56:52+00:00",
+  "operation": "Q209 preregistration amendment01 sync/readback",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": [
+    "Resultados!A496:AH496",
+    "Modelos locales por peso!J6:K6"
+  ],
+  "readback_match": true,
+  "readback_checks": {
+    "Resultados!E496": "PREREGISTRATION AMENDED 01 · preflight attempt01 stopped before Maya; no inference/GPU. Repeat full hash and live gates pending.",
+    "Resultados!AD496": "Attempt01 failed in runner before server start: KeyError config_sha256. At least 274.3 GB read, but no per-shard receipt; repeat all five SHA checks. Corrected config-key and launcher SHA; per-shard progress receipts added. No GPU compute, no model server.",
+    "Resultados!AF496_contains_amendment_sha256": "acefa6e2876a3ff51c5ef890a7c4cfe0d7987a6acd3ad653f73e767ca9328f1f",
+    "inventory_J6_K6": "N/D — Q209 Q173 preregistrado; pendiente ladder DS4_SPLIT=39,1; attempt01 failure noted in cell notes",
+    "format": "Resultados row496 Arial10, TOP, WRAP; inventory existing format preserved"
+  },
+  "preregistration_sha256": "acefa6e2876a3ff51c5ef890a7c4cfe0d7987a6acd3ad653f73e767ca9328f1f",
+  "runner_sha256": "8e3d16ad5e07c1a7b7301175bd276dd153dbb1328d6eae5780c71e9c1d6d25d8",
+  "gpu_inference_started": false,
+  "next": "Re-read gates and run corrected full-hash/live preflight; if all pass, launch only 8192×3 with same server process allocating both ASUS and PNY."
+}

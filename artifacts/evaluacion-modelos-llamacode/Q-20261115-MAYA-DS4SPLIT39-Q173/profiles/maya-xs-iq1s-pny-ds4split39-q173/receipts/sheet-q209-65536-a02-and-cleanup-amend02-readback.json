@@ -1,0 +1,31 @@
+{
+  "schema": "llamacode.q209-sheet-readback.v1",
+  "timestamp_utc": "2026-11-15T15:27:25+00:00",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheets": {
+    "Resultados": 1972251122,
+    "Modelos locales por peso": 2026102751
+  },
+  "verified_ranges": {
+    "Resultados!E496": "Q209 Q173 PARTIAL · 8K×3,32K×1,64K×1 completed; 128K/261888 pending. 64K a02 PASS: P443.236/D4.801, TTFT147.926s n=1. Detached worker independent; postflight clean despite cleanup-hook identity-order bug. CPU-only fix Q209-CONTROLLER-DETACHED-CPU-02 preregistered; no next GPU run until verified.",
+    "Resultados!Y496:Z496": [
+      443.23635991939796,
+      4.800900517383643
+    ],
+    "Resultados!AD496": "Repair test Q209-CONTROLLER-DETACHED-CPU-02 preregistered. Inactive exact-attempt unit should be recorded already-stopped without signaling; active targets remain exact-description gated. CPU only, no model/GPU. Preregistration readback required before test.",
+    "Resultados!AF496": "64K result receipt SHA-256 f4792c8140e0393951f369f9ad77e892c0019e1fc7c93aab87c47c422eb9b687. Cleanup repair preregistration SHA-256 252c45172ab2325a6027197d3a6c83f6d6016109985c8b9268dddfc9d36001ee.",
+    "Modelos locales por peso!E6:F6": [
+      459.1010619850736,
+      20.627203663458925
+    ],
+    "Modelos locales por peso!J6:K6": [
+      "Q209 Q173 effective E2E; equal-weight context-point mean over 8K/32K/64K; 8K n=3, 32K/64K n=1; provisional.",
+      "Q209 llama-benchy tg_throughput; equal-weight context-point mean over 8K/32K/64K; 8K n=3, 32K/64K n=1; provisional."
+    ],
+    "Modelos locales por peso!E6.note": "Q209 Q173 provisional effective E2E prefill. Equal-weight context-point mean over 8K/32K/64K = 459.101 tok/s; 8K n=3, 32K n=1, 64K a02 n=1. 64K P=443.236, TTFT147.926s. Historical 64K attempt with no request remains excluded. 128K/261888 pending; mean provisional.",
+    "Modelos locales por peso!F6.note": "Q209 Q173 provisional llama-benchy tg_throughput decode. Equal-weight context-point mean over 8K/32K/64K = 20.627 tok/s; 8K n=3, 32K n=1, 64K a02 n=1. 64K D=4.801 tok/s, one sample. Historical no-result 64K attempt excluded. 128K/261888 pending; mean provisional.",
+    "Modelos locales por peso!Z6": "Q209 Q173 64K a02 valid: P443.236/D4.801, TTFT147.926s, n=1. Included in equal-weight 8K/32K/64K means: P459.101/D20.627. Small n; 64K slow. Q172=89.333 remains separate; safety failed TC-92. 128K/261888 pending. Detached systemd worker completed independently; cleanup hook identity mismatch but runner exit+postflight show clean; fix and CPU-regress before next GPU run. Result receipt SHA-256 f4792c8140e0393951f369f9ad77e892c0019e1fc7c93aab87c47c422eb9b687."
+  },
+  "format_verified": "Resultados row 496 remains Arial 10 with WRAP; inventory numeric fields retain existing formatting and notes were refreshed.",
+  "preregistration_sha256": "252c45172ab2325a6027197d3a6c83f6d6016109985c8b9268dddfc9d36001ee"
+}

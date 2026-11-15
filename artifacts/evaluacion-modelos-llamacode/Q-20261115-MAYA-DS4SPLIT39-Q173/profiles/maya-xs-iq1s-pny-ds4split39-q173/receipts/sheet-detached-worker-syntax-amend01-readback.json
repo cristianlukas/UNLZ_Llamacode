@@ -1,0 +1,96 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "properties": {
+    "title": "Listado",
+    "locale": "en_US",
+    "timeZone": "America/Buenos_Aires"
+  },
+  "sheets": [
+    {
+      "properties": {
+        "sheetId": 1972251122,
+        "title": "Resultados",
+        "index": 17,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 520,
+          "columnCount": 34,
+          "frozenRowCount": 1,
+          "frozenColumnCount": 4
+        }
+      },
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 Q173 PARTIAL PASS · contexts 8K×3 and 32K×1 complete on ASUS+PNY; 64K/128K/261888 pending. · 64K attempt 2026-11-15: NO RESULT; no request/run JSON/events, excluded. Amended Q209-CONTROLLER-DETACHED-CPU-01 preregistration/readback PASS; amended four-script syntax gate PASS at 2026-11-15T15:02:58Z. Next: CPU-only systemd lifecycle smoke; no GPU retry before PASS.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 Q173 PARTIAL PASS · contexts 8K×3 and 32K×1 complete on ASUS+PNY; 64K/128K/261888 pending. · 64K attempt 2026-11-15: NO RESULT; no request/run JSON/events, excluded. Amended Q209-CONTROLLER-DETACHED-CPU-01 preregistration/readback PASS; amended four-script syntax gate PASS at 2026-11-15T15:02:58Z. Next: CPU-only systemd lifecycle smoke; no GPU retry before PASS."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Both completed Q173 context points (8K×3 and 32K×1) cleaned up; 64K ended at 2h cap without a request. Detached systemd worker remediation: outer 3900s/8GiB, Maya child 3600s/96GiB, swap disabled, OOMPolicy=kill, KillMode=control-group, exact identity-checked ExecStopPost. Amended syntax gate PASS; lifecycle smoke pending, no GPU retry before PASS.",
+                  "userEnteredValue": {
+                    "stringValue": "Both completed Q173 context points (8K×3 and 32K×1) cleaned up; 64K ended at 2h cap without a request. Detached systemd worker remediation: outer 3900s/8GiB, Maya child 3600s/96GiB, swap disabled, OOMPolicy=kill, KillMode=control-group, exact identity-checked ExecStopPost. Amended syntax gate PASS; lifecycle smoke pending, no GPU retry before PASS."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 prior results/failure receipts retained. Amended Q209-CONTROLLER-DETACHED-CPU-01 preregistration SHA 1e4fa706714463eb754981e963c7ca96739b1be982f49888f92c5ff2a68fc873; amended smoke script SHA 2a5e419ca620e0228d55ee3a95543a3b9c4b82c7012406a12579389be698cfab. Amended syntax gate receipt SHA e39532d3106fd1f9e5fa5ea63915cf5c0c11d4e38a01bb1792a5d6c2bbded500 (PASS, four files, no GPU). Sheet amended-prereg readback receipt SHA 2bc96260c436a52f45a6ccc1f903cd9101c489bdddadb490b347b2467d5d60fd. Next: CPU-only lifecycle smoke.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 prior results/failure receipts retained. Amended Q209-CONTROLLER-DETACHED-CPU-01 preregistration SHA 1e4fa706714463eb754981e963c7ca96739b1be982f49888f92c5ff2a68fc873; amended smoke script SHA 2a5e419ca620e0228d55ee3a95543a3b9c4b82c7012406a12579389be698cfab. Amended syntax gate receipt SHA e39532d3106fd1f9e5fa5ea63915cf5c0c11d4e38a01bb1792a5d6c2bbded500 (PASS, four files, no GPU). Sheet amended-prereg readback receipt SHA 2bc96260c436a52f45a6ccc1f903cd9101c489bdddadb490b347b2467d5d60fd. Next: CPU-only lifecycle smoke."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

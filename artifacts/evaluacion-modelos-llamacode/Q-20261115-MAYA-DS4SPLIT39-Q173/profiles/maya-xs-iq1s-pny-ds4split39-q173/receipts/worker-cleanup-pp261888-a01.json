@@ -1,0 +1,16 @@
+{
+  "schema": "llamacode.q209-detached-worker-cleanup.v1",
+  "timestamp_utc": "2026-11-15T16:15:38+00:00",
+  "unit": "q209-maya-q173-pp261888-a01",
+  "expected_description": "Q209-MAYA-Q173|d9029f6b-c649-4291-b0be-f14d77dc737e|q209-maya-q173-pp261888-a01",
+  "actual_description": "q209-maya-q173-pp261888-a01.service",
+  "service_result": "success",
+  "exit_code": "exited",
+  "exit_status": "0",
+  "before": {
+    "load_state": "not-found",
+    "active_state": "inactive"
+  },
+  "status": "PASS_ALREADY_STOPPED",
+  "stop_attempted": false
+}

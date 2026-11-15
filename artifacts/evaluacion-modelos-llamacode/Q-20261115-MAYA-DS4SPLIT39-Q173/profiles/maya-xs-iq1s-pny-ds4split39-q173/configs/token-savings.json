@@ -1,0 +1,25 @@
+{
+ "since": 1794727842.3497992,
+ "models": {
+  "maya-q173-262k-ds4split39.json": {
+   "since": 1794727842.350219,
+   "bands": {
+    "base": {
+     "input": 1016346,
+     "cached": 300,
+     "output": 1561,
+     "requests": 37
+    },
+    "peak": {
+     "input": 0,
+     "cached": 0,
+     "output": 0,
+     "requests": 0
+    }
+   },
+   "model": "deepseek-v4.1-flash",
+   "quant": "Maya-XS"
+  }
+ },
+ "prices": {}
+}

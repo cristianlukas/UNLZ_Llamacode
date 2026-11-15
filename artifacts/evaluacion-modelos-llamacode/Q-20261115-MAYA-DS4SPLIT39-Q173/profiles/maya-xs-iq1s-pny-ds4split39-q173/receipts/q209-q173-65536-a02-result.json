@@ -1,0 +1,56 @@
+{
+  "schema": "llamacode.q209-q173-65536-a02-result.v1",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "completed_utc": "2026-11-15T15:19:08+00:00",
+  "attempt": "a02",
+  "status": "PASS_METRICS; CLEANUP_HOOK_IDENTITY_MISMATCH; POSTFLIGHT_CLEAN",
+  "context_tokens": 65536,
+  "n_requests": 1,
+  "prompt_tokens": 65566,
+  "output_tokens": 128,
+  "effective_prefill_tps": 443.23635991939796,
+  "decode_tps": 4.800900517383643,
+  "ttft_s": 147.92558988599922,
+  "prefill_method": "actual prompt_tokens / request start-to-first-content-token elapsed; includes client/network overhead",
+  "decode_method": "llama-benchy tg_throughput",
+  "diagnostic_prefill_tps_do_not_use": 800855.728020073,
+  "server_ready_seconds_not_classified_cold_hot": 91.047,
+  "equal_context_mean_through_64k": {
+    "contexts": [
+      8192,
+      32768,
+      65536
+    ],
+    "prefill_tps": 459.1010619850736,
+    "decode_tps": 20.627203663458925,
+    "note": "Equal-weight context-point means; 8K n=3; 32K and64K n=1 each; provisional and high-variance, not a global model average."
+  },
+  "worker_independence": "Detached user-systemd worker; launcher returned before the benchmark and the worker continued independently.",
+  "containment": {
+    "engine_cgroup_memory_max_bytes": 103079215104,
+    "oom": 0,
+    "oom_kill": 0,
+    "host_mem_available_bytes_at_postflight": 124589400064,
+    "port_free": true,
+    "remaining_inference_servers": [],
+    "gpu_compute_apps": []
+  },
+  "cleanup_hook": {
+    "status": "REFUSED_IDENTITY_MISMATCH",
+    "expected_description": "Q209-MAYA-Q173|d9029f6b-c649-4291-b0be-f14d77dc737e|q209-maya-q173-pp65536-a02",
+    "actual_description": "q209-maya-q173-pp65536-a02.service",
+    "stop_attempted": false,
+    "interpretation": "The benchmark runner had already removed its owned Maya unit before ExecStopPost ran; postflight confirms no inference service, no GPU compute app, and port 18628 free. The cleanup hook rejected the already-finished unit due an identity check ordering bug; fix and CPU-retest before another model run."
+  },
+  "artifacts": {
+    "run_json": "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173/runs/q173-context-65536.json",
+    "run_sha256": "5cc61330f1001281accca929a8b898ca30ba39d6bfa0daf244cefa7e8fb0c173",
+    "events_jsonl": "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173/runs/q173-context-65536-events.jsonl",
+    "events_sha256": "24c57656fb648fc087bebfb838cc13d40d9a93598ff23aa05c5a128143ad1145",
+    "postflight_receipt": "receipts/postflight-q209-maya-q173-pp65536-a02.json",
+    "postflight_sha256": "e1ad8a13a0a311b7f4e709317ebe41f93c00b3a225cec110c65394148744175d",
+    "cleanup_receipt": "receipts/worker-cleanup-pp65536-a02.json",
+    "cleanup_sha256": "55c1419f5dc754354616344458bdf30cb77858620da57e3725847d0b51774c6b"
+  }
+}

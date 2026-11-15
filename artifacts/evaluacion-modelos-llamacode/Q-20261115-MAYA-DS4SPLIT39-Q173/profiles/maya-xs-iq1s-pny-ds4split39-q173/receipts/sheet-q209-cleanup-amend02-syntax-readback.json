@@ -1,0 +1,14 @@
+{
+  "schema": "llamacode.q209-sheet-readback.v1",
+  "timestamp_utc": "2026-11-15T15:30:34+00:00",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Resultados",
+  "ranges": [
+    "AD496",
+    "AF496"
+  ],
+  "syntax_gate": "PASS",
+  "syntax_receipt_sha256": "a01694e64ab324f1dbcc73cd1c05d76d3ae2dab5556af168c3d89ebad8afef99",
+  "readback_matches_write": true,
+  "format": "Arial10 WRAP retained"
+}

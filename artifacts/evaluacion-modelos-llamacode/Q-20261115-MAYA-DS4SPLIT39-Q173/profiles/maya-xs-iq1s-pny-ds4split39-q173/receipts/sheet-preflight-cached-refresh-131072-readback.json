@@ -1,0 +1,60 @@
+{
+  "schema": "llamacode.q209-sheet-preflight-readback.v1",
+  "timestamp_utc": "2026-11-15T15:40:40Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "PASS",
+  "ranges": [
+    {
+      "title": "Resultados",
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            [
+              "Q209 Q173 PARTIAL · 8K/32K/64K complete; 128K/261888 pending. 64K: P443.236/D4.801 tok/s, TTFT147.926s n=1. Amendment04 cached preflight for 131072 PASS at 2026-11-15T15:40:40Z; no inference in preflight. Detached bounded worker remains mandatory; one 128K run next only after this readback."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            [
+              "Q209 amendment04 preflight PASS for 131072×1; 5/5 shard identities unchanged, support assets rehashed, ASUS+PNY present, HELPER/quarantine 1636/1636/P2P read+write/gpu_unlock pass, zero compute apps/foreign inference servers, port free, MemAvailable 124568858624 B, output free 27512692736 B. No inference started. Preflight receipt SHA-256 668a519293a5265ce6ca3270d4283e6b74e4ac4d7cae449ce8f0490d925bdeac. Next: detached bounded 131072×1 only."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            [
+              "64K result SHA f4792c8140e0393951f369f9ad77e892c0019e1fc7c93aab87c47c422eb9b687; CPU cleanup PASS SHA f118cf8061cee5a9067363b545820eac1fd9b5911665513cfd0510d82f3b8471; 128K preflight PASS SHA 668a519293a5265ce6ca3270d4283e6b74e4ac4d7cae449ce8f0490d925bdeac; worker script SHA d4a509ccb9d6f88e3e27e6198974f066834bdd0082bc5f3d015f1b5edba08579."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Modelos locales por peso",
+      "data": [
+        {
+          "startRow": 5,
+          "startColumn": 25,
+          "rowData": [
+            [
+              "Q209 Q173 updated: 8K/32K/64K complete; P/D provisional mean 459.101/20.627. 64K P443.236/D4.801; 128K/261888 pending. Q172 89.33 separately; TC-92 fail. Amendment04 preflight 131K PASS; detached worker only. Receipt 668a519293a5265ce6ca3270d4283e6b74e4ac4d7cae449ce8f0490d925bdeac."
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "verified": [
+    "Resultados!E496",
+    "Resultados!AD496",
+    "Resultados!AF496",
+    "Modelos locales por peso!Z6"
+  ]
+}

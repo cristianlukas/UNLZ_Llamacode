@@ -1,0 +1,96 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "properties": {
+    "title": "Listado",
+    "locale": "en_US",
+    "timeZone": "America/Buenos_Aires"
+  },
+  "sheets": [
+    {
+      "properties": {
+        "sheetId": 1972251122,
+        "title": "Resultados",
+        "index": 17,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 520,
+          "columnCount": 34,
+          "frozenRowCount": 1,
+          "frozenColumnCount": 4
+        }
+      },
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 Q173 PARTIAL PASS · contexts 8K×3 and 32K×1 complete on ASUS+PNY; 64K/128K/261888 pending. · 64K attempt 2026-11-15: NO RESULT. Codex-side controller session disappeared; Maya API became ready but no request/result/events were recorded. The nested server stayed up until RuntimeMaxSec=7200, then systemd reported Result=timeout. Excluded from Q173 means; rerun only after a detached worker and cleanup test. · Q209-CONTROLLER-DETACHED-CPU-01 preregistration readback PASS. Python syntax gate PASS for four scripts (2026-11-15T15:00Z); next: CPU-only systemd lifecycle smoke; no GPU retry before PASS.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 Q173 PARTIAL PASS · contexts 8K×3 and 32K×1 complete on ASUS+PNY; 64K/128K/261888 pending. · 64K attempt 2026-11-15: NO RESULT. Codex-side controller session disappeared; Maya API became ready but no request/result/events were recorded. The nested server stayed up until RuntimeMaxSec=7200, then systemd reported Result=timeout. Excluded from Q173 means; rerun only after a detached worker and cleanup test. · Q209-CONTROLLER-DETACHED-CPU-01 preregistration readback PASS. Python syntax gate PASS for four scripts (2026-11-15T15:00Z); next: CPU-only systemd lifecycle smoke; no GPU retry before PASS."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Both completed Q173 context points (8K×3 and 32K×1) cleaned up; fresh full-hash preflight before 64K PASS; helper/quarantine/P2P/gpu_unlock PASS; no foreign servers; MemAvailable115.95GiB. 64K attempt ended at 2h cap without a request, so no metrics. Remediation preregistered: detached systemd worker 3900s/8GiB, Maya child 3600s/96GiB, swap disabled, OOMPolicy=kill, KillMode=control-group, exact identity-checked ExecStopPost. Syntax gate passed; CPU-only fake-job lifecycle smoke must PASS before any GPU retry.",
+                  "userEnteredValue": {
+                    "stringValue": "Both completed Q173 context points (8K×3 and 32K×1) cleaned up; fresh full-hash preflight before 64K PASS; helper/quarantine/P2P/gpu_unlock PASS; no foreign servers; MemAvailable115.95GiB. 64K attempt ended at 2h cap without a request, so no metrics. Remediation preregistered: detached systemd worker 3900s/8GiB, Maya child 3600s/96GiB, swap disabled, OOMPolicy=kill, KillMode=control-group, exact identity-checked ExecStopPost. Syntax gate passed; CPU-only fake-job lifecycle smoke must PASS before any GPU retry."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 prior results and failure receipts retained. Detached-worker CPU smoke preregistration Q209-CONTROLLER-DETACHED-CPU-01 SHA-256 5755d92c470adb1afebf8afcb8a4ccc2a79542899cf0eef0401874797768fceb; sheet prereg readback receipt c5ab8cc863c57443c560840c6851449e5d1f3876bbc428a7b558ba40b1e48ec4. Syntax gate receipt SHA-256 54f29e9e8d290bf14d99f9c80491baa3c2c2b30fcac8fbbbed33d6d923cf9507. Runner a4f54ecec98bfce1f9fd01f2c233f2367e8e904a2a605015e1d49fbe9fd2d411; detached launcher a2a4ff0f19842c3f34fa3d8ce8e5479be894fe74de686aff92dfb192b5f9a010; cleanup 05dd9013063ed2a29d0442e5dd2dd11de1fba08a7b6cb0770a789cc9bdb49853; smoke d669d797aea3dd90100c18562e46e39fe1508a8f3c41c9bb14072c0842e9fa98. Syntax PASS; lifecycle smoke pending.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 prior results and failure receipts retained. Detached-worker CPU smoke preregistration Q209-CONTROLLER-DETACHED-CPU-01 SHA-256 5755d92c470adb1afebf8afcb8a4ccc2a79542899cf0eef0401874797768fceb; sheet prereg readback receipt c5ab8cc863c57443c560840c6851449e5d1f3876bbc428a7b558ba40b1e48ec4. Syntax gate receipt SHA-256 54f29e9e8d290bf14d99f9c80491baa3c2c2b30fcac8fbbbed33d6d923cf9507. Runner a4f54ecec98bfce1f9fd01f2c233f2367e8e904a2a605015e1d49fbe9fd2d411; detached launcher a2a4ff0f19842c3f34fa3d8ce8e5479be894fe74de686aff92dfb192b5f9a010; cleanup 05dd9013063ed2a29d0442e5dd2dd11de1fba08a7b6cb0770a789cc9bdb49853; smoke d669d797aea3dd90100c18562e46e39fe1508a8f3c41c9bb14072c0842e9fa98. Syntax PASS; lifecycle smoke pending."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

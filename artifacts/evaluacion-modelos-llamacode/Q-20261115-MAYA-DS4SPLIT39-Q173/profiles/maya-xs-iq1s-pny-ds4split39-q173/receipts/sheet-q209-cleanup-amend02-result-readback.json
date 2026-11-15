@@ -1,0 +1,19 @@
+{
+  "schema": "llamacode.q209-sheet-readback.v1",
+  "timestamp_utc": "2026-11-15T15:32:19+00:00",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheets": {
+    "Resultados": 1972251122,
+    "Modelos locales por peso": 2026102751
+  },
+  "ranges": [
+    "Resultados!E496",
+    "Resultados!AD496:AF496",
+    "Modelos locales por peso!E6:F6",
+    "Modelos locales por peso!Z6"
+  ],
+  "status": "READBACK_MATCHES_WRITES",
+  "format": "Resultados row496 Arial10 WRAP; inventory format preserved",
+  "test_result_sha256": "f118cf8061cee5a9067363b545820eac1fd9b5911665513cfd0510d82f3b8471",
+  "model_result_sha256": "f4792c8140e0393951f369f9ad77e892c0019e1fc7c93aab87c47c422eb9b687"
+}

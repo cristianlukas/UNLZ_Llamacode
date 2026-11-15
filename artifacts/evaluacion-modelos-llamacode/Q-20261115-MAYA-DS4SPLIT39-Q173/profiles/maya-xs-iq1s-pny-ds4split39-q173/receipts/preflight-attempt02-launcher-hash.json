@@ -1,0 +1,21 @@
+{
+  "timestamp_utc": "2026-11-15T07:10:38+00:00",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "attempt": 2,
+  "status": "FAILED_PINNED_LAUNCHER_DIGEST_TYPO",
+  "observed_launcher_sha256": "95087759f61e581888fadbb3e9f84128197a7d908628658ccb65e3298e82748b",
+  "stale_expected_launcher_sha256": "95087759f61e581888fadbb3e9f84128197a7d908628ccb65e3298e82748b",
+  "launcher_mtime": "2026-10-29T14:15:12.742186200-03:00",
+  "historical_crosscheck": "Observed SHA equals prior Q206 launcher fingerprint; no launcher content change found.",
+  "model_shards": {
+    "status": "ALL_FIVE_HASHES_MATCHED",
+    "bytes": 276626308260,
+    "receipt": "receipts/shard-hash-progress.json"
+  },
+  "server_started": false,
+  "inference_started": false,
+  "gpu_compute_started": false,
+  "live_preflight": "Not reached after pinned-support hash mismatch; earlier non-invasive live gate snapshot PASS at 2026-11-15T06:57:30Z.",
+  "runner_sha256": "9f5dfb07bae15324961b010292b3be718e0e7debcf70224fafb0561bf66a06df",
+  "amendment02_requires_sheet_readback_before_retry": true
+}

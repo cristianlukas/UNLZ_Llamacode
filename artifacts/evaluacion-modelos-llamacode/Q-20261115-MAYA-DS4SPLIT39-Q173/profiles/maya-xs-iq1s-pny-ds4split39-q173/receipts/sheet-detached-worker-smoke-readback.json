@@ -1,0 +1,172 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "properties": {
+    "title": "Listado",
+    "locale": "en_US",
+    "timeZone": "America/Buenos_Aires"
+  },
+  "sheets": [
+    {
+      "properties": {
+        "sheetId": 1972251122,
+        "title": "Resultados",
+        "index": 17,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 520,
+          "columnCount": 34,
+          "frozenRowCount": 1,
+          "frozenColumnCount": 4
+        }
+      },
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 Q173 PARTIAL PASS · contexts 8K×3 and 32K×1 complete on ASUS+PNY; 64K/128K/261888 pending. · 64K attempt 2026-11-15: NO RESULT; no request/run JSON/events, excluded. Q209-CONTROLLER-DETACHED-CPU-01 PASS: detached worker survived launcher exit, hit its 8s cap, and ExecStopPost stopped only the exact fake child. CPU-only; no model/GPU. Next: detached, bounded 64K retry.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 Q173 PARTIAL PASS · contexts 8K×3 and 32K×1 complete on ASUS+PNY; 64K/128K/261888 pending. · 64K attempt 2026-11-15: NO RESULT; no request/run JSON/events, excluded. Q209-CONTROLLER-DETACHED-CPU-01 PASS: detached worker survived launcher exit, hit its 8s cap, and ExecStopPost stopped only the exact fake child. CPU-only; no model/GPU. Next: detached, bounded 64K retry."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Both completed Q173 context points (8K×3 and 32K×1) cleaned up; 64K ended at 2h cap without a request. Detached worker CPU lifecycle smoke PASS: caller returned, worker continued independently, timeout was enforced at 8s, exact child cleanup PASS; no model/GPU or other unit touched. Production caps: outer3900s/8GiB; Maya child3600s/96GiB/swap0/OOMPolicy=kill/cgroup cleanup. 64K retry pending.",
+                  "userEnteredValue": {
+                    "stringValue": "Both completed Q173 context points (8K×3 and 32K×1) cleaned up; 64K ended at 2h cap without a request. Detached worker CPU lifecycle smoke PASS: caller returned, worker continued independently, timeout was enforced at 8s, exact child cleanup PASS; no model/GPU or other unit touched. Production caps: outer3900s/8GiB; Maya child3600s/96GiB/swap0/OOMPolicy=kill/cgroup cleanup. 64K retry pending."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 detached-worker CPU smoke summary SHA-256 8da2f4f71d3471ad5a7e9b2038cc7d92f67e29a80f809aad0bc2d20041bf5719; raw smoke receipt 00558c6a0d913473e87cfd5ed40e2e1506a5eb2b7c6e7869b99c36c6266edbe7; exact child cleanup receipt fedd48f7e51a51926d9f9b3f9eb4c23c1e404a323039cc4ce3a301737244c2cc. PASS, CPU-only, no model/GPU. Amended syntax gate receipt e39532d3106fd1f9e5fa5ea63915cf5c0c11d4e38a01bb1792a5d6c2bbded500. Q209 64K remains unmeasured and excluded.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 detached-worker CPU smoke summary SHA-256 8da2f4f71d3471ad5a7e9b2038cc7d92f67e29a80f809aad0bc2d20041bf5719; raw smoke receipt 00558c6a0d913473e87cfd5ed40e2e1506a5eb2b7c6e7869b99c36c6266edbe7; exact child cleanup receipt fedd48f7e51a51926d9f9b3f9eb4c23c1e404a323039cc4ce3a301737244c2cc. PASS, CPU-only, no model/GPU. Amended syntax gate receipt e39532d3106fd1f9e5fa5ea63915cf5c0c11d4e38a01bb1792a5d6c2bbded500. Q209 64K remains unmeasured and excluded."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "properties": {
+        "sheetId": 2026102751,
+        "title": "Modelos locales por peso",
+        "index": 18,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 116,
+          "columnCount": 28,
+          "frozenRowCount": 1,
+          "frozenColumnCount": 9
+        }
+      },
+      "data": [
+        {
+          "startRow": 5,
+          "startColumn": 4,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "467.033413",
+                  "userEnteredValue": {
+                    "numberValue": 467.0334130179115
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "CLIP"
+                  },
+                  "note": "Q209 Q173 provisional equal-weight mean of the completed context means: 8K n=3 + 32K n=1. Remaining 64K/128K/261888 pending; final profile average not yet available. See Resultados row496. 64K attempt produced no run JSON/events and no P/D metrics; controller session disappeared, nested server later hit its 2h RuntimeMaxSec. Attempt excluded from numeric means; pending detached-worker fix and safe retry."
+                },
+                {
+                  "formattedValue": "28.54035524",
+                  "userEnteredValue": {
+                    "numberValue": 28.540355236496566
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "CLIP"
+                  },
+                  "note": "Q209 Q173 provisional equal-weight mean of completed context means: 8K n=3 + 32K n=1. Remaining 64K/128K/261888 pending; final profile average not yet available. See Resultados row496. 64K attempt produced no run JSON/events and no P/D metrics; controller session disappeared, nested server later hit its 2h RuntimeMaxSec. Attempt excluded from numeric means; pending detached-worker fix and safe retry."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 5,
+          "startColumn": 9,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 Q173 effective E2E P; equal-weight completed contexts 8K×3 + 32K×1; provisional.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 Q173 effective E2E P; equal-weight completed contexts 8K×3 + 32K×1; provisional."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "CLIP"
+                  },
+                  "note": "Q209 Q173 effective E2E prefill; provisional equal-weight completed contexts 8K×3 + 32K×1 = 467.033 tok/s. 64K attempt produced no request/result/events; excluded. Detached-worker CPU lifecycle gate Q209-CONTROLLER-DETACHED-CPU-01 PASS: caller detached, 8s bound enforced, exact child cleanup. No new model measurement. Detached 64K retry pending under 3600s/96GiB cap; 128K/261888 gated."
+                },
+                {
+                  "formattedValue": "Q209 Q173 llama-benchy tg_throughput; equal-weight completed contexts 8K×3 + 32K×1; provisional.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 Q173 llama-benchy tg_throughput; equal-weight completed contexts 8K×3 + 32K×1; provisional."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "CLIP"
+                  },
+                  "note": "Q209 Q173 llama-benchy decode; provisional equal-weight completed contexts 8K×3 + 32K×1 = 28.540 tok/s. 64K attempt produced no request/result/events; excluded. Detached-worker CPU lifecycle gate Q209-CONTROLLER-DETACHED-CPU-01 PASS: caller detached, 8s bound enforced, exact child cleanup. No new model measurement. Detached 64K retry pending under 3600s/96GiB cap; 128K/261888 gated."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

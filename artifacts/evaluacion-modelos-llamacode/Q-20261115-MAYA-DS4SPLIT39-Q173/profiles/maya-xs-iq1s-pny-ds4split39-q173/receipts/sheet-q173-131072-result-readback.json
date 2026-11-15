@@ -1,0 +1,178 @@
+{
+  "schema": "llamacode.q209-sheet-q173-131072-result-readback.v1",
+  "timestamp_utc": "2026-11-15T15:50:16Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "PASS",
+  "ranges": [
+    {
+      "title": "Resultados",
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            [
+              {
+                "value": "Q209 Q173 PARTIAL · 8K/32K/64K/131072 complete; 261888 pending. 131072×1 PASS: P603.845/D18.513 tok/s, TTFT217.112s, output128, startup30.391s (not cold/hot). Detached worker exited 0; both units stopped cleanly.",
+                "note": null
+              }
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 12,
+          "rowData": [
+            [
+              {
+                "value": "Q173 sample counts by context: 8192 n=3; 32768 n=1; 65536 n=1; 131072 n=1. Output 128 tokens each. One valid 131K point; not an independent quality result.",
+                "note": null
+              },
+              {
+                "value": "8192/32768/65536/131072 complete; 261888 pending. 523904 excluded.",
+                "note": null
+              }
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 21,
+          "rowData": [
+            [
+              {
+                "value": "131072×1 PASS; overall ladder partial 4/5 context points complete; 261888 pending.",
+                "note": null
+              },
+              {
+                "value": null,
+                "note": null
+              },
+              {
+                "value": "131072: effective TTFT 217.112 s; server readiness 30.391 s (not cold/hot). Output 128 tokens. Q173 request completed under detached worker.",
+                "note": null
+              },
+              {
+                "value": "603.8446308",
+                "note": "Q209 Q173 per-context effective E2E prefill. 8K 393.593 (n=3); 32K 540.474 (n=1); 64K 443.236 (n=1); 131K 603.845 (n=1). 131K TTFT=217.112s; this cell is the latest point, not the ladder mean. Equal-weight point mean through 131K=495.287."
+              },
+              {
+                "value": "18.51321678",
+                "note": "Q209 Q173 per-context llama-benchy tg_throughput decode. 8K 31.023 (n=3); 32K 26.058 (n=1); 64K 4.801 (n=1); 131K 18.513 (n=1). This cell is the latest point, not the ladder mean. Equal-weight point mean through 131K=20.099."
+              }
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 28,
+          "rowData": [
+            [
+              {
+                "value": "Both RTX3090 PIDs verified during run (PNY+ASUS); peak VRAM PNY23764MiB, ASUS7442MiB. Postflight MemAvailable123142356992 B; pressure=0; OOMKill=0. Helper/quarantine/P2P/unlock PASS.",
+                "note": null
+              },
+              {
+                "value": "Q209 131K detached worker+engine exit 0 and inactive; postflight port free and zero inference servers/compute apps. No Codex-bound controller. Startup30.391s is not cold/hot. Postflight receipt SHA 33cefab9443bc42a1a69068d867bb6a28223e8c12d4d146572f0062979c6bd93.",
+                "note": null
+              },
+              {
+                "value": null,
+                "note": null
+              },
+              {
+                "value": "131K summary SHA 82a2dbb452ed3cfbb7a5ea7ac0b41507b19953d1b199a0fc0dece79fb2dfddf1; raw SHA d4beaf60c9fff84ee238c94a1fe918f4d196325cd50ba90d1b4a8ac0fde9a9a5; events SHA 0798c32fca432e5d991bcc8c059eba3c105f412e086fad374d365f04d3979d4d; worker cleanup SHA fe02ad41fad7fe534d5d0ddc549f47ce86238bf3c8747ec75ecacd9c09bbf2e6.",
+                "note": null
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Modelos locales por peso",
+      "data": [
+        {
+          "startRow": 5,
+          "startColumn": 3,
+          "rowData": [
+            [
+              {
+                "value": "Project Maya v1.1.37 · Q189 · DS4_SPLIT=39,1 · ctx131072 measured · TP2 · vision off · reasoning medium",
+                "note": "Sólo cambia la colocación DS4 y el orden GPU frente a Q190; el log se escribe en el directorio de intento."
+              },
+              {
+                "value": "495.2869542",
+                "note": "Q209 Q173 effective E2E prefill; equal-weight mean of context-point means 8K/32K/64K/131K = 495.287 tok/s. Per-context: 393.593 (8K n=3), 540.474 (32K n=1), 443.236 (64K n=1), 603.845 (131K n=1). Descriptive/provisional; unequal samples; 261888 pending."
+              },
+              {
+                "value": "20.09870694",
+                "note": "Q209 Q173 llama-benchy tg_throughput; equal-weight mean of context-point means 8K/32K/64K/131K = 20.099 tok/s. Per-context: 31.023, 26.058, 4.801, 18.513. Descriptive/provisional; 8K n=3, all other points n=1; 261888 pending."
+              },
+              {
+                "value": "89.33333333",
+                "note": null
+              },
+              {
+                "value": "76",
+                "note": null
+              },
+              {
+                "value": "276.63",
+                "note": null
+              },
+              {
+                "value": "Q209 Q173 effective E2E. Equal-weight context-point mean through131K; 8K n=3, 32K/64K/131K n=1; provisional.",
+                "note": "Q209 Q173 effective E2E prefill; equal-weight context-point mean for completed 8K/32K/64K points. Samples: 8K n=3, 32K n=1, 64K n=1. 64K P=443.236 tok/s, TTFT147.926s. Provisional; higher contexts pending."
+              },
+              {
+                "value": "Q209 Q173 llama-benchy tg_throughput. Equal-weight context-point mean through131K; 8K n=3, 32K/64K/131K n=1; provisional.",
+                "note": "Q209 Q173 llama-benchy tg_throughput decode; equal-weight context-point mean for completed 8K/32K/64K points. Samples: 8K n=3, 32K n=1, 64K n=1. 64K D=4.801 tok/s. Provisional; higher contexts pending."
+              }
+            ]
+          ]
+        },
+        {
+          "startRow": 5,
+          "startColumn": 21,
+          "rowData": [
+            [
+              {
+                "value": "131K TTFT217.112s; readiness30.391s, not cold/hot. 261888 pending.",
+                "note": null
+              }
+            ]
+          ]
+        },
+        {
+          "startRow": 5,
+          "startColumn": 25,
+          "rowData": [
+            [
+              {
+                "value": "Q209 Q173 131K a01 valid: P603.845/D18.513; TTFT217.112s; startup30.391s (not cold/hot). 4/5 context points complete; 261888 pending. Q172=89.33 separate, TC-92 fail. Detached worker and postflight clean. Result SHA 82a2dbb452ed3cfbb7a5ea7ac0b41507b19953d1b199a0fc0dece79fb2dfddf1; postflight SHA 33cefab9443bc42a1a69068d867bb6a28223e8c12d4d146572f0062979c6bd93.",
+                "note": null
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "prefill_131072": 603.8446308141025,
+    "decode_131072": 18.513216779165358,
+    "mean_prefill_4_contexts": 495.2869541923309,
+    "mean_decode_4_contexts": 20.098706942385533,
+    "ttft_131072_s": 217.11213996098377
+  },
+  "verified": [
+    "Resultados!E496",
+    "Resultados!M496:N496",
+    "Resultados!V496:Z496",
+    "Resultados!AC496:AF496",
+    "Modelos locales por peso!D6:K6",
+    "Modelos locales por peso!V6",
+    "Modelos locales por peso!Z6"
+  ]
+}

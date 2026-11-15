@@ -1,0 +1,71 @@
+{
+  "schema": "llamacode.q209-detached-worker-cpu-smoke.v1",
+  "status": "PASS",
+  "timestamp_utc": "2026-11-15T15:30:34+00:00",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "gpu_used": false,
+  "model_used": false,
+  "worker_unit": "q209-lifecycle-smoke-b56885ecb29c-worker",
+  "worker_description": "Q209-CPU-SMOKE-WORKER|b56885ecb29c",
+  "child_unit": "q209-lifecycle-smoke-b56885ecb29c-child",
+  "child_description": "Q209-CPU-SMOKE-CHILD|b56885ecb29c",
+  "marker": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/receipts/detached-worker-smoke-b56885ecb29c-started.txt",
+  "cleanup_receipt": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/receipts/detached-worker-smoke-b56885ecb29c-cleanup.json",
+  "controller_launcher_returncode": 0,
+  "controller_launcher_stdout": "",
+  "controller_launcher_stderr": "Running as unit: q209-lifecycle-smoke-b56885ecb29c-worker.service\n",
+  "worker_runtime_limit_seconds": 8,
+  "marker_after_launcher_exit": "started",
+  "verified_utc": "2026-11-15T15:30:54+00:00",
+  "worker_final_state": "failed",
+  "worker_result": "timeout",
+  "child_final_state": "inactive",
+  "cleanup": {
+    "schema": "llamacode.q209-detached-worker-cleanup.v1",
+    "timestamp_utc": "2026-11-15T15:30:42+00:00",
+    "unit": "q209-lifecycle-smoke-b56885ecb29c-child",
+    "expected_description": "Q209-CPU-SMOKE-CHILD|b56885ecb29c",
+    "actual_description": "Q209-CPU-SMOKE-CHILD|b56885ecb29c",
+    "service_result": "timeout",
+    "exit_code": "killed",
+    "exit_status": "TERM",
+    "before": {
+      "load_state": "loaded",
+      "active_state": "active"
+    },
+    "stop_returncode": 0,
+    "stop_stdout": "",
+    "stop_stderr": "",
+    "after": {
+      "load_state": "not-found",
+      "active_state": "inactive"
+    },
+    "status": "PASS_STOPPED",
+    "stop_attempted": true
+  },
+  "already_stopped_cleanup": {
+    "schema": "llamacode.q209-detached-worker-cleanup.v1",
+    "timestamp_utc": "2026-11-15T15:30:54+00:00",
+    "unit": "q209-lifecycle-smoke-b56885ecb29c-child",
+    "expected_description": "Q209-MAYA-Q173|d9029f6b-c649-4291-b0be-f14d77dc737e|q209-lifecycle-smoke-b56885ecb29c-child",
+    "actual_description": "q209-lifecycle-smoke-b56885ecb29c-child.service",
+    "service_result": null,
+    "exit_code": null,
+    "exit_status": null,
+    "before": {
+      "load_state": "not-found",
+      "active_state": "inactive"
+    },
+    "status": "PASS_ALREADY_STOPPED",
+    "stop_attempted": false
+  },
+  "assertions": {
+    "launcher_returned_without_waiting_for_worker": true,
+    "worker_continued_after_launcher_process_exit": true,
+    "worker_timeout_was_bounded": true,
+    "worker_exit_hook_stopped_exact_child_unit": true,
+    "repeat_cleanup_after_normal_child_exit_is_safe_noop": true,
+    "gpu_used": false,
+    "model_used": false
+  }
+}

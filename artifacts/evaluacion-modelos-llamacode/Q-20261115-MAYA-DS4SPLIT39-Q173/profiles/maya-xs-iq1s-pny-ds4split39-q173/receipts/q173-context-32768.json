@@ -1,0 +1,2267 @@
+{
+  "schema": "llamacode.q209-maya-q173-context.v1",
+  "status": "PASS",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "timestamp_utc": "2026-11-15T07:42:23+00:00",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "profile": "Maya-XS IQ1_S · Project Maya v1.1.37 · PNY-first · DS4_SPLIT=39,1",
+  "physical_gpus": [
+    "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+    "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6"
+  ],
+  "context_tokens": 32768,
+  "server_context": 262144,
+  "generation_tokens": 128,
+  "runs": 1,
+  "prefill_effective_e2e": {
+    "method": "actual prompt_tokens / request start-to-first-content-token elapsed; includes client/network overhead",
+    "n": 1,
+    "samples": [
+      {
+        "request_id": 0,
+        "prompt_tokens": 32798,
+        "first_content_elapsed_s": 60.683769154013135,
+        "effective_prefill_tps": 540.4740090675631
+      }
+    ],
+    "mean_tps": 540.4740090675631,
+    "sample_stdev_tps": 0.0
+  },
+  "benchy_prefill_tps_diagnostic_only": {
+    "mean": 631744.6058373895,
+    "std": 0.0,
+    "values": [
+      631744.6058373895
+    ]
+  },
+  "decode_tps": {
+    "mean": 26.057772457120176,
+    "std": 0.0,
+    "values": [
+      26.057772457120176
+    ]
+  },
+  "ttft_ms": {
+    "mean": 60683.769154013135,
+    "std": 0.0,
+    "values": [
+      60683.769154013135
+    ]
+  },
+  "reported_prompt_tokens": 32768,
+  "reported_output_tokens": 128,
+  "server_ready_seconds": 101.341,
+  "server_ready_is_cold_or_hot": false,
+  "quality_score": "N/D · Q173 only",
+  "gpu_samples": [
+    {
+      "timestamp_utc": "2026-11-15T07:40:10+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 23765569536,
+        "pressure": {
+          "some": {
+            "avg10": 30.94,
+            "avg60": 14.85,
+            "avg300": 6.24,
+            "total": 158170493.0
+          },
+          "full": {
+            "avg10": 30.94,
+            "avg60": 14.85,
+            "avg300": 6.24,
+            "total": 158094883.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7360,
+          "memory_total_mib": 24576,
+          "utilization_percent": 6,
+          "temperature_c": 53
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23792,
+          "memory_total_mib": 24576,
+          "utilization_percent": 8,
+          "temperature_c": 36
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:40:10+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7382,
+              "memory_total_mib": 24576,
+              "utilization_percent": 6,
+              "temperature_c": 53
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23792,
+              "memory_total_mib": 24576,
+              "utilization_percent": 8,
+              "temperature_c": 36
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6400
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23494
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:40:20+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 23116992512,
+        "pressure": {
+          "some": {
+            "avg10": 11.39,
+            "avg60": 12.57,
+            "avg300": 6.03,
+            "total": 158181961.0
+          },
+          "full": {
+            "avg10": 11.39,
+            "avg60": 12.57,
+            "avg300": 6.03,
+            "total": 158106348.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7442,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 57
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 43
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:40:20+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7442,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 57
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 47
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6402
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:40:30+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 23064903680,
+        "pressure": {
+          "some": {
+            "avg10": 4.19,
+            "avg60": 10.64,
+            "avg300": 5.83,
+            "total": 158191808.0
+          },
+          "full": {
+            "avg10": 4.19,
+            "avg60": 10.64,
+            "avg300": 5.82,
+            "total": 158116193.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7588,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 59
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 51
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:40:30+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7588,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 59
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 51
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:40:41+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 22925975552,
+        "pressure": {
+          "some": {
+            "avg10": 1.54,
+            "avg60": 9.01,
+            "avg300": 5.63,
+            "total": 158194002.0
+          },
+          "full": {
+            "avg10": 1.54,
+            "avg60": 9.01,
+            "avg300": 5.63,
+            "total": 158118386.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7588,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 60
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 53
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:40:41+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7592,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 60
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 53
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:40:51+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 22865674240,
+        "pressure": {
+          "some": {
+            "avg10": 0.56,
+            "avg60": 7.63,
+            "avg300": 5.44,
+            "total": 158202901.0
+          },
+          "full": {
+            "avg10": 0.56,
+            "avg60": 7.63,
+            "avg300": 5.44,
+            "total": 158127285.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7590,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 61
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 57
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:40:51+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7590,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 63
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 57
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:41:01+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 22965280768,
+        "pressure": {
+          "some": {
+            "avg10": 0.2,
+            "avg60": 6.46,
+            "avg300": 5.25,
+            "total": 158202983.0
+          },
+          "full": {
+            "avg10": 0.2,
+            "avg60": 6.46,
+            "avg300": 5.25,
+            "total": 158127367.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7588,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 62
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 58
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:41:01+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7588,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 62
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 58
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:41:11+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 23013548032,
+        "pressure": {
+          "some": {
+            "avg10": 0.07,
+            "avg60": 5.47,
+            "avg300": 5.07,
+            "total": 158202983.0
+          },
+          "full": {
+            "avg10": 0.07,
+            "avg60": 5.47,
+            "avg300": 5.07,
+            "total": 158127367.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7590,
+          "memory_total_mib": 24576,
+          "utilization_percent": 14,
+          "temperature_c": 61
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 97,
+          "temperature_c": 59
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:41:12+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7590,
+              "memory_total_mib": 24576,
+              "utilization_percent": 12,
+              "temperature_c": 61
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 97,
+              "temperature_c": 59
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:41:22+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 22895161344,
+        "pressure": {
+          "some": {
+            "avg10": 0.02,
+            "avg60": 4.63,
+            "avg300": 4.9,
+            "total": 158202983.0
+          },
+          "full": {
+            "avg10": 0.02,
+            "avg60": 4.63,
+            "avg300": 4.9,
+            "total": 158127367.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7582,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 64
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 59
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:41:22+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7582,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 64
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 59
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:41:32+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 22964133888,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 3.79,
+            "avg300": 4.7,
+            "total": 158202983.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 3.79,
+            "avg300": 4.7,
+            "total": 158127367.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7605,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 64
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 61
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:41:32+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7605,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 64
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 60
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:41:42+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 22906646528,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 3.21,
+            "avg300": 4.54,
+            "total": 158215400.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 3.21,
+            "avg300": 4.54,
+            "total": 158139781.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7586,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 65
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 63
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:41:42+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7586,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 65
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 63
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:41:53+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 22968725504,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 2.71,
+            "avg300": 4.39,
+            "total": 158215559.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 2.71,
+            "avg300": 4.39,
+            "total": 158139939.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7586,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 65
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 4,
+          "temperature_c": 55
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:41:53+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7586,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 65
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 4,
+              "temperature_c": 55
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:42:03+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 22960021504,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 2.29,
+            "avg300": 4.24,
+            "total": 158215559.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 2.29,
+            "avg300": 4.24,
+            "total": 158139939.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7584,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 66
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 65
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:42:03+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7584,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 66
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 65
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    },
+    {
+      "timestamp_utc": "2026-11-15T07:42:13+00:00",
+      "unit_pids": [
+        3910034,
+        3910089,
+        3910120,
+        3913119
+      ],
+      "compute_by_physical_uuid": {
+        "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049": [
+          3910120
+        ],
+        "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6": [
+          3910120
+        ]
+      },
+      "memory": {
+        "mem_available_bytes": 22959910912,
+        "pressure": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 1.94,
+            "avg300": 4.09,
+            "total": 158215559.0
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 1.94,
+            "avg300": 4.09,
+            "total": 158139939.0
+          }
+        },
+        "oom_kill": 0
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 7588,
+          "memory_total_mib": 24576,
+          "utilization_percent": 100,
+          "temperature_c": 66
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 23940,
+          "memory_total_mib": 24576,
+          "utilization_percent": 96,
+          "temperature_c": 61
+        }
+      ],
+      "helper_gate": {
+        "status": "PASS",
+        "checks": {
+          "helper_verify_success": true,
+          "helper_current_boot_pass": true,
+          "asus_quarantine_full": true,
+          "asus_quarantine_service_active": true,
+          "gpu_unlock_loaded": true,
+          "gpu_unlock_both_cards": true,
+          "p2p_read_bidirectional": true,
+          "p2p_write_bidirectional": true
+        },
+        "systemd": "Result=success\nExecMainStatus=0",
+        "vram": "active",
+        "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+        "boot_receipt": {
+          "task": "Q-20261029-VF-ITERATION-190",
+          "timestampUtc": "2026-10-31T22:55:55Z",
+          "bootKernel": "7.0.0-38-generic",
+          "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+          "systemdBootVerifier": {
+            "status": "success",
+            "automaticBootRun": "PASS",
+            "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+          },
+          "asusQuarantine": {
+            "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+            "active": "running",
+            "pci": "0000:01:00.0",
+            "held": 1636,
+            "total": 1636,
+            "pending": 0
+          },
+          "gpuUnlock": {
+            "module": "loaded",
+            "targets": [
+              "0000:01:00.0",
+              "0000:03:00.0"
+            ],
+            "kernelLog": "both PCI devices report unlocked"
+          },
+          "p2pMatrix": {
+            "read": "OK both directions",
+            "write": "OK both directions",
+            "topology": "PHB"
+          },
+          "p2pSmoke": {
+            "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+            "payloadBytes": 8388608,
+            "copiesPerDirection": 5,
+            "exactValues": true,
+            "direction0to1": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "direction1to0": {
+              "medianMs": 0.643,
+              "medianGBps": 13.047
+            },
+            "result": "PASS",
+            "inferenceRun": false,
+            "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+          },
+          "firstSmokeAttempt": {
+            "correctness": "PASS",
+            "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+          },
+          "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+          "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+          "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+        },
+        "gpus": {
+          "timestamp_utc": "2026-11-15T07:42:13+00:00",
+          "gpus": [
+            {
+              "index": 0,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:01:00.0",
+              "memory_used_mib": 7590,
+              "memory_total_mib": 24576,
+              "utilization_percent": 100,
+              "temperature_c": 66
+            },
+            {
+              "index": 1,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "pci": "00000000:03:00.0",
+              "memory_used_mib": 23940,
+              "memory_total_mib": 24576,
+              "utilization_percent": 56,
+              "temperature_c": 60
+            }
+          ],
+          "compute_apps": [
+            {
+              "pid": 3910120,
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "used_mib": 6548
+            },
+            {
+              "pid": 3910120,
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "used_mib": 23642
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "argv": [
+    "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+    "--base-url",
+    "http://127.0.0.1:18628/v1",
+    "--model",
+    "deepseek-v4.1-flash",
+    "--tokenizer",
+    "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json",
+    "--pp",
+    "32768",
+    "--tg",
+    "128",
+    "--exact-tg",
+    "--depth",
+    "0",
+    "--concurrency",
+    "1",
+    "--runs",
+    "1",
+    "--latency-mode",
+    "generation",
+    "--no-cache",
+    "--skip-coherence",
+    "--no-adapt-prompt",
+    "--extra-body",
+    "temperature=0.6,top_p=0.95,top_k=20,min_p=0.0,repetition_penalty=1.0,presence_penalty=0.0,seed=42",
+    "--format",
+    "json",
+    "--exit-on-first-fail",
+    "--save-result",
+    "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173/runs/q173-context-32768.json",
+    "--emit-progress",
+    "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173/runs/q173-context-32768-events.jsonl"
+  ],
+  "raw_result": "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173/runs/q173-context-32768.json",
+  "raw_events": "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173/runs/q173-context-32768-events.jsonl",
+  "client_log": "/media/cristian/Disco local/Modelos-eval/Q209-Maya-DS4SPLIT39-Q173/logs/q173-context-32768.log",
+  "finished_utc": "2026-11-15T07:42:23+00:00"
+}

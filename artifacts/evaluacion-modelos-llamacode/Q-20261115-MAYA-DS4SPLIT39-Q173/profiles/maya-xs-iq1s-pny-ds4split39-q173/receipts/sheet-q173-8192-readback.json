@@ -1,0 +1,45 @@
+{
+  "timestamp_utc": "2026-11-15T07:38:03+00:00",
+  "operation": "Q209 Q173 context8192×3 results sync/readback",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": [
+    "Resultados!E496",
+    "Resultados!U496:AD496",
+    "Resultados!AF496",
+    "Modelos locales por peso!E6:F6",
+    "Modelos locales por peso!J6:K6"
+  ],
+  "readback_match": true,
+  "format": "Resultados row496 Arial10 TOP WRAP retained; inventory cells retained MIDDLE CLIP; E6/F6 remain numeric for sorting",
+  "result": {
+    "status": "PASS",
+    "context_tokens_target": 8192,
+    "actual_prompt_tokens": 8222,
+    "runs": 3,
+    "prefill_effective_e2e_mean_tps": 393.5928169682599,
+    "prefill_sd_tps": 0.895471034752166,
+    "decode_mean_tps": 31.022938015872956,
+    "decode_sd_tps": 1.8776185144966298,
+    "ttft_mean_s": 20.889680862334597,
+    "server_readiness_s": 477.877,
+    "same_server_pid_on_both_gpus": 3878694,
+    "quality": "not measured by Q173; Q172 historical remains separate",
+    "min_memavailable_gib": 16.64,
+    "oom_kills": 0,
+    "cleanup": "PASS, service stopped, port free, no server remaining"
+  },
+  "inventory": {
+    "row": 6,
+    "prefill_numeric_provisional": 393.5928169682599,
+    "decode_numeric_provisional": 31.022938015872956,
+    "label": "8K×3 only; remaining Q173 ladder pending"
+  },
+  "sha256": {
+    "raw": "3207a38b8ca3c15d924a710d50778262a4a1ad36ed93ed0d0b133079919c600f",
+    "events": "214aa4dc2ae73dcd8593eb61cd7ddc86d2149f4f0b211db74b52a07bdcf366a2",
+    "result": "c148e67b294c0aa31cf7de106d22c4f357305246350c625c400f366c3b4ae86a",
+    "startup": "f0d894da34c45c51ddea165ce397b1cafbffc34fbe5529c8cde7f66df39ea693",
+    "postflight": "37568cd22157c47eb52bc60afe882f6112fe2a2488c640a71ad159d34465b5d5"
+  },
+  "next": "Q173 context32768×1 after fresh gate reads; update Sheet and read back immediately."
+}

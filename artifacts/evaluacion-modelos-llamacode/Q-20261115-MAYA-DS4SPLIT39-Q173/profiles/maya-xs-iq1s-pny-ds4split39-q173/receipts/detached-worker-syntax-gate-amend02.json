@@ -1,0 +1,18 @@
+{
+  "schema": "llamacode.q209-cleanup-amend02-syntax-gate.v1",
+  "timestamp_utc": "2026-11-15T15:30:01+00:00",
+  "test_id": "Q209-CONTROLLER-DETACHED-CPU-02/SYNTAX",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "status": "PASS",
+  "returncode": 0,
+  "stderr": "",
+  "files": {
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/scripts/run_q173.py": "a4f54ecec98bfce1f9fd01f2c233f2367e8e904a2a605015e1d49fbe9fd2d411",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/scripts/launch_detached_q173.py": "a2a4ff0f19842c3f34fa3d8ce8e5479be894fe74de686aff92dfb192b5f9a010",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/scripts/cleanup_detached_worker.py": "abffa62a85b247be623215a8030b3588806603db92252bf122d58b7a87ed6442",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/scripts/test_detached_worker_lifecycle.py": "9975154c691d5925d129fa68dac96e851b18e011c444e166c95c9b4b3c251b4a"
+  },
+  "gpu_used": false,
+  "model_used": false,
+  "spreadsheet_prereg_readback_sha256": "c2836aa20cb7851209c3ec3b56d9a36ae36c46233cdf517e49e812c026160ba7"
+}

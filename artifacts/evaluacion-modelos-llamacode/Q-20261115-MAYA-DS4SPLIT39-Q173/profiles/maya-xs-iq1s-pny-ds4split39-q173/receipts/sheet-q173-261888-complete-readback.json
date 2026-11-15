@@ -1,0 +1,43 @@
+{
+  "schema": "llamacode.q209-sheet-q173-261888-readback.v1",
+  "captured_at_utc": "2026-11-15 16:28:24 UTC",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "status": "PASS",
+  "cells": {
+    "Resultados!E496": "Q209 Q173 COMPLETE · 5/5 context points, 7/7 requests complete. Detached worker and engine exited 0; 523904 excluded.",
+    "Resultados!M496": "Q173 sample counts: 8192 n=3; 32768, 65536, 131072, 261888 n=1; 128 output tokens per request.",
+    "Resultados!N496": "8192/32768/65536/131072/261888 complete; maximum tested 261888. 523904 excluded.",
+    "Resultados!U496": "Q209 Q173 is a speed-only cohort; no new quality score. Q172 89.33/100 (n=3) belongs to the separate Q206 quality cohort.",
+    "Resultados!V496": "PASS · Q173 ladder: 5/5 contexts and 7/7 requests produced exactly 128 tokens; llama-benchy result PASS.",
+    "Resultados!W496": "No quality/safety rerun in Q209. Separate Q172 Q206 score 89.33/100; TC-92 cross-tenant disclosure failed in 3/3 seeds.",
+    "Resultados!X496": "TTFT: 8K 20.890s avg (n=3); 32K 60.684s; 64K 147.926s; 131K 217.112s; 261888 441.555s. Readiness 261K 20.335s; not cold/hot.",
+    "Resultados!Y496": 514.8638538847408,
+    "Resultados!Z496": 19.573139585823203,
+    "Resultados!AA496": "128 each; 7 total requests: 8K×3 plus 32K/64K/131K/261888×1.",
+    "Resultados!AC496": "Both RTX 3090 compute PIDs verified throughout. Peak VRAM: ASUS 7439 MiB, PNY 23770 MiB; peak 74°C. Min MemAvailable 116190371840 B; max memory PSI avg10 0.09; OOMKill 0.",
+    "Resultados!AD496": "Clean exit: worker/engine status success, exit 0; port freed, no inference servers/compute apps remained. Detached lifetime is independent of Codex session.",
+    "Resultados!AF496": "Q173 result SHA-256 f5b21d5cc463e61443c3606e79747c823895581e8d48e42028506a31bbe890d1; raw JSON 7b00bc2ca18fe3ddfa8b31c0b8f06bae2475dbec860b03a3523aa9f73e6a29ee; events 1b5e77727effe659b7fd172dec9894a7176ab0f5f1e2c4bd46a4794ddd554421; postflight 301c1572646cf5672a4f88628271074008aebf9414925bee99733ab9c09bc9e7; worker cleanup ccf8a55a68077e6632b8744986c51b2706c49b10ec1bf7da392fad826f7d483b.",
+    "Resultados!AG496": "N/D · cold init not separately measured.",
+    "Resultados!AH496": "N/D · hot init not separately measured; server readiness 20.335 s is not equivalent.",
+    "Modelos locales por peso!D6": "Project Maya v1.1.37 · Q189 · DS4_SPLIT=39,1 · server ctx262144; Q173 ladder measured through 261888 · TP2 · vision off · reasoning medium",
+    "Modelos locales por peso!E6": 514.8638538847408,
+    "Modelos locales por peso!F6": 19.573139585823203,
+    "Modelos locales por peso!J6": "Q209 Q173 effective E2E prefill; equal-weight mean across context means. 8K n=3, other points n=1; mean=514.864 tok/s.",
+    "Modelos locales por peso!K6": "Q209 Q173 llama-benchy tg_throughput decode; equal-weight mean across context means. 8K n=3, other points n=1; mean=19.573 tok/s.",
+    "Modelos locales por peso!V6": "TTFT: 8K 20.890s avg (n=3); 32K 60.684s; 64K 147.926s; 131K 217.112s; 261888 441.555s. Readiness at 261888=20.335s; not cold/hot.",
+    "Modelos locales por peso!Z6": "Q209 Q173 complete at five contexts (8K×3; 32K/64K/131K/261888×1); 7/7 exact 128-token requests. 261888: P593.171/D17.471 tok/s, TTFT441.555s. Detached worker exited cleanly; postflight no pressure/OOM. 523904 excluded.",
+    "Modelos locales por peso!AB6": "N/D / N/D; readiness=20.335s measured, but not classified as cold or hot initialization."
+  },
+  "notes": {
+    "Resultados!Y496": "Five-context equal-weight mean, not latest single-context point. Context values 393.593/540.474/443.236/603.845/593.171; n=3/1/1/1/1.",
+    "Resultados!Z496": "Five-context equal-weight mean, not latest single-context point. Context values 31.023/26.058/4.801/18.513/17.471; n=3/1/1/1/1.",
+    "Modelos locales por peso!E6": "Equal-weight mean of context-point means; 8K n=3, others n=1; descriptive only.",
+    "Modelos locales por peso!F6": "Equal-weight mean of context-point means; 8K n=3, others n=1; descriptive only."
+  },
+  "format_verification": {
+    "resultados_row496": "Arial 10, vertical TOP, WRAP preserved.",
+    "modelos_row6": "LEFT, MIDDLE, CLIP preserved; numeric values remained numeric."
+  },
+  "visual_check": "CUA loaded the requested tab, but the browser was signed out and its narrow viewport could not display the frozen nine-column grid fully. The API readback verified values, notes, and formatting; no sizing or formatting changes were made."
+}

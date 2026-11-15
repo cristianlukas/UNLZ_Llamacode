@@ -1,0 +1,38 @@
+{
+  "schema": "llamacode.q209-detached-worker-cleanup-amendment.v1",
+  "test_id": "Q209-CONTROLLER-DETACHED-CPU-02",
+  "preregistered_utc": "2026-11-15T15:25:55+00:00",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "objective": "Repair ExecStopPost behavior when the owned model unit has already exited normally before the detached controller stops; preserve fail-closed behavior for any still-active unit whose exact Q209 description does not match.",
+  "change_under_test": "Query LoadState/ActiveState before requiring the expected Description. If unit is absent/inactive/failed, write PASS_ALREADY_STOPPED and never issue stop. If active, require exact expected Q209 description before stopping. No broader process matching, pkill, or name-only stop.",
+  "method": [
+    "Run Python syntax compilation for runner, detached launcher, cleanup hook, and lifecycle test.",
+    "CPU-only case A: active harmless child with exact Q209 description; bounded worker timeout must stop only that child (prior CPU smoke is supporting evidence).",
+    "CPU-only case B: naturally exited transient harmless unit with default Description=unit.service; invoke cleanup with exact expected Q209 description, require PASS_ALREADY_STOPPED and stop_attempted=false.",
+    "Re-check unit states and ensure no smoke unit remains active; do not use GPU, model, network, or inference server."
+  ],
+  "pass_criteria": [
+    "case A cleanup remains exact-identity gated",
+    "case B inactive child is accepted as already stopped despite default description",
+    "no stop is attempted for case B",
+    "no external unit/process touched",
+    "syntax gate and lock token pass"
+  ],
+  "scripts_before_test": {
+    "cleanup_sha256_before": "05dd9013063ed2a29d0442e5dd2dd11de1fba08a7b6cb0770a789cc9bdb49853",
+    "lifecycle_test_sha256_before": "2a5e419ca620e0228d55ee3a95543a3b9c4b82c7012406a12579389be698cfab"
+  },
+  "gates": [
+    "exact Q202 lock token still owns WORK_QUEUE.lock",
+    "Google Sheet Q209 result/repair preregistration readback is complete",
+    "CPU-only user systemd units only"
+  ],
+  "gpu_used": false,
+  "model_used": false,
+  "implemented_script_sha256_before_test": {
+    "cleanup_detached_worker.py": "abffa62a85b247be623215a8030b3588806603db92252bf122d58b7a87ed6442",
+    "test_detached_worker_lifecycle.py": "9975154c691d5925d129fa68dac96e851b18e011c444e166c95c9b4b3c251b4a"
+  },
+  "implementation_recorded_utc": "2026-11-15T15:29:16+00:00"
+}

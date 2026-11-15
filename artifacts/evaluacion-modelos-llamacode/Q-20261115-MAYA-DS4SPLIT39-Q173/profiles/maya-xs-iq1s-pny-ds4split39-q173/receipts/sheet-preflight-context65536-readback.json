@@ -1,0 +1,46 @@
+{
+  "timestamp_utc": "2026-11-15 07:58:53 UTC",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "status": "PASS",
+  "prior_attempt": "Initial range used invalid startRow/startColumn names and API returned HTTP 400; no cells changed. Retried with startRowIndex/startColumnIndex.",
+  "update_response": {
+    "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "replies": [
+      {},
+      {}
+    ],
+    "updatedSpreadsheet": null
+  },
+  "readback_ranges": [
+    "Resultados!AD496",
+    "Resultados!AF496"
+  ],
+  "readback_cells": [
+    {
+      "value": "Both completed Q173 context points (8K×3 and 32K×1) cleaned up; fresh preflight before 64K at 2026-11-15T07:57:07Z reverified all five model shards and five support assets by full SHA-256 (276,626,308,260 B). 3090 HELPER, ASUS quarantine1636/1636, bidirectional P2P, gpu_unlock on both, no foreign inference servers/compute apps, port free, MemAvailable115.95GiB, OOM0. Output free25.63GiB. No inference launched by preflight.",
+      "format": {
+        "verticalAlignment": "TOP",
+        "wrapStrategy": "WRAP",
+        "textFormat": {
+          "fontFamily": "Arial",
+          "fontSize": 10
+        }
+      }
+    },
+    {
+      "value": "Q209 8K: raw 3207a38b8ca3c15d924a710d50778262a4a1ad36ed93ed0d0b133079919c600f; result c148e67b294c0aa31cf7de106d22c4f357305246350c625c400f366c3b4ae86a. 32K: raw 004a4a61f925f44b62c5f5d9e46fac4baeae44adaf17c6f2888b2e3fb2326b1b; events 81fca6739fb075fca3408160c9423d4ae6f0ae3b87b61d24a936a6dceb76bb58; result 98c2e343542aee5514fb794e78728e2e8a1cad67e7bf31cf56f93c0f9a7c999b. Startup 8944d57c74bcde1a0bcb8ff2ecb13932ad8335bc0b4e8eedb2729be84f726c58; postflight 96be4ca2596ecc8ede5b828bbe963826799a964f0567ae50e21b8f4cf00f2944. Fresh full-hash preflight before 64K PASS 2026-11-15T07:57:07Z; receipt SHA-256 39ac508772a4740a58ce000e2564cf3597aa8dddf6f0adc81f1ac6482f863709.",
+      "format": {
+        "verticalAlignment": "TOP",
+        "wrapStrategy": "WRAP",
+        "textFormat": {
+          "fontFamily": "Arial",
+          "fontSize": 10
+        }
+      }
+    }
+  ],
+  "expected": {
+    "ad": "Both completed Q173 context points (8K×3 and 32K×1) cleaned up; fresh preflight before 64K at 2026-11-15T07:57:07Z reverified all five model shards and five support assets by full SHA-256 (276,626,308,260 B). 3090 HELPER, ASUS quarantine1636/1636, bidirectional P2P, gpu_unlock on both, no foreign inference servers/compute apps, port free, MemAvailable115.95GiB, OOM0. Output free25.63GiB. No inference launched by preflight.",
+    "af": "Q209 8K: raw 3207a38b8ca3c15d924a710d50778262a4a1ad36ed93ed0d0b133079919c600f; result c148e67b294c0aa31cf7de106d22c4f357305246350c625c400f366c3b4ae86a. 32K: raw 004a4a61f925f44b62c5f5d9e46fac4baeae44adaf17c6f2888b2e3fb2326b1b; events 81fca6739fb075fca3408160c9423d4ae6f0ae3b87b61d24a936a6dceb76bb58; result 98c2e343542aee5514fb794e78728e2e8a1cad67e7bf31cf56f93c0f9a7c999b. Startup 8944d57c74bcde1a0bcb8ff2ecb13932ad8335bc0b4e8eedb2729be84f726c58; postflight 96be4ca2596ecc8ede5b828bbe963826799a964f0567ae50e21b8f4cf00f2944. Fresh full-hash preflight before 64K PASS 2026-11-15T07:57:07Z; receipt SHA-256 39ac508772a4740a58ce000e2564cf3597aa8dddf6f0adc81f1ac6482f863709."
+  }
+}

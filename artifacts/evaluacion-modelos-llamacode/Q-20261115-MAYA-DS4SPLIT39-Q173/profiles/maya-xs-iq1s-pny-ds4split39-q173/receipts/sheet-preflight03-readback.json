@@ -1,0 +1,35 @@
+{
+  "timestamp_utc": "2026-11-15T07:22:24+00:00",
+  "operation": "Q209 attempt03 preflight sync/readback",
+  "sheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "ranges": [
+    "Resultados!E496",
+    "Resultados!AD496",
+    "Resultados!AF496",
+    "Modelos locales por peso!J6:K6"
+  ],
+  "readback_match": true,
+  "format": "Resultados row496 Arial10/TOP/WRAP preserved; inventory format unchanged",
+  "preflight_status": "PASS",
+  "preflight_receipt_sha256": "e82f24c15b1ae0f5905ac264ed3a07b6a58eefcfc5be6abed07b66ff0ccace36",
+  "verified_model_shards": 5,
+  "verified_support_files": 5,
+  "physical_gpu_uuids": [
+    "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+    "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049"
+  ],
+  "foreign_servers": [],
+  "compute_apps": [],
+  "helper_checks": {
+    "helper_verify_success": true,
+    "helper_current_boot_pass": true,
+    "asus_quarantine_full": true,
+    "asus_quarantine_service_active": true,
+    "gpu_unlock_loaded": true,
+    "gpu_unlock_both_cards": true,
+    "p2p_read_bidirectional": true,
+    "p2p_write_bidirectional": true
+  },
+  "no_inference_started": true,
+  "next": "Re-read four repo gates and live state; run Q173 8192×3 only if no foreign inference and ASUS+PNY conditions still pass."
+}

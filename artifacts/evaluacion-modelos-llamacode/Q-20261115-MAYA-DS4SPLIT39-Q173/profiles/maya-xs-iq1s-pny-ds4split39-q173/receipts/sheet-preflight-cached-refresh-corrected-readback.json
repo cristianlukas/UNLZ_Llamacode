@@ -1,0 +1,96 @@
+{
+  "spreadsheetId": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "properties": {
+    "title": "Listado",
+    "locale": "en_US",
+    "timeZone": "America/Buenos_Aires"
+  },
+  "sheets": [
+    {
+      "properties": {
+        "sheetId": 1972251122,
+        "title": "Resultados",
+        "index": 17,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 520,
+          "columnCount": 34,
+          "frozenRowCount": 1,
+          "frozenColumnCount": 4
+        }
+      },
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 Q173 PARTIAL PASS · contexts 8K×3 and 32K×1 complete on ASUS+PNY; 64K/128K/261888 pending. · 64K attempt 2026-11-15: NO RESULT; excluded. Detached-controller CPU smoke PASS. Fresh cached preflight 2026-11-15T15:10Z PASS: all 5 shards retain prior full-SHA identity; 5 support files rehashed; helper/P2P/quarantine/unlock PASS; no inference servers or compute apps; both 3090s detected; port free; MemAvailable 116.1GiB. Ready for one detached bounded 64K retry.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 Q173 PARTIAL PASS · contexts 8K×3 and 32K×1 complete on ASUS+PNY; 64K/128K/261888 pending. · 64K attempt 2026-11-15: NO RESULT; excluded. Detached-controller CPU smoke PASS. Fresh cached preflight 2026-11-15T15:10Z PASS: all 5 shards retain prior full-SHA identity; 5 support files rehashed; helper/P2P/quarantine/unlock PASS; no inference servers or compute apps; both 3090s detected; port free; MemAvailable 116.1GiB. Ready for one detached bounded 64K retry."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Detached controller CPU lifecycle smoke PASS. Fresh Q209 preflight 2026-11-15T15:10Z PASS: all 5 model shard identities unchanged from full-SHA receipt; 5 support assets rehashed; 3090 HELPER, ASUS quarantine, P2P and gpu_unlock PASS; no foreign inference servers or GPU compute apps; both RTX 3090s present; port18628 free; MemAvailable116.1GiB; results volume free25.63GiB. Only 64K retry is next; no measurement yet.",
+                  "userEnteredValue": {
+                    "stringValue": "Detached controller CPU lifecycle smoke PASS. Fresh Q209 preflight 2026-11-15T15:10Z PASS: all 5 model shard identities unchanged from full-SHA receipt; 5 support assets rehashed; 3090 HELPER, ASUS quarantine, P2P and gpu_unlock PASS; no foreign inference servers or GPU compute apps; both RTX 3090s present; port18628 free; MemAvailable116.1GiB; results volume free25.63GiB. Only 64K retry is next; no measurement yet."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            {
+              "values": [
+                {
+                  "formattedValue": "Q209 cached preflight refresh receipt SHA-256 4a9c769a8b9c46f5dc66069cb701b584a7f7e878628a7ec3abdd5682196d96f5. Prior full-SHA model result reused because all five shard paths/device/inode/size/mtime_ns were unchanged; five support files rehashed. Fresh gates PASS: zero compute apps/foreign servers, both RTX 3090s, port free. Detached-worker CPU smoke summary SHA-256 2c74f6586821c1bae756577ebeb411944b4c5c8a6b8b82f7ce89e29430fc4cf7; raw smoke receipt 00558c6a0d913473e87cfd5ed40e2e1506a5eb2b7c6e7869b99c36c6266edbe7; cleanup receipt fedd48f7e51a51926d9f9b3f9eb4c23c1e404a323039cc4ce3a301737244c2cc. No model metrics changed.",
+                  "userEnteredValue": {
+                    "stringValue": "Q209 cached preflight refresh receipt SHA-256 4a9c769a8b9c46f5dc66069cb701b584a7f7e878628a7ec3abdd5682196d96f5. Prior full-SHA model result reused because all five shard paths/device/inode/size/mtime_ns were unchanged; five support files rehashed. Fresh gates PASS: zero compute apps/foreign servers, both RTX 3090s, port free. Detached-worker CPU smoke summary SHA-256 2c74f6586821c1bae756577ebeb411944b4c5c8a6b8b82f7ce89e29430fc4cf7; raw smoke receipt 00558c6a0d913473e87cfd5ed40e2e1506a5eb2b7c6e7869b99c36c6266edbe7; cleanup receipt fedd48f7e51a51926d9f9b3f9eb4c23c1e404a323039cc4ce3a301737244c2cc. No model metrics changed."
+                  },
+                  "userEnteredFormat": {
+                    "wrapStrategy": "WRAP",
+                    "textFormat": {
+                      "fontFamily": "Arial",
+                      "fontSize": 10
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

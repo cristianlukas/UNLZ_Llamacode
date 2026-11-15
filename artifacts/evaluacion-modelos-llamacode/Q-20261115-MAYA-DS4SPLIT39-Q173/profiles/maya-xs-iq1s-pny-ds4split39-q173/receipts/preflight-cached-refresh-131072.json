@@ -1,0 +1,264 @@
+{
+  "schema": "llamacode.q209-cached-preflight-refresh.v1",
+  "status": "PASS",
+  "timestamp_utc": "2026-11-15T15:40:40+00:00",
+  "task": "Q209-MAYA-DS4SPLIT39-Q173",
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "purpose": "fresh live preflight for Q173 131072x1; no full 276 GB shard reread",
+  "previous_full_hash_preflight_utc": "2026-11-15T07:57:07+00:00",
+  "previous_runner_sha256": "a4f54ecec98bfce1f9fd01f2c233f2367e8e904a2a605015e1d49fbe9fd2d411",
+  "current_runner_sha256": "a4f54ecec98bfce1f9fd01f2c233f2367e8e904a2a605015e1d49fbe9fd2d411",
+  "model_shard_validation": {
+    "status": "PASS_IDENTITY_UNCHANGED_REUSED_PRIOR_FULL_SHA",
+    "shards": [
+      {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00001-of-00005.gguf",
+        "resolved_path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00001-of-00005.gguf",
+        "bytes": 47781530400,
+        "mtime_ns": 1793283569770661500,
+        "inode": 4689929,
+        "device": 66307,
+        "sha256_reused_from_verified_full_hash": "a0cb7966afd68bc35c46f78018d1fa1d2e4bcbe3c3baf39f60cd1733ed9ad7e5"
+      },
+      {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00002-of-00005.gguf",
+        "resolved_path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00002-of-00005.gguf",
+        "bytes": 47775748128,
+        "mtime_ns": 1793285064355048800,
+        "inode": 5074651,
+        "device": 66307,
+        "sha256_reused_from_verified_full_hash": "ba5afb43adfc667436ebcfbd82d25411fa2843ee7e1d877290611cd60f93cca1"
+      },
+      {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00003-of-00005.gguf",
+        "resolved_path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00003-of-00005.gguf",
+        "bytes": 19784230848,
+        "mtime_ns": 1793286146790623900,
+        "inode": 4745084,
+        "device": 66307,
+        "sha256_reused_from_verified_full_hash": "1482443bb4957c8d2f005ded365445f98558ff05c50674f9ee9a96ddabc122a4"
+      },
+      {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00004-of-00005.gguf",
+        "resolved_path": "/media/cristian/Disco local/LlamaCode-evals/Q189/Engram-shards/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00004-of-00005.gguf",
+        "bytes": 80641295472,
+        "mtime_ns": 1793290265383662900,
+        "inode": 1272837,
+        "device": 66311,
+        "sha256_reused_from_verified_full_hash": "0d93315942c523d82f6dbc0a6e0e1751548e309f3963f96b82f92e8f9bc52e36"
+      },
+      {
+        "path": "/media/cristian/7CFE1E0FFE1DC1F6/LlamaCode-evals/Q189/Maya-XS/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00005-of-00005.gguf",
+        "resolved_path": "/media/cristian/Disco local/LlamaCode-evals/Q189/Engram-shards/DeepSeek-V4.1-Flash-1017-Maya-XS-IQ1_S-00005-of-00005.gguf",
+        "bytes": 80643503412,
+        "mtime_ns": 1793292748362194300,
+        "inode": 1273961,
+        "device": 66311,
+        "sha256_reused_from_verified_full_hash": "39bbc8cde8b17604fed9a7ba7fc6bc9c5e72e34733657943ac049b4b9ca2d340"
+      }
+    ],
+    "verified_bytes": 276626308260
+  },
+  "supporting_files_rehashed": [
+    {
+      "path": "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/build/maya-ds4",
+      "resolved_path": "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/build/maya-ds4",
+      "bytes": 53464088,
+      "mtime_ns": 1793281530944461100,
+      "inode": 240322,
+      "device": 2049,
+      "sha256": "b4d00bcb0dc1b6680158749941601e79f669af6b1ae5c2d28c5feaa0cc72df17"
+    },
+    {
+      "path": "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/run-maya-ds4.sh",
+      "resolved_path": "/media/cristian/HDD extra/LlamaCode-evals/Q189-project-maya-v1.1.37/run-maya-ds4.sh",
+      "bytes": 464,
+      "mtime_ns": 1793294112742186200,
+      "inode": 240328,
+      "device": 2049,
+      "sha256": "95087759f61e581888fadbb3e9f84128197a7d908628658ccb65e3298e82748b"
+    },
+    {
+      "path": "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json",
+      "resolved_path": "/home/cristian/.cache/q173-tokenizers/deepseek-v41-flash-1017/tokenizer.json",
+      "bytes": 6367257,
+      "mtime_ns": 1793201340603881274,
+      "inode": 2116388,
+      "device": 66312,
+      "sha256": "c90dfa01249db1be4245780a052ede752e1361c612ac6d08e2bdada7d599476b"
+    },
+    {
+      "path": "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+      "resolved_path": "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/llama-benchy",
+      "bytes": 260,
+      "mtime_ns": 1793201279738543544,
+      "inode": 2116379,
+      "device": 66312,
+      "sha256": "e8a892fe937d5ae1b6a43c31e8cb286ce4774f70396f62ab71008c9ddb0a01a1"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/configs/maya-q173-262k-ds4split39.json",
+      "resolved_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261115-MAYA-DS4SPLIT39-Q173/profiles/maya-xs-iq1s-pny-ds4split39-q173/configs/maya-q173-262k-ds4split39.json",
+      "bytes": 1213,
+      "mtime_ns": 1794755548897888100,
+      "inode": 4831459,
+      "device": 66307,
+      "sha256": "213dcf70cfe5242b99add4f116db2c7a5c6f38fd2ed609fdd47b8aa28e80618d"
+    }
+  ],
+  "live_gates": {
+    "timestamp_utc": "2026-11-15T15:40:40+00:00",
+    "memory": {
+      "mem_available_bytes": 124568858624,
+      "pressure": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0,
+          "total": 308691331.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0,
+          "avg300": 0.0,
+          "total": 308593808.0
+        }
+      },
+      "oom_kill": 0
+    },
+    "gpus": {
+      "timestamp_utc": "2026-11-15T15:40:40+00:00",
+      "gpus": [
+        {
+          "index": 0,
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:01:00.0",
+          "memory_used_mib": 796,
+          "memory_total_mib": 24576,
+          "utilization_percent": 47,
+          "temperature_c": 47
+        },
+        {
+          "index": 1,
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "pci": "00000000:03:00.0",
+          "memory_used_mib": 108,
+          "memory_total_mib": 24576,
+          "utilization_percent": 18,
+          "temperature_c": 32
+        }
+      ],
+      "compute_apps": []
+    },
+    "helper_gate": {
+      "status": "PASS",
+      "checks": {
+        "helper_verify_success": true,
+        "helper_current_boot_pass": true,
+        "asus_quarantine_full": true,
+        "asus_quarantine_service_active": true,
+        "gpu_unlock_loaded": true,
+        "gpu_unlock_both_cards": true,
+        "p2p_read_bidirectional": true,
+        "p2p_write_bidirectional": true
+      },
+      "systemd": "Result=success\nExecMainStatus=0",
+      "vram": "active",
+      "p2p_read": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+      "p2p_write": " \t\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown\n",
+      "boot_receipt": {
+        "task": "Q-20261029-VF-ITERATION-190",
+        "timestampUtc": "2026-10-31T22:55:55Z",
+        "bootKernel": "7.0.0-38-generic",
+        "bootCmdline": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+        "systemdBootVerifier": {
+          "status": "success",
+          "automaticBootRun": "PASS",
+          "manualRecheck": "PASS at 2026-10-31T19:54:35-03:00"
+        },
+        "asusQuarantine": {
+          "service": "vram-quarantine@GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6.service",
+          "active": "running",
+          "pci": "0000:01:00.0",
+          "held": 1636,
+          "total": 1636,
+          "pending": 0
+        },
+        "gpuUnlock": {
+          "module": "loaded",
+          "targets": [
+            "0000:01:00.0",
+            "0000:03:00.0"
+          ],
+          "kernelLog": "both PCI devices report unlocked"
+        },
+        "p2pMatrix": {
+          "read": "OK both directions",
+          "write": "OK both directions",
+          "topology": "PHB"
+        },
+        "p2pSmoke": {
+          "experiment": "Q190-P2P-CUDA-COPY-SMOKE-SYNC-RETRY-20261031",
+          "payloadBytes": 8388608,
+          "copiesPerDirection": 5,
+          "exactValues": true,
+          "direction0to1": {
+            "medianMs": 0.643,
+            "medianGBps": 13.047
+          },
+          "direction1to0": {
+            "medianMs": 0.643,
+            "medianGBps": 13.047
+          },
+          "result": "PASS",
+          "inferenceRun": false,
+          "sourceSha256": "affe19d5946c22272f136e18428f5bd1fdedb1796d8b07afe777c3cf8d16dcf5"
+        },
+        "firstSmokeAttempt": {
+          "correctness": "PASS",
+          "timing": "invalid; omitted because asynchronous copy was not explicitly synchronized"
+        },
+        "inferenceServers": "none detected; nvidia-smi listed only Artcraft desktop (205 MiB)",
+        "kernelLogNote": "gpu_unlock is unsigned and emits the expected module-verification/taint warning; module loaded and unlock passed both devices. No NVRM Xid in this boot.",
+        "next": "Run Ling Q172 seed43 retry2 and then seed44 retry1 serially after separate preflight; sync Modelos locales por peso row 3 after each."
+      },
+      "gpus": {
+        "timestamp_utc": "2026-11-15T15:40:40+00:00",
+        "gpus": [
+          {
+            "index": 0,
+            "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+            "name": "NVIDIA GeForce RTX 3090",
+            "pci": "00000000:01:00.0",
+            "memory_used_mib": 796,
+            "memory_total_mib": 24576,
+            "utilization_percent": 47,
+            "temperature_c": 47
+          },
+          {
+            "index": 1,
+            "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+            "name": "NVIDIA GeForce RTX 3090",
+            "pci": "00000000:03:00.0",
+            "memory_used_mib": 108,
+            "memory_total_mib": 24576,
+            "utilization_percent": 18,
+            "temperature_c": 32
+          }
+        ],
+        "compute_apps": []
+      }
+    },
+    "foreign_inference_servers": [],
+    "own_unit_pids": [],
+    "port_free": true
+  },
+  "no_other_compute_apps": true,
+  "no_foreign_inference_servers": true,
+  "port_free": true,
+  "output_free_bytes": 27512692736,
+  "next_context_tokens": 131072,
+  "gpu_inference_started": false
+}

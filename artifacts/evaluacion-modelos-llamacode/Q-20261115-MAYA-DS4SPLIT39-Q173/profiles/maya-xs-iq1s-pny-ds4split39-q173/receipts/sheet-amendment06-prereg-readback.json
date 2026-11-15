@@ -1,0 +1,62 @@
+{
+  "schema": "llamacode.q209-sheet-amendment06-prereg-readback.v1",
+  "timestamp_utc": "2026-11-15T15:50:16Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "status": "PASS",
+  "preregistration_sha256": "760fb20894f1beb7c651e344991cb1b76bdd3f92cca8160c31fbe31b47f86765",
+  "preflight_script_sha256": "d0a923648487b98e5ad83046ad01dabd42b3efd6e6a306b8d1ff35df27178726",
+  "ranges": [
+    {
+      "title": "Resultados",
+      "data": [
+        {
+          "startRow": 495,
+          "startColumn": 4,
+          "rowData": [
+            [
+              "Q209 Q173 PARTIAL · 8K/32K/64K/131072 complete; final 261888×1 pending. Amendment06 preregistered context-specific fresh preflight; if PASS, run only detached 261888. 523904 excluded."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 29,
+          "rowData": [
+            [
+              "Amendment06 gates 261888: exact ASUS+PNY/helper/quarantine/P2P/unlock; no inference server or other compute app (GUI allowed); port/memory/space and asset identities; abort without stopping unrelated processes. Preflight script SHA d0a923648487b98e5ad83046ad01dabd42b3efd6e6a306b8d1ff35df27178726; prereg SHA 760fb20894f1beb7c651e344991cb1b76bdd3f92cca8160c31fbe31b47f86765."
+            ]
+          ]
+        },
+        {
+          "startRow": 495,
+          "startColumn": 31,
+          "rowData": [
+            [
+              "131K result SHA 82a2dbb452ed3cfbb7a5ea7ac0b41507b19953d1b199a0fc0dece79fb2dfddf1; 131K Sheet readback edbdc6e2e2d149bea733e4737456b4a8c5ed8dc76da9deae6d006eb5f69ad383; amendment06 prereg SHA 760fb20894f1beb7c651e344991cb1b76bdd3f92cca8160c31fbe31b47f86765; preflight script SHA d0a923648487b98e5ad83046ad01dabd42b3efd6e6a306b8d1ff35df27178726."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Modelos locales por peso",
+      "data": [
+        {
+          "startRow": 5,
+          "startColumn": 25,
+          "rowData": [
+            [
+              "Q209 Q173 131K valid; four-point means P495.287/D20.099. Final Q173 context 261888 is preregistered after amendment06; fresh helper/quarantine/P2P/unlock, no inference/other compute, memory/space/assets must pass. Detached worker only, no 523904. Prereg SHA 760fb20894f1beb7c651e344991cb1b76bdd3f92cca8160c31fbe31b47f86765; gate script SHA d0a923648487b98e5ad83046ad01dabd42b3efd6e6a306b8d1ff35df27178726."
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "verified": [
+    "Resultados!E496",
+    "Resultados!AD496",
+    "Resultados!AF496",
+    "Modelos locales por peso!Z6"
+  ]
+}
