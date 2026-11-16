@@ -1,0 +1,35 @@
+{
+  "timestamp_utc": "2026-11-16T07:38:52Z",
+  "snapshot": {
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 914,
+        "memory_total_mib": 24576,
+        "temperature_c": 47
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 108,
+        "memory_total_mib": 24576,
+        "temperature_c": 31
+      }
+    },
+    "compute": {
+      "0": [],
+      "1": []
+    },
+    "mem_available_kib": 118992856,
+    "memory_pressure_avg10": 0.0
+  },
+  "p2p": "OK bidireccional",
+  "gpu_unlock": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+  "asus_reservation": "StatusText=0000:01:00.0: 1636/1636 frames held, 0 pending",
+  "boot_helper": "PASS",
+  "foreign_servers": [],
+  "status": "PASS",
+  "port18489_free": true,
+  "service_inactive": true
+}

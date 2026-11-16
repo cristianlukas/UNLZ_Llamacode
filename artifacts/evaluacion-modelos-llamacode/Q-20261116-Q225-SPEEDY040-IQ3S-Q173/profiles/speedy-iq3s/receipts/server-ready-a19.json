@@ -1,0 +1,84 @@
+{
+  "status": "PASS",
+  "ready_seconds": 560.413,
+  "health": {
+    "status": 200,
+    "body": "{\"status\": \"ok\", \"max_context\": 16384, \"model\": \"qwen3.8-flash-next-iq3_s\", \"images\": false, \"api_key\": false, \"image_generation\": false, \"loaded\": true, \"service\": \"strata\"}",
+    "models": {
+      "object": "list",
+      "data": [
+        {
+          "id": "qwen3.8-flash-next-iq3_s",
+          "object": "model",
+          "status": {
+            "value": "loaded"
+          },
+          "meta": {
+            "n_ctx": 16384
+          },
+          "architecture": {
+            "input_modalities": [
+              "text"
+            ],
+            "output_modalities": [
+              "text"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "gpu": {
+    "gpus": {
+      "0": {
+        "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 21614,
+        "memory_total_mib": 24576,
+        "temperature_c": 49
+      },
+      "1": {
+        "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+        "name": "NVIDIA GeForce RTX 3090",
+        "memory_used_mib": 20218,
+        "memory_total_mib": 24576,
+        "temperature_c": 36
+      }
+    },
+    "compute": {
+      "0": [
+        {
+          "pid": 2289296,
+          "used_mib": 20590
+        }
+      ],
+      "1": [
+        {
+          "pid": 2289296,
+          "used_mib": 20006
+        }
+      ]
+    },
+    "mem_available_kib": 65380788,
+    "memory_pressure_avg10": 0.0
+  },
+  "command": [
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/venv/bin/python",
+    "-m",
+    "serve.server",
+    "--engine",
+    "strata",
+    "--config",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a19-cache6000-spec2-pw0-mtp-off.json",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18489",
+    "--gpu",
+    "0,1",
+    "--offline",
+    "--ready-file",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/server-ready-a19.json"
+  ],
+  "config": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a19-cache6000-spec2-pw0-mtp-off.json"
+}

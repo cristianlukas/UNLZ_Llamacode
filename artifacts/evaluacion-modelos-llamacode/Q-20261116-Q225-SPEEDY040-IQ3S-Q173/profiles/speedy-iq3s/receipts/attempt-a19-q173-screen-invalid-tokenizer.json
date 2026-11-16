@@ -1,0 +1,165 @@
+{
+  "attempt_id": "Q225-A19",
+  "status": "FAIL_Q173_HARNESS_TOKENIZER_AND_EARLY_STOP",
+  "timestamp_utc": "2026-11-16T07:38:52+00:00",
+  "model": "Qwen3.8 Flash-Next RCO IQ3_S",
+  "runtime": "Speedy v0.4.0 / Strata",
+  "config_sha256": "bd2b2c9a3c9d47a8b5165fa649a04dc905b1e7265df2eadf8e4b1e8ec905819c",
+  "runner_sha256": "71be367f47648fb83e992a6bbbf78159a6a9e763e215e71a98e3a73391d38c8e",
+  "launch_receipt_sha256": "9d578be039a19a5725eeca5f52de1f030cc9b6c81a1481523d6e1424f0d50c87",
+  "factor": "--expert-cache 6000 slots; native IQ --spec2; MTP/draft off; reserve-later4096; pipeline-windows0; dual RTX3090 layer split",
+  "protocol": "Q173-style requested prompt8192/output128, seeds42/43/44 serial; llama-benchy0.4.0",
+  "requests": 3,
+  "valid_exact_q173_requests": 0,
+  "actual_runs": [
+    {
+      "seed": 42,
+      "actual_prompt_tokens": 7573,
+      "actual_completion_tokens": 128,
+      "request_prompt_setting": 8192,
+      "request_output_setting": 128,
+      "benchy_prefill_tps": null,
+      "benchy_decode_tps": 23.081231566863504,
+      "benchy_ttft_ms": 3391.349846991943,
+      "benchy_status": "ok",
+      "event_sha256": "9b19ca7be4d905558860508a6954bd2fb86be6238004ad40b7a12ca1e608940e",
+      "result_sha256": "81cfbf1983490550e234ba4a2354550ee5f6a115244674f2ef8bdd8b18ddff73"
+    },
+    {
+      "seed": 43,
+      "actual_prompt_tokens": 7344,
+      "actual_completion_tokens": 6,
+      "request_prompt_setting": 8192,
+      "request_output_setting": 128,
+      "benchy_prefill_tps": 91985.75179910721,
+      "benchy_decode_tps": 17.769000048321807,
+      "benchy_ttft_ms": 3097.415940981591,
+      "benchy_status": "ok",
+      "event_sha256": "07c87b27e25b70cb8c6df39d6ae940f3139a3c0fbd2a25832bbfd51f878845da",
+      "result_sha256": "6bdcb56ca0142b74b310af11335855e52aa13a093a46a1b5ab86a7f8e85694ce"
+    },
+    {
+      "seed": 44,
+      "actual_prompt_tokens": 7496,
+      "actual_completion_tokens": 128,
+      "request_prompt_setting": 8192,
+      "request_output_setting": 128,
+      "benchy_prefill_tps": 1886540.9414447427,
+      "benchy_decode_tps": 25.3529057758454,
+      "benchy_ttft_ms": 3101.6091460187454,
+      "benchy_status": "ok",
+      "event_sha256": "3deada4fe057df7988e5935e3cadd754fe98f3b37c4943900669d2cb2bc3c207",
+      "result_sha256": "0cfd71cfe83aaf843489551d44d18660082d62c9b2e2a2210a1b3394557f2ece"
+    }
+  ],
+  "engine_direct_metrics": [
+    {
+      "prompt_tokens": 7573,
+      "reused_tokens": 0,
+      "prompt_read_tokens": 7573,
+      "prefill_ms": 3365,
+      "prefill_tps": 2250.5,
+      "generated_tokens": 128,
+      "decode_ms": 5514,
+      "decode_tps": 23.2
+    },
+    {
+      "prompt_tokens": 7344,
+      "reused_tokens": 0,
+      "prompt_read_tokens": 7344,
+      "prefill_ms": 3003,
+      "prefill_tps": 2445.9,
+      "generated_tokens": 6,
+      "decode_ms": 312,
+      "decode_tps": 19.2
+    },
+    {
+      "prompt_tokens": 7496,
+      "reused_tokens": 0,
+      "prompt_read_tokens": 7496,
+      "prefill_ms": 3010,
+      "prefill_tps": 2490.5,
+      "generated_tokens": 128,
+      "decode_ms": 5095,
+      "decode_tps": 25.1
+    }
+  ],
+  "diagnostic_summary": {
+    "prompt_tps_mean_diagnostic": 2395.633333333333,
+    "decode_tps_mean_full_128_only": 24.15,
+    "full_output_seeds": [
+      42,
+      44
+    ],
+    "invalid_short_output_seeds": [
+      43
+    ]
+  },
+  "harness_validity": {
+    "valid": false,
+    "reasons": [
+      "llama-benchy could not parse pack added_tokens and fell back to approximate GPT-2; actual prompt lengths were 7573, 7344, 7496, not 8192",
+      "seed43 stopped after 6 completion tokens although 128 were requested",
+      "pp_throughput was null for seed42 and nonsensical for seeds43/44; discarded"
+    ]
+  },
+  "decision": {
+    "q173_gate": "FAIL/INVALID SCREEN",
+    "prefill_tps": "N/D for exact 8K Q173; engine diagnostics only, mean 2395.63 over three prompts of 7344–7573 tokens",
+    "decode_tps": "24.15 tok/s mean of two full 128-token responses only (seeds42/44), diagnostic and far below 90 tok/s follow-up gate",
+    "quality_q172": null,
+    "continue_ladder": false
+  },
+  "startup": {
+    "expert_load": "46.84 GiB at 0.09 GiB/s; 551 s to expert load; cache 8201 experts / 14.88 GiB VRAM"
+  },
+  "resources": {
+    "peak_vram_mib": {
+      "0": 21698,
+      "1": 20302
+    },
+    "postflight": {
+      "timestamp_utc": "2026-11-16T07:38:52Z",
+      "snapshot": {
+        "gpus": {
+          "0": {
+            "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 914,
+            "memory_total_mib": 24576,
+            "temperature_c": 47
+          },
+          "1": {
+            "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+            "name": "NVIDIA GeForce RTX 3090",
+            "memory_used_mib": 108,
+            "memory_total_mib": 24576,
+            "temperature_c": 31
+          }
+        },
+        "compute": {
+          "0": [],
+          "1": []
+        },
+        "mem_available_kib": 118992856,
+        "memory_pressure_avg10": 0.0
+      },
+      "p2p": "OK bidireccional",
+      "gpu_unlock": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+      "asus_reservation": "StatusText=0000:01:00.0: 1636/1636 frames held, 0 pending",
+      "boot_helper": "PASS",
+      "foreign_servers": [],
+      "status": "PASS",
+      "port18489_free": true,
+      "service_inactive": true
+    }
+  },
+  "cleanup": "PASS: server stopped, service inactive, port18489 free, no compute/foreign server; postflight P2P/unlock/helper/ASUS reserve PASS",
+  "logs": {
+    "server": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/logs/server-a19.log",
+    "server_sha256": "b9a354b1a8b240b1e1aaacfc2a4548881316d0801ab60d2666d95bed3ba2fa81",
+    "engine": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/logs/strata-engine-a19.log",
+    "engine_sha256": "98696ab2c4e094bbd77879231dd5424289f95d3ba56bd9c7da2a1baa03cd8bb7"
+  },
+  "progress_receipt_sha256": "150f3824db6ad2eb65018455101eb84cf4a38e63be5854b7a0ceee6ab030c609"
+}

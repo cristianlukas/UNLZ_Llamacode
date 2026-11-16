@@ -1,0 +1,22 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+llama-benchy (0.4.0)
+Date: 2026-11-16 04:33:28
+Benchmarking model: qwen3.8-flash-next-iq3_s at http://127.0.0.1:18489/v1
+Concurrency levels: [1]
+Error loading tokenizer '/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer': 'added_tokens' (lightweight tokenizer error: data did not match any variant of untagged enum ModelUntagged at line 2 column 16)
+Falling back to 'gpt2' tokenizer as approximation.
+Loading text from cache: /home/cristian/.cache/llama-benchy/cc6a0b5782734ee3b9069aa3b64cc62c.txt
+Total tokens available in text corpus: 159385
+
+Skipping coherence test (--skip-coherence specified)
+Measuring latency using mode: generation...
+Average latency (generation): 26.71 ms
+Running test: pp=8192, tg=128, depth=0, concurrency=1
+  Run 1/1 (batch size 1)...
+  No complete token_ids in response, using stream usage token count
+Saving results to /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/runs/a19-q173-8k-seed-42.json in JSON format...
+
+
+
+llama-benchy (0.4.0)
+date: 2026-11-16 04:33:28 | latency mode: generation
