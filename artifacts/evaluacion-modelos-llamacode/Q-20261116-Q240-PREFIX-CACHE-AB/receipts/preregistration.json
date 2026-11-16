@@ -1,0 +1,20 @@
+{
+  "test_id":"Q240-PREFIX-CACHE-QWEN38-Q210-3P",
+  "status":"preregistered_before_launch",
+  "created_utc":"2026-11-16T15:35:00Z",
+  "task":"Q-20261103-VF-RESUME-202",
+  "lock_token":"d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "decision_question":"Does stable tool-schema serialization yield measurably better prompt-prefix reuse than changing the JSON insertion order, on the same LlamaCode Qwen3.8 Q210 profile?",
+  "model":{"path":"/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q4_K_XL.gguf","bytes":17559178144,"sha256":"3f227079003add2511437e5b1e94812e363385225bf6a9b47b0054a72bc8b01e"},
+  "runtime":{"path":"/home/cristian/.cache/llamacode-evaluations/Q210-tandem-sm86-20261115/llama.cpp/build/bin/llama-server","sha256":"31de89f011944d9f88d7f8fd188df04d6d1c93db5faad1a697820ad36c0eae96","profile":"Q210 Tandem CUDA SM86"},
+  "runner":{"path":"tools/benchmark_prefix_loop.py","sha256":"5c742d86d941ea753e21529abef6e65a114d7bcfe9fd7df851a4510dbdae12ef","version":"llamacode-prefix-loop-benchmark-v1"},
+  "worker":{"path":"artifacts/evaluacion-modelos-llamacode/Q-20261116-Q240-PREFIX-CACHE-AB/run_q240.sh","sha256":"62db9a6f830ee216b9114d0b03215b19b273f1571ffe136a728022077013762e","systemd_unit":"q240-prefix-cache-qwen38-20261116.service","runtime_max_sec":900,"memory_max":"64G","cpu_quota":"500%","kill_mode":"control-group"},
+  "hardware":{"gpus":"ASUS RTX3090 GPU0 + PNY RTX3090 GPU1","placement":"both GPUs, layer split 1:1","protection":"3090 HELPER, ASUS failed-memory quarantine, P2P and gpu_unlock must pass preflight"},
+  "server_args":["--ctx-size 8320","--parallel 1","--device CUDA0,CUDA1","--split-mode layer","--tensor-split 1,1","--gpu-layers all","--fit off","--flash-attn on","--cache-type-k q8_0","--cache-type-v q8_0","--batch-size 512","--ubatch-size 64","--no-context-shift","--metrics","--no-warmup","--jinja","--chat-template-kwargs {\"enable_thinking\":false}","--reasoning off","--predict 4096","--temp 0.6","--top-p 0.95","--top-k 20","--min-p 0.0","--repeat-penalty 1.0","--presence-penalty 0.0","loopback 127.0.0.1:18780"],
+  "harness_args":{"turns":6,"passes":3,"timeout_sec":120,"max_tokens":32,"temperature":0.0,"cache_prompt":true,"tool_choice":"none","arms":["rolling-tool canonical schema","unstable-prefix same schema with JSON key order permuted"],"requests_total":36},
+  "scope":"Synthetic tool-call transcript only; no tool executes; no quality/Q172/LHA inference or model-adoption claim.",
+  "metrics":["HTTP success fraction","median wall time per arm","prompt_tokens","cached_tokens or cache_n","API-ready time","exit/cleanup"],
+  "decision_gate":"All 36 requests pass and cache metrics exist. Follow-up candidate only if canonical schema has >=10% lower median wall or >=10% higher median cached tokens; replicate before changing defaults. Otherwise no behavior change.",
+  "stop_gates":["foreign inference/CUDA compute process","failed ASUS quarantine/helper/P2P/gpu_unlock preflight","MemAvailable<32GiB or PSI avg10>=1%","temperature>=84C","API error/timeout","OOM/kernel fault","worker or server cleanup failure"],
+  "limitations":"Existing harness records transport/cache/latency only and does not validate generated answer correctness; results are exploratory and not a quality score."
+}

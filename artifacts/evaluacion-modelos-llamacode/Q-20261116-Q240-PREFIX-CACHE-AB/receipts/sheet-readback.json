@@ -1,0 +1,8 @@
+{
+  "timestamp_utc":"2026-11-16T15:39:00Z",
+  "spreadsheet_id":"1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readback_pass":true,
+  "ranges":["Accionables!D78","Accionables!I78:K78","Accionables!M78:N78","Resultados!A523:AH523","Modelos locales por peso!Z4"],
+  "verified":"Q240 completed screening status and limitations; cache metrics, latency, cleanup, receipt references; actionable remains open only for a better isolated/counterbalanced cache-on/off test.",
+  "inventory":"Qwen3.8-27B row4 notes updated; no numeric Q173/Q172 fields changed."
+}

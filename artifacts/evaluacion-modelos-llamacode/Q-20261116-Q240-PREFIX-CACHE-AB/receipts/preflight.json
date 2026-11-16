@@ -1,0 +1,20 @@
+{
+  "test_id":"Q240-PREFIX-CACHE-QWEN38-Q210-3P",
+  "timestamp_utc":"2026-11-16T15:38:00Z",
+  "result":"PASS",
+  "lock":"d9029f6b-c649-4291-b0be-f14d77dc737e / Q-20261103-VF-RESUME-202",
+  "model_sha256":"3f227079003add2511437e5b1e94812e363385225bf6a9b47b0054a72bc8b01e",
+  "runtime_sha256":"31de89f011944d9f88d7f8fd188df04d6d1c93db5faad1a697820ad36c0eae96",
+  "runner_sha256":"5c742d86d941ea753e21529abef6e65a114d7bcfe9fd7df851a4510dbdae12ef",
+  "worker_sha256":"62db9a6f830ee216b9114d0b03215b19b273f1571ffe136a728022077013762e",
+  "inference_processes":[],
+  "cuda_compute_processes":[],
+  "target_port_18780":"free",
+  "gpu0":{"model":"RTX 3090 ASUS","uuid":"GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6","bus":"0000:01:00.0","temperature_c":48,"memory_used_mib":969,"memory_total_mib":24576,"quarantine":"active; 1636/1636 64-KiB frames held; 0 pending"},
+  "gpu1":{"model":"RTX 3090 PNY","uuid":"GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049","bus":"0000:03:00.0","temperature_c":34,"memory_used_mib":108,"memory_total_mib":24576},
+  "gpu_unlock":{"module":"loaded","boot_kernel_log":"both PCI devices report unlocked; ss0=0x88888888 ss1=0x8"},
+  "p2p_read":"GPU0<->GPU1 OK",
+  "mem_available_kib":114746052,
+  "memory_psi_avg10":0.0,
+  "conclusion":"PASS; no foreign inference/compute worker; both GPUs available for the preregistered dual-GPU test. Desktop utilization is not classified as an inference server."
+}
