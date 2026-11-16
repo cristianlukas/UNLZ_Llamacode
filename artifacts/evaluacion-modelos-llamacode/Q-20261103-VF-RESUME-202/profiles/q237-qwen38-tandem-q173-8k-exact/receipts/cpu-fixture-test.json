@@ -1,0 +1,17 @@
+{
+  "test_id": "Q237-TANDEM-QWEN38-Q173-8K-EXACT-01",
+  "phase": "CPU exact prompt fixture",
+  "status": "PASS",
+  "finished_utc": "2026-11-16T13:24:08Z",
+  "target_local_tokens": 8180,
+  "actual_tokens": [
+    8180,
+    8180,
+    8180
+  ],
+  "unique_prompts": 3,
+  "gpu_used": false,
+  "server_started": false,
+  "fixture_sha256": "51bfd9f68c811855777a5f5dcff8fb1f01b9d1d904b09bf82106f086b3efeae0",
+  "stdout": "Loading text from cache; status PASS; target8180; counts[8180,8180,8180]; unique3"
+}

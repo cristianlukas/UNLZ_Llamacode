@@ -1,0 +1,72 @@
+{
+  "test_id": "Q237-TANDEM-QWEN38-Q173-8K-EXACT-01",
+  "status": "PASS",
+  "finished_utc": "2026-11-16T13:25:54+00:00",
+  "worker_finished_receipt_utc": "2026-11-16T13:28:06Z",
+  "systemd_unit": "q237-qwen38-tandem-q173-8k-exact.service",
+  "invocation_id": "0ae89c27c890421d8c17e636bfdc4d56",
+  "systemd_postflight": "Result=success\nExecMainStatus=0\nActiveState=inactive\nSubState=dead\nInvocationID=",
+  "server_exit_code": 0,
+  "port_18776_free": true,
+  "server_event_validation": {
+    "valid": true,
+    "errors": [],
+    "request_start_count": 3,
+    "request_end_count": 3,
+    "bench_complete_statuses": [
+      "ok"
+    ],
+    "client_prompt_size_diagnostic": [
+      8191,
+      8191,
+      8191
+    ],
+    "server_prompt_tokens_per_run": [
+      8192,
+      8192,
+      8192
+    ],
+    "output_tokens_per_run": [
+      128,
+      128,
+      128
+    ]
+  },
+  "gpus": "ASUS RTX3090 GPU0 + PNY RTX3090 GPU1; layer split 1:1",
+  "postrun_gpu_snapshot": [
+    "GPU0 60C, 1121MiB, 18% utilization snapshot",
+    "GPU1 44C, 108MiB, 31% utilization snapshot"
+  ],
+  "compute_apps_after": "none",
+  "cold_hot_initialization": "N/D",
+  "api_ready_seconds_diagnostic": 10.45,
+  "prefill_tok_s": {
+    "mean": 979.9727901035258,
+    "std": 3.914511891916519,
+    "values": [
+      984.6244489602843,
+      980.2463177953184,
+      975.0476035549746
+    ]
+  },
+  "decode_tok_s": {
+    "mean": 36.759071516825514,
+    "std": 0.035399527609095004,
+    "values": [
+      36.802756964976176,
+      36.7160539008419,
+      36.758403684658475
+    ]
+  },
+  "ttft_ms": {
+    "mean": 8359.549216994006,
+    "std": 33.40664144198242,
+    "values": [
+      8319.92340699071,
+      8357.083164999494,
+      8401.641078991815
+    ]
+  },
+  "quality_q172": "N/D; Q173 throughput-only",
+  "scope": "Valid exact-token Q173 8K point only; no Q172, quality or adoption claim."
+}

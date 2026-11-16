@@ -1,0 +1,252 @@
+{
+  "id": "Q237-TANDEM-QWEN38-Q173-8K-EXACT-01",
+  "status": "PASS",
+  "started_utc": "2026-11-16T13:24:55+00:00",
+  "worker_pid": 2984457,
+  "profile": "Qwen3.8-27B UD-Q4_K_XL; Tandem CUDA SM86; dual RTX3090 layer split 1:1",
+  "scope": "Q173 throughput only; 8192 server prompt tokens x 3 sequential runs, 128 output; no Q172/quality/adoption claim",
+  "preflight": {
+    "gpu": "0, GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6, 55, 1130 MiB, 19 %\n1, GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049, 34, 108 MiB, 35 %",
+    "compute_apps": "",
+    "pmon": "# gpu         pid   type     sm    mem    enc    dec    jpg    ofa     fb   ccpm    command \n# Idx           #    C/G      %      %      %      %      %      %     MB     MB    name \n    0       2477     G     22      5      -      -      -      -    544      0    Xorg           \n    0       5318     G      -      -      -      -      -      -     39      0    compiz         \n    0     405959     G      -      -      -      -      -      -    198      0    Codex --change-\n    0    1387004     G      -      -      -      -      -      -     91      0    brave --type=gp\n    0    1717416     G      -      -      -      -      -      -     70      0    whatsapp-electr\n    0    2981942     G      -      -      -      -      -      -     16      0    nautilus       \n    1       2477     G      -      -      -      -      -      -     81      0    Xorg",
+    "inference_processes": [],
+    "memavailable_bytes": 116335718400,
+    "memory_psi_avg10": 0.0,
+    "gpu_temps_c": [
+      56,
+      34
+    ],
+    "port_free": true,
+    "port_state": "",
+    "output_free_bytes": 35100782592,
+    "model_sha256": "3f227079003add2511437e5b1e94812e363385225bf6a9b47b0054a72bc8b01e",
+    "server_sha256": "31de89f011944d9f88d7f8fd188df04d6d1c93db5faad1a697820ad36c0eae96",
+    "quarantine": "Result=success\nActiveState=active",
+    "helper": "Result=success\nExecMainStatus=0",
+    "helper_log": "nov 13 13:57:40 3090 3090-helper-admin[3102]: ===== 2026-11-11T04:21:12-03:00 boot verification =====\nnov 13 13:57:40 3090 3090-helper-admin[3102]: kernel cmdline: BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-generic root=UUID=8b369bf0-d0cd-4e1e-802d-ad78247d3527 ro quiet splash amd_iommu=on iommu=pt gpu_unlock.targets=0000:01:00.0,0000:03:00.0 vt.handoff=7\nnov 13 13:57:40 3090 3090-helper-admin[3102]: PASS: reserva ASUS, P2P bidireccional y gpu-unlock en ambas RTX 3090.\nnov 13 13:57:40 3090 3090-helper-admin[3102]: ===== 2026-11-13T13:57:37-03:00 boot verification =====\nnov 13 13:57:40 3090 3090-helper-admin[3102]: kernel cmdline: BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-generic root=UUID=8b369bf0-d0cd-4e1e-802d-ad78247d3527 ro quiet splash amd_iommu=on iommu=pt gpu_unlock.targets=0000:01:00.0,0000:03:00.0 vt.handoff=7\nnov 13 13:57:40 3090 3090-helper-admin[3102]: PASS: reserva ASUS, P2P bidireccional y gpu-unlock en ambas RTX 3090.\nnov 13 13:57:40 3090 systemd[1]: 3090-helper-verify-boot.service: Deactivated successfully.\nnov 13 13:57:40 3090 systemd[1]: Finished 3090-helper-verify-boot.service - Verificar las protecciones de las dos RTX 3090.",
+    "p2p_read": "\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown",
+    "p2p_write": "\u001b[4mGPU0\tGPU1\t\u001b[0m\n GPU0\tX\tOK\t\n GPU1\tOK\tX\t\n\nLegend:\n\n  X    = Self\n  OK   = Status Ok\n  CNS  = Chipset not supported\n  GNS  = GPU not supported\n  TNS  = Topology not supported\n  NS   = Not supported\n  U    = Unknown",
+    "gpu_unlock_loaded": true,
+    "kernel_cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-generic root=UUID=8b369bf0-d0cd-4e1e-802d-ad78247d3527 ro quiet splash amd_iommu=on iommu=pt gpu_unlock.targets=0000:01:00.0,0000:03:00.0 vt.handoff=7"
+  },
+  "server_argv": [
+    "/home/cristian/.cache/llamacode-evaluations/Q210-tandem-sm86-20261115/llama.cpp/build/bin/llama-server",
+    "--model",
+    "/media/cristian/Disco local/Models/llamacpp/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q4_K_XL.gguf",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18776",
+    "--ctx-size",
+    "8320",
+    "--parallel",
+    "1",
+    "--device",
+    "CUDA0,CUDA1",
+    "--split-mode",
+    "layer",
+    "--tensor-split",
+    "1,1",
+    "--gpu-layers",
+    "all",
+    "--fit",
+    "off",
+    "--flash-attn",
+    "on",
+    "--cache-type-k",
+    "q8_0",
+    "--cache-type-v",
+    "q8_0",
+    "--batch-size",
+    "512",
+    "--ubatch-size",
+    "64",
+    "--no-context-shift",
+    "--metrics",
+    "--no-warmup",
+    "--jinja",
+    "--chat-template-kwargs",
+    "{\"enable_thinking\":false}",
+    "--reasoning",
+    "off",
+    "--predict",
+    "4096",
+    "--temp",
+    "0.6",
+    "--top-p",
+    "0.95",
+    "--top-k",
+    "20",
+    "--min-p",
+    "0.0",
+    "--repeat-penalty",
+    "1.0",
+    "--presence-penalty",
+    "0.0"
+  ],
+  "server_pid": 2984677,
+  "api_ready_seconds_diagnostic": 10.45,
+  "harness_argv": [
+    "/home/cristian/.cache/q173-llama-benchy-0.4.0/bin/python",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/q237-qwen38-tandem-q173-8k-exact/scripts/run_seeded_benchy_exact.py",
+    "--base-url",
+    "http://127.0.0.1:18776/v1",
+    "--model",
+    "Qwen3.8-27B-UD-Q4_K_XL.gguf",
+    "--tokenizer",
+    "/media/cristian/HDD extra/Modelos-eval/Q208-UD31-Qwen38/tokenizer",
+    "--pp",
+    "8191",
+    "--tg",
+    "128",
+    "--runs",
+    "3",
+    "--no-cache",
+    "--skip-coherence",
+    "--latency-mode",
+    "none",
+    "--format",
+    "json",
+    "--save-result",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/q237-qwen38-tandem-q173-8k-exact/runs/q173-8k-exact-tandem.json",
+    "--emit-progress",
+    "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/q237-qwen38-tandem-q173-8k-exact/runs/q173-8k-exact-tandem-progress.jsonl",
+    "--extra-body",
+    "temperature=0.6,top_p=0.95,top_k=20,min_p=0,repeat_penalty=1.0,presence_penalty=0,seed=42"
+  ],
+  "harness_returncode": 0,
+  "harness_result": {
+    "version": "0.4.0",
+    "timestamp": "2026-11-16 13:25:54Z",
+    "latency_mode": "none",
+    "latency_ms": 0.0,
+    "model": "Qwen3.8-27B-UD-Q4_K_XL.gguf",
+    "prefix_caching_enabled": false,
+    "max_concurrency": 1,
+    "benchmarks": [
+      {
+        "concurrency": 1,
+        "context_size": 0,
+        "prompt_size": 8191,
+        "response_size": 128,
+        "is_context_prefill_phase": false,
+        "pp_throughput": {
+          "mean": 979.9727901035258,
+          "std": 3.914511891916519,
+          "values": [
+            984.6244489602843,
+            980.2463177953184,
+            975.0476035549746
+          ]
+        },
+        "pp_req_throughput": {
+          "mean": 979.9727901035258,
+          "std": 3.914511891916519,
+          "values": [
+            984.6244489602843,
+            980.2463177953184,
+            975.0476035549746
+          ]
+        },
+        "tg_throughput": {
+          "mean": 36.759071516825514,
+          "std": 0.035399527609095004,
+          "values": [
+            36.802756964976176,
+            36.7160539008419,
+            36.758403684658475
+          ]
+        },
+        "tg_req_throughput": {
+          "mean": 36.759071516825514,
+          "std": 0.035399527609095004,
+          "values": [
+            36.802756964976176,
+            36.7160539008419,
+            36.758403684658475
+          ]
+        },
+        "peak_throughput": {
+          "mean": 37.0,
+          "std": 0.0,
+          "values": [
+            37.0,
+            37.0,
+            37.0
+          ]
+        },
+        "peak_req_throughput": {
+          "mean": 37.0,
+          "std": 0.0,
+          "values": [
+            37.0,
+            37.0,
+            37.0
+          ]
+        },
+        "ttfr": {
+          "mean": 8359.549216994006,
+          "std": 33.40664144198242,
+          "values": [
+            8319.92340699071,
+            8357.083164999494,
+            8401.641078991815
+          ]
+        },
+        "est_ppt": {
+          "mean": 8359.549216994006,
+          "std": 33.40664144198242,
+          "values": [
+            8319.92340699071,
+            8357.083164999494,
+            8401.641078991815
+          ]
+        },
+        "e2e_ttft": {
+          "mean": 8359.549216994006,
+          "std": 33.40664144198242,
+          "values": [
+            8319.92340699071,
+            8357.083164999494,
+            8401.641078991815
+          ]
+        },
+        "throughput_over_time": null,
+        "requests_throughput_over_time": null
+      }
+    ]
+  },
+  "client_prompt_size_reported": 8191,
+  "output_tokens_reported": 128,
+  "server_event_validation": {
+    "valid": true,
+    "errors": [],
+    "request_start_count": 3,
+    "request_end_count": 3,
+    "bench_complete_statuses": [
+      "ok"
+    ],
+    "client_prompt_size_diagnostic": [
+      8191,
+      8191,
+      8191
+    ],
+    "server_prompt_tokens_per_run": [
+      8192,
+      8192,
+      8192
+    ],
+    "output_tokens_per_run": [
+      128,
+      128,
+      128
+    ]
+  },
+  "prefill_mean_tok_s": 979.9727901035258,
+  "decode_mean_tok_s": 36.759071516825514,
+  "validity": "PASS",
+  "port_free_after_cleanup": true,
+  "server_exit_code": 0,
+  "finished_utc": "2026-11-16T13:25:54+00:00",
+  "duration_seconds": 59.052
+}

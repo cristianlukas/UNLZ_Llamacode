@@ -1,0 +1,42 @@
+{
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readback_utc": "2026-11-16T13:29:54Z",
+  "status": "PASS",
+  "ranges": {
+    "Resultados!A520:AH520": {
+      "test_id": "Q237-TANDEM-QWEN38-Q173-8K-EXACT-01",
+      "status": "PASS",
+      "prefill_tok_s": 979.9727901035258,
+      "decode_tok_s": 36.759071516825514,
+      "q172": "N/D; throughput-only",
+      "cold_init": "N/D",
+      "hot_init": "N/D"
+    },
+    "Modelos locales por peso!A4": {
+      "profile": "Qwen3.8-27B UD-Q4_K_XL · Tandem SM86 · dual 3090 · Q173 8K/32K/64K · Q172 parcial"
+    },
+    "Modelos locales por peso!E4:F4": {
+      "numeric_values": [
+        903.4641493460837,
+        31.708825220817285
+      ],
+      "formatted_values": [
+        "903.46",
+        "31.71"
+      ],
+      "method": "equal-weight mean of exact Q173 context means at 8K/32K/64K; n=3 each"
+    },
+    "Modelos locales por peso!J4:K4": {
+      "contains_all_three_exact_context_points": true,
+      "contains_equal_context_mean": true
+    },
+    "Modelos locales por peso!V4:W4": {
+      "TTFT_values_seconds": {
+        "8K": 8.359549216994006,
+        "32K": 35.317656335333595,
+        "64K": 81.66530822733573
+      },
+      "cold_hot": "N/D"
+    }
+  }
+}
