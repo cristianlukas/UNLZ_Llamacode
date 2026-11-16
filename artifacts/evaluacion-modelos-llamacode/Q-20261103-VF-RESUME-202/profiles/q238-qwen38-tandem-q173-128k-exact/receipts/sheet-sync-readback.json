@@ -1,0 +1,29 @@
+{
+  "checked_utc": "2026-11-16T14:04:34+00:00",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "tabs": {
+    "Resultados": {
+      "row": 521,
+      "id": "Q238-TANDEM-QWEN38-Q173-128K-EXACT-01",
+      "status": "PASS · Q173 exact 128K; 3/3 exact server requests; detached exit0; cleanup PASS",
+      "prefill_tps": 633.1576855306868,
+      "decode_tps": 19.99684014320103,
+      "q172": "N/D — Q172 not run",
+      "ttft_s": 207.01411496666455,
+      "cold_hot_init": "N/D / N/D"
+    },
+    "Modelos locales por peso": {
+      "row": 4,
+      "profile": "Qwen3.8-27B UD-Q4_K_XL · Tandem SM86 · dual 3090",
+      "q173_contexts": [
+        8192,
+        32768,
+        65536,
+        131072
+      ],
+      "prefill_equal_context_mean": 835.8875274086109,
+      "decode_equal_context_mean": 28.780829953327025,
+      "readback_verified": true
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "test_id": "Q238-TANDEM-QWEN38-Q173-128K-EXACT-01",
+  "checked_utc": "2026-11-16T14:02:55+00:00",
+  "systemd_unit": {
+    "returncode": 0,
+    "stdout": "Result=success\nActiveState=inactive\nSubState=dead",
+    "stderr": ""
+  },
+  "port_18778": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "compute_apps": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "inference_processes": [],
+  "gpu_snapshot": {
+    "returncode": 0,
+    "stdout": "0, NVIDIA GeForce RTX 3090, 936 MiB, 23239 MiB, 55, 27 %\n1, NVIDIA GeForce RTX 3090, 108 MiB, 24070 MiB, 41, 34 %",
+    "stderr": ""
+  },
+  "memory_bytes": {
+    "MemAvailable": 117665218560,
+    "SwapFree": 720445440
+  },
+  "server_events": {
+    "request_end_count": 3,
+    "prompt_tokens": [
+      131072,
+      131072,
+      131072
+    ],
+    "output_tokens": [
+      128,
+      128,
+      128
+    ],
+    "decode_seconds": [
+      6.353333825012669,
+      6.353923818998737,
+      6.353648143005557
+    ],
+    "errors": [
+      "",
+      "",
+      ""
+    ]
+  },
+  "result_status": "PASS",
+  "port_free_after_cleanup": true,
+  "server_exit_code": 0,
+  "artifacts_sha256": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/q238-qwen38-tandem-q173-128k-exact/receipts/q238-result.json": "d14dfbf23784bb55ec20d7b52ac7cc3a6b0f63c307827a7c6fb6fd85e286d959",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/q238-qwen38-tandem-q173-128k-exact/runs/q173-128k-exact-tandem.json": "14e0a6206986a4fcc448d624df841c11372abff98b8e82bf75278b7627d9e4a5",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/q238-qwen38-tandem-q173-128k-exact/runs/q173-128k-exact-tandem-progress.jsonl": "2492e6c06477bfb0bcb564a3cd9c14f8ce6286b3e2e7ecf88f85307d3772ed59",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/q238-qwen38-tandem-q173-128k-exact/logs/server.log": "1680011ee008ec9b25cb6eb1947ffac5af60390ac9bdc8facbc6cc7702c066fa",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/q238-qwen38-tandem-q173-128k-exact/logs/client.log": "9965769b5622f5573e837f73dcdb127c36e8a77ebdea22b4ccb7f69e1de9ba0c",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/q238-qwen38-tandem-q173-128k-exact/receipts/preregistration.json": "70540cb0475ba418500711690774dab95c788e87392df5512403b3b50e2751dc",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/q238-qwen38-tandem-q173-128k-exact/receipts/cpu-fixture-test.json": "ba022d214c0a140ae78f8acaf6a0c3265358f7e5a84ede3d7eedb89a1381fd9f"
+  },
+  "inference_process_match": "exact argv[0] basename; helper shell excluded"
+}
