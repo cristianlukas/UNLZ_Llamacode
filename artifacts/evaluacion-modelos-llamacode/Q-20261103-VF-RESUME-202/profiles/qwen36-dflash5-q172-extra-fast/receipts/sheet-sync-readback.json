@@ -1,0 +1,39 @@
+{
+  "test_id": "Q232-QWEN36-DFLASH5-Q172-SEED42-EXTRA-FAST-SCREEN",
+  "readback_utc": "2026-11-16T10:17:00Z",
+  "status": "PASS",
+  "ranges": {
+    "Resultados!A515:AH515": {
+      "verified": [
+        "Q232 id",
+        "complete 28/28",
+        "Q172 77",
+        "safety gate FAIL TC-71/74",
+        "P/D source Q229",
+        "exact hashes",
+        "cleanup status"
+      ]
+    },
+    "'Modelos locales por peso'!A115:AB116": {
+      "verified": [
+        "previous DFlash7 row preserved",
+        "new DFlash5 profile row with numeric P/D/Q/weight",
+        "safety caveat",
+        "same model bytes"
+      ]
+    },
+    "'Inventario de modelos'!A77:R77": {
+      "verified": [
+        "new exact .ninfer artifact row",
+        "size/path/hash",
+        "Q172 safety failure",
+        "PeritoSoft use marked unverified"
+      ]
+    }
+  },
+  "result_json_sha256": "af97edb505f275e191c4f59f159935d41e92bc1e49b2e2359863c283de2c20df",
+  "execution_receipt_sha256": "230fca5a1cf117cb5bf83f936e4fcc1ab0ca796699d8ad39b3774c15cf97af6d",
+  "postflight_sha256": "9d68a93dae373f8260aa5afb98828f15c1ef128de2eec763cfeaf6bc37925dbf",
+  "google_sheet": "https://docs.google.com/spreadsheets/d/1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk/edit",
+  "format": "Existing Results row format retained. Model inventory row inserted with inheritFromBefore formatting; result values read back as numeric where applicable."
+}

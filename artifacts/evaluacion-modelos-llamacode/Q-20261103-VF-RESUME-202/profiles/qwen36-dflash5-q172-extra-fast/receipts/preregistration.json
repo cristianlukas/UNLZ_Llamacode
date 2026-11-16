@@ -1,0 +1,76 @@
+{
+  "test_id": "Q232-QWEN36-DFLASH5-Q172-SEED42-EXTRA-FAST-SCREEN",
+  "status": "PREREGISTERED",
+  "hypothesis": "Although Q229 DFlash K=5 missed its decode continuation gate (217.40 vs 314.34 tok/s), its decode is materially above the SOL reference (87.31 tok/s). A one-seed Q172 screen can determine whether it remains eligible for an extra-fast tier; this does not claim dominance or reopen Q229's speed ladder.",
+  "artifact": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/qwen3_6_35b_a3b.ninfer",
+    "bytes": 22790484480,
+    "sha256": "3e33297645dc33557751be1a3c407a74ed7c00f34909b5d4e8cfdce91b3dbe84"
+  },
+  "runtime": {
+    "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/build-nospace/apps/ninfer-serve",
+    "commit": "8bde0c064cb6cb7f7f86710ea4a614e7a821dceb",
+    "sha256": "7d839bb832f79605363f7a5fbe31944123b7cb54c0d980c1e3686865f163fdb1"
+  },
+  "profile": {
+    "devices": "0,1",
+    "topology": "2x RTX 3090 TP2",
+    "context_capacity": 262144,
+    "kv_capacity": 262144,
+    "kv_dtype": "rk4v4",
+    "gdn_state": "fp16",
+    "draft": "DFlash K=5, lm-head draft",
+    "prefill_chunk": 512,
+    "prefix_reuse": false,
+    "server_id": "qwen3.6-35b-a3b",
+    "host": "127.0.0.1",
+    "port": 18645
+  },
+  "harness": {
+    "name": "Tool-Eval Hard Mode",
+    "version": "2.8.0",
+    "sha256": "31e3c8f5fa9140738cde4e1cecc909f5335cf928a90fbdd062ec7935e0526472",
+    "scenarios": "TC-70..TC-97",
+    "seed": 42,
+    "trials": 1,
+    "parallel": 1,
+    "timeout_seconds": 120,
+    "max_turns": 8,
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0,
+      "reasoning_effort": "medium"
+    },
+    "no_warmup": true,
+    "no_live_external_actions": true,
+    "redact_urls": true
+  },
+  "run_policy": {
+    "seeds": [
+      42
+    ],
+    "serial": true,
+    "critical_safety_failure": "stop immediately; no Q172 aggregate and no further seeds",
+    "incomplete_suite": "record partial only; no Q172 aggregate",
+    "independent_worker": "bounded systemd service outside the Codex process; localhost only",
+    "gpu_attribution": "same owned server PID must be visible on both RTX 3090s",
+    "deletion": "none",
+    "production_change": "none"
+  },
+  "decision_rules": {
+    "complete_seed": "screen only; provisional Q172 score and separate safety gate",
+    "critical_safety_failure": "ineligible for agentic/production tier until remediation and a newly preregistered retest",
+    "clean_complete_seed": "additional seeds and LlamaCode long-horizon cohort required before adoption"
+  },
+  "registered_at_utc": "2026-11-16T10:08:41Z",
+  "worker": {
+    "path": "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen36-dflash5-q172-extra-fast/scripts/run_q232.py",
+    "sha256": "91493ab789444919414d4c8aa6f0c0da65909409c1c0d4a8218f1fba02bc7d97",
+    "syntax_check": "python3 -m py_compile PASS",
+    "detached_unit": "q232-qwen36-dflash5-q172-seed42.service"
+  }
+}

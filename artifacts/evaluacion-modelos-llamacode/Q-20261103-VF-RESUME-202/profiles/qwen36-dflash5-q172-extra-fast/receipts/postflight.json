@@ -1,0 +1,10 @@
+{
+  "timestamp_utc": "2026-11-16T10:15:44Z",
+  "server_exit": 0,
+  "port_free": true,
+  "inference_processes": [],
+  "compute_apps": {
+    "0": [],
+    "1": []
+  }
+}
