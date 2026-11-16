@@ -1,0 +1,16 @@
+{
+  "test_id": "Q222-NINFER-MTP4-Q172-SEED42-PAIRED-SCREEN",
+  "launched_at_utc": "2026-11-16T00:43:52Z",
+  "unit": "q222-ninfer-mtp4-q172-seed42.service",
+  "launch_mode": "sudo systemd-run --system --no-block; detached system.slice worker",
+  "worker_pid": 1543981,
+  "limits": {
+    "MemoryMax": "96G",
+    "CPUQuota": "400%",
+    "RuntimeMaxSec": "5400s",
+    "KillMode": "control-group",
+    "OOMPolicy": "kill"
+  },
+  "prereg_readback_sha256": "87e6de9d4c9e83be96a4c904fe48ec574b38765448e94e8d68788adec11af5cc",
+  "status": "RUNNING"
+}
