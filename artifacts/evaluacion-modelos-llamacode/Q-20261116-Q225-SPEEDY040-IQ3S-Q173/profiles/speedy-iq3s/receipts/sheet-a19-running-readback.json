@@ -1,0 +1,21 @@
+{
+  "attempt_id": "Q225-A19",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Resultados",
+  "sheet_id": 1972251122,
+  "ranges": [
+    "Resultados!E509:E509",
+    "Resultados!AC509:AF509"
+  ],
+  "readback_verified": true,
+  "status": "RUNNING_DETACHED",
+  "unit": "q225-speedy-iq3s-q173-8k-a19.service",
+  "invocation_id": "a2d10becea134c3b87f8307ea4d74c8c",
+  "launch_receipt_sha256": "9d578be039a19a5725eeca5f52de1f030cc9b6c81a1481523d6e1424f0d50c87",
+  "verified_cells": {
+    "E509": "A19 RUNNING detached; Q173 8K×3 pending",
+    "AC509": "worker cgroup 57.7GB; both GPUs attributed to owned engine; no foreign server",
+    "AF509": "A19 config/runner/launch hashes recorded"
+  },
+  "readback_utc": "2026-11-16T07:26:06+00:00"
+}

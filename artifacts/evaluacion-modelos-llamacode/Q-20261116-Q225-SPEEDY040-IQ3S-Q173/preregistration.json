@@ -1,0 +1,1157 @@
+{
+  "test_id": "Q225-SPEEDY040-IQ3S-Q173-8K-SCREEN",
+  "registered_utc": "2026-11-16T02:37:05.132501+00:00",
+  "status": "A19_DONE_INVALID_Q173_SCREEN_LOW_DECODE",
+  "hypothesis": "Speedy v0.4.0 may provide a useful, stable dual-RTX-3090 Qwen3.8 Flash-Next IQ3_S profile; a bounded 8K throughput screen will decide whether to spend time on a long-context ladder and Q172.",
+  "source": "https://github.com/DevDock-AI/Speedy/releases/tag/v0.4.0",
+  "release_commit": "8f0d2e3 (GitHub verified tag)",
+  "runtime_asset": {
+    "name": "strata-linux-x64-rtx30.zip",
+    "url": "https://github.com/DevDock-AI/Speedy/releases/download/v0.4.0/strata-linux-x64-rtx30.zip",
+    "bytes": 53374865,
+    "sha256": "3827c0ca8ddd19dd757bd87c57426c01db63048c1b1574cba83edc3a8bac9fad"
+  },
+  "model_files": [
+    {
+      "path": "/media/cristian/HDD extra/LlamaCode-evals/Q211-qwen38-iq3s-mtp/target/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+      "bytes": 54817524224,
+      "sha256": "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3"
+    },
+    {
+      "path": "/media/cristian/HDD extra/LlamaCode-evals/Q211-qwen38-iq3s-mtp/target/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+      "bytes": 28800138432,
+      "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    }
+  ],
+  "draft": {
+    "path": "/media/cristian/Disco local/Models/FlashNext-IQ3XXS-ISTA-Strata-eval-20261009/strata-data/mtp/mtp-q2_0.gguf",
+    "bytes": 889017216,
+    "sha256": "a22206a4d74eafbf31063a84610292535fb3b49af9a339963817fd04aed81e4d",
+    "format": "Strata MTP q2_0, optional speculative draft; enabled only if Speedy v0.4.0 preset explicitly supports it, otherwise amend prereg and run no-draft screen"
+  },
+  "hardware": {
+    "gpus": "2x RTX 3090; GPU0 ASUS PCI 0000:01:00.0 (faulty VRAM quarantined by 3090 HELPER), GPU1 PNY PCI 0000:03:00.0",
+    "topology": "layer-split/pipeline preset; P2P bidirectional; gpu_unlock enabled for both",
+    "current_boot_helper": "PASS in 3090-helper-verify-boot.service log; verify fresh immediately before launch"
+  },
+  "protocol": {
+    "suite": "Q173-style throughput screen",
+    "context_tokens": 8192,
+    "repetitions": 3,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "output_tokens": 128,
+    "serial": true,
+    "sampling": "temperature 0.6, top_p 0.95, top_k 20, min_p 0, repeat_penalty 1.0, presence_penalty 0",
+    "metrics": [
+      "per-request prompt tokens and completion tokens",
+      "prefill tok/s",
+      "decode tok/s",
+      "TTFT and request wall time",
+      "GPU attribution, RAM/VRAM/temp, worker exit and cleanup"
+    ],
+    "quality": "N/D; speed screen only"
+  },
+  "pass_gate": "All 3 requests exact at 8192 prompt/128 output; no engine/runtime error, both GPU attribution and postflight cleanup pass; for long-context follow-up require mean decode >=90 tok/s and mean prefill >=1000 tok/s. This is only a screening gate, not a superiority claim or adoption score.",
+  "stop_conditions": [
+    "model/runtime hash or size mismatch",
+    "3090 HELPER quarantine/P2P/gpu_unlock preflight fails",
+    "foreign inference server or CUDA compute process appears",
+    "server not ready or request token counts differ",
+    "critical runtime error, OOM, temperature >=82C, memory pressure PSI avg10 >=10%"
+  ],
+  "isolation": {
+    "launcher": "detached user systemd transient service; service control-group owns runner/server only",
+    "MemoryMax": "96G",
+    "CPUQuota": "400%",
+    "RuntimeMaxSec": "5400",
+    "KillMode": "control-group",
+    "endpoint": "127.0.0.1 only",
+    "cleanup": "stop only the owned unit and confirm no owned server/compute app remains"
+  },
+  "compatibility_note": "Speedy author numbers are on RTX 3080 and are not user-machine results. This IQ3_S screen will not be called superior to SOL/Strata because exact matched local baseline is not yet established.",
+  "amendments": [
+    {
+      "id": "Q225-A01",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/q225-amendment01.json",
+      "reason": "El preset oficial Speedy v0.4.0 usa MTP runtime `rt` (dense.bin/experts.bin/draft_vocab.bin), no el GGUF draft alternativo de 889 MB que se anotó inicialmente. Se fija el mismo protocolo Q173 8K×3; no se cambia el objetivo ni los gates.",
+      "config_sha256": "91ada6ce45eac1b0d55c36bb4291067df6bdd749f64b8d4fc2445e9c4d71ff0c",
+      "runner_sha256": "6a4d15cbf897f7f4ce147c578df0a34ddeffdd099b459fb8c35df02718f444fd"
+    },
+    {
+      "id": "Q225-A02",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/q225-amendment02.json",
+      "reason": "A01 terminó antes de cargar el modelo: `ModuleNotFoundError: regex` al importar el servidor. No hubo CUDA, inference ni compute; cleanup PASS. A02 conserva el mismo protocolo/modelo/engine/args, añade un venv aislado usando el Python de sistema con `--system-site-packages` y solo `regex==2026.9.10`, exigido por requirements.txt del tag v0.4.0. No instala ni cambia paquetes globales.",
+      "runner_sha256": "488762e0cc11b732441969711e5c051f37eb6e545e87a26c35fcdf8c294a5a4d"
+    },
+    {
+      "id": "Q225-A03",
+      "timestamp_utc": "2026-11-16T03:21:13.295670+00:00",
+      "reason": "A02 alcanzó el arranque dual pero el engine terminó antes de inferencia porque el pack IQ3_S configurado carecía de dense.bin y native_experts.txt; cero solicitudes. La búsqueda local confirmó que no existe un pack completo IQ3_S. A03 genera un pack aislado desde los mismos shards IQ3_S ya fijados/verificados con la herramienta oficial iq_pack.py del árbol Speedy v0.4.0; no cambia pesos, runtime, MTP, GPUs ni protocolo. El build de pack es CPU-only y detached; no se inicia inferencia hasta validar y fijar hashes de cada salida.",
+      "a02_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a02-missing-speedy-pack.json",
+      "source_tree": "/media/cristian/Disco local/Modelos-eval/Q225-Speedy-v0.4.0/source (not a git checkout; upstream tag recorded in parent prereg)",
+      "pack_builder": {
+        "path": "/media/cristian/Disco local/Modelos-eval/Q225-Speedy-v0.4.0/source/tools/iq_pack.py",
+        "sha256": "6588cba726b74b70ebbe17f8972afecda4cd1e3160f82c15ec15214a8bc55be6"
+      },
+      "pack_inputs": [
+        {
+          "path": "/media/cristian/HDD extra/LlamaCode-evals/Q211-qwen38-iq3s-mtp/target/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+          "bytes": 54817524224,
+          "sha256": "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3"
+        },
+        {
+          "path": "/media/cristian/HDD extra/LlamaCode-evals/Q211-qwen38-iq3s-mtp/target/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+          "bytes": 28800138432,
+          "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+        }
+      ],
+      "command": [
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/venv/bin/python",
+        "/media/cristian/Disco local/Modelos-eval/Q225-Speedy-v0.4.0/source/tools/iq_pack.py",
+        "--gguf",
+        "/media/cristian/HDD extra/LlamaCode-evals/Q211-qwen38-iq3s-mtp/target/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+        "--out",
+        "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s"
+      ],
+      "output": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s",
+      "worker": {
+        "unit": "q225-speedy-iq3s-pack-a03.service",
+        "detached": true,
+        "MemoryMax": "48G",
+        "CPUQuota": "200%",
+        "RuntimeMaxSec": 3600,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "CUDA_VISIBLE_DEVICES": "",
+        "no_inference": true
+      },
+      "pack_gate": "iq_pack.py rc=0; dense.bin, index.txt, native_experts.txt, conversions.json, tokenizer/vocab.json and tokenizer/chat_template.jinja present; capture size and SHA-256 of every produced file. Update config/runner to the new profile-local pack, pin all output hashes in a follow-up amendment, sync/readback Sheets, and only then launch the unchanged dual-GPU Q173 8K×3 screen."
+    },
+    {
+      "id": "Q225-A04",
+      "timestamp_utc": "2026-11-16T03:27:51.508011+00:00",
+      "status": "PREREGISTERED_READY_FOR_DETACHED_RUN",
+      "reason": "A03 construyó y validó el pack Speedy IQ3_S desde los shards fijados; A04 es el primer intento con el pack completo. A01/A02 no llegaron a inferencia. No se cambian artefacto modelo, runtime, parámetros, hardware ni harness.",
+      "test": "Q173-style throughput screen at exact 8192 prompt tokens and exact 128 generated tokens, 3 serial seeds 42/43/44; MTP4 draft remains enabled; one request at a time; no warmup/cache; no Q172.",
+      "artifacts": {
+        "model_shards": {
+          "shard1": "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3",
+          "shard2": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+        },
+        "pack_receipt": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/pack-build-a03.json",
+          "sha256": "e8f0264b5ed77e9c18e5781b41a9678c47a57fad590ba144b499a2865fc0278b"
+        },
+        "pack_files": {
+          "dense.bin": {
+            "bytes": 1538035200,
+            "sha256": "d2af3d8331e5c7a1985d1d589747230f9d56719a6d33c7cddc9ee6b81cde6b13"
+          },
+          "index.txt": {
+            "bytes": 93685,
+            "sha256": "b2a014878c3b61d6a6f915e194055a5e68ede34f9465dd1cb13249d902f008ac"
+          },
+          "native_experts.txt": {
+            "bytes": 3304,
+            "sha256": "d9ac2dfa3ee63c55c9c6a6db26f72da0cec0ee41733f007e5cbbbba71617aa5d"
+          },
+          "conversions.json": {
+            "bytes": 306,
+            "sha256": "51df3cd6ffd0d38c2da8e2d3a95a604b4a96c20b06fc639a9bf477282a42b86a"
+          },
+          "tokenizer/vocab.json": {
+            "bytes": 5737005,
+            "sha256": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4"
+          },
+          "tokenizer/chat_template.jinja": {
+            "bytes": 9993,
+            "sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce"
+          },
+          "tokenizer/tokenizer.json": {
+            "bytes": 541,
+            "sha256": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf"
+          },
+          "tokenizer/merges.txt": {
+            "bytes": 3353258,
+            "sha256": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332"
+          },
+          "tokenizer/token_type.json": {
+            "bytes": 744960,
+            "sha256": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b"
+          }
+        },
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k.json",
+          "sha256": "4b0050165f5c30479bc547f87db958111e4b34642f69f808ae44b3ccb8e97aad"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen.py",
+          "sha256": "4f11c29b031692e82e1224c92d42b8cc0e473ed05ffc9dceb37df3cd8830fac6"
+        },
+        "runtime": "Speedy v0.4.0 / Strata; binary SHA-256 e27386032a59ada0d6036bb55634f3ad9115cc96f51924143e9ffd931ff862b6"
+      },
+      "hardware": "2x RTX 3090: GPU0 ASUS + GPU1 PNY; TP/layer split preset as pinned config. Require fresh ASUS quarantine, P2P/gpu_unlock checks and no unrelated inference server/CUDA compute process.",
+      "harness": "llama-benchy 0.4.0; localhost OpenAI-compatible API; Q173-style exact tokens; 3 seeds; report per-run prefill/decode, average, startup diagnostic, telemetry, exit and cleanup.",
+      "decision_gate": "screen only: if all 3 exact runs valid, clean stop/postflight and mean prefill >=1000 tok/s and decode >=90 tok/s, continue to the preregistered context ladder; otherwise stop and report. This is not a superiority or quality conclusion.",
+      "isolation": {
+        "worker_unit": "q225-speedy-iq3s-q173-8k-a04.service",
+        "detached": true,
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "runner": "/usr/bin/python3 artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen.py"
+      },
+      "prior_failures": [
+        "A01: isolated system Python lacked regex; no GPU/inference.",
+        "A02: inference server exited before first request because configured IQ3_S pack lacked dense.bin/native pack; no throughput result."
+      ],
+      "pretest_validation": "Runner py_compile PASS; runner verifies generated pack manifest hashes, A03 receipt hash, config hash, model/runtime artifacts; config points to profile-local pack and output paths a04."
+    },
+    {
+      "id": "Q225-A05",
+      "timestamp_utc": "2026-11-16T03:36:43.666808+00:00",
+      "status": "PREREGISTERED_READY_FOR_DETACHED_RUN",
+      "reason": "A04 cargó parcialmente el motor, pero el monitor de preflight abortó porque el propio comando shell de seguimiento fue falsamente detectado como servidor ajeno. A05 corrige la detección ignorando shells y reconoce procesos Python por módulos de servidor específicos. A04 ya había rehasheado y validado todos los shards, runtime, MTP y pack; para evitar repetir lectura de 83 GB desde HDD, A05 fija el SHA-256 del recibo PASS A04 y compara dispositivo/inodo/tamaño/mtime_ns de los 16 artefactos antes de continuar.",
+      "a04_failure_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a04-preinference-false-positive.json",
+      "changes_only": [
+        "false-positive-resistant server detector",
+        "distinct A05 logs and run files",
+        "reuse immediately preceding full artifact hash receipt after checking receipt SHA and file identity metadata"
+      ],
+      "test": "Same Q173-style exact 8192 prompt / 128 generated tokens, 3 serial seeds 42/43/44, one request at a time, MTP4 enabled, no warmup/cache, no Q172.",
+      "artifacts": {
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen.py",
+          "sha256": "9dcee6c7de9ea3ef7ced2e098086cdd8781d1c289c0e1ce9700f5716068cd1b1"
+        },
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k.json",
+          "sha256": "23ed274363e923049076a3f77a25617c7773a8c4fba295f211889f4d16eb5045"
+        },
+        "pack_receipt": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/pack-build-a03.json",
+          "sha256": "e8f0264b5ed77e9c18e5781b41a9678c47a57fad590ba144b499a2865fc0278b"
+        },
+        "previous_full_artifact_receipt": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/preflight-a04-artifacts.json",
+          "sha256": "51b75c64d871c34fd3cad997b44f7cca53ff7d53a5669195c9bf572fb078decf"
+        },
+        "stat_snapshot": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/artifact-stat-snapshot-a04.json",
+          "sha256": "21e60517a80582a96e378f3918ce5d23e8b50464c12b8cdbae1e5569931205ff"
+        }
+      },
+      "hardware": "2x RTX 3090 GPU0 ASUS + GPU1 PNY; require fresh boot helper/quarantine, P2P and gpu_unlock PASS, no unrelated inference server or CUDA compute.",
+      "same_decision_gate": "All three requests exact/valid, cleanup/postflight passes, mean prefill >=1000 and decode >=90 tok/s to continue ladder. Screen only, no superiority or quality claim.",
+      "isolation": {
+        "unit": "q225-speedy-iq3s-q173-8k-a05.service",
+        "detached": true,
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "runner": "/usr/bin/python3 artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen.py"
+      }
+    },
+    {
+      "id": "Q225-A06",
+      "timestamp_utc": "2026-11-16T03:38:35.538118+00:00",
+      "status": "PREREGISTERED_READY_FOR_DETACHED_RUN",
+      "reason": "A05 no alcanzó inferencia: el engine no abrió su log porque la ruta relativa se resolvía bajo el source checkout. A06 corrige únicamente la ruta a absoluta y usa paths de salida únicos; detector A05 y verificación de integridad por recibo+stat quedan iguales.",
+      "prior_attempts": {
+        "A04": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a04-preinference-false-positive.json",
+        "A05": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a05-preinference-log-path.json"
+      },
+      "test": "Mismo Q173-style exact 8192 prompt / 128 generated tokens, serial seeds 42/43/44; Speedy v0.4.0 Strata; MTP4; 2x RTX3090; no warmup/cache; no Q172.",
+      "artifacts": {
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen.py",
+          "sha256": "a7f0a7147804f15be07f639c0692436cc9c000b8e5f07522bddf7701b7f88196"
+        },
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k.json",
+          "sha256": "da2e73d88b43c8b85709d86df4f96beba06dee7ef0f5879b1e104ecb22c73073"
+        },
+        "prior_full_artifact_receipt": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/preflight-a04-artifacts.json",
+          "sha256": "51b75c64d871c34fd3cad997b44f7cca53ff7d53a5669195c9bf572fb078decf"
+        },
+        "artifact_stat_snapshot": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/artifact-stat-snapshot-a04.json",
+          "sha256": "21e60517a80582a96e378f3918ce5d23e8b50464c12b8cdbae1e5569931205ff"
+        },
+        "pack_receipt": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/pack-build-a03.json",
+          "sha256": "e8f0264b5ed77e9c18e5781b41a9678c47a57fad590ba144b499a2865fc0278b"
+        }
+      },
+      "decision_gate": "Tres solicitudes válidas y limpieza correcta; continuar ladder sólo si media prefill>=1000 y decode>=90 tok/s. Sin conclusión de calidad/superioridad.",
+      "isolation": {
+        "unit": "q225-speedy-iq3s-q173-8k-a06.service",
+        "detached": true,
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "runner": "/usr/bin/python3 artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen.py"
+      },
+      "pretest": "Python compile check PASS; config SHA pinned; absolute engine log path; no model/runtime/harness args changed."
+    },
+    {
+      "id": "Q225-A07",
+      "timestamp_utc": "2026-11-16T03:56:48.028895+00:00",
+      "status": "PREREGISTERED_READY_FOR_DETACHED_RUN",
+      "reason": "A06 alcanzó 900 s sin READY por carga de PLE (26.8 GiB) y arena de expertos desde HDD. Speedy server.py incluye el parámetro de configuración soportado `engine_ready_s` (default 900) específicamente para starts largos; A07 sólo amplía el plazo operativo a 2400 s y el watchdog externo a 2700 s, conservando iguales artefacto, motor, argumentos de inferencia, MTP, GPUs y protocolo.",
+      "source_support": {
+        "server_py": "/media/cristian/Disco local/Modelos-eval/Q225-Speedy-v0.4.0/source/serve/server.py",
+        "sha256": "463fff091c2837ff8f79b0161091cfface4740a6c3f15f9d621f8eeab23494c4",
+        "implementation": "apply_ready_timeout(config) sets ENGINE_READY_S from engine_ready_s; default 900"
+      },
+      "prior_failure": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a06-startup-timeout.json",
+      "changes_only": [
+        "engine_ready_s=2400 in config",
+        "outer readiness watchdog 2700s",
+        "distinct A07 output/log/unit names"
+      ],
+      "test": "Same Q173-style exact 8192 prompt /128 output, three serial seeds 42/43/44, Speedy v0.4.0 Strata, MTP4, 2x RTX3090; no warmup/cache; Q172 not included.",
+      "same_gate": "All 3 valid exact token runs and clean postflight; mean prefill>=1000 and decode>=90 tok/s to continue. This is a screen only.",
+      "artifacts": {
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen.py",
+          "sha256": "55927413384675b2dcd81d02f3c70f60357e049a08d211fd9b0afee3e1a1b95c"
+        },
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k.json",
+          "sha256": "da1eef4cf918e40659b26bd5f6ff0fa859dc8fcdb847766905515e0d901a7a0a"
+        },
+        "prior_full_artifact_receipt": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/preflight-a04-artifacts.json",
+          "sha256": "51b75c64d871c34fd3cad997b44f7cca53ff7d53a5669195c9bf572fb078decf"
+        },
+        "artifact_stat_snapshot": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/artifact-stat-snapshot-a04.json",
+          "sha256": "21e60517a80582a96e378f3918ce5d23e8b50464c12b8cdbae1e5569931205ff"
+        },
+        "pack_receipt": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/pack-build-a03.json",
+          "sha256": "e8f0264b5ed77e9c18e5781b41a9678c47a57fad590ba144b499a2865fc0278b"
+        }
+      },
+      "resource_limits": {
+        "systemd_unit": "q225-speedy-iq3s-q173-8k-a07.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "outer_readiness_s": 2700,
+        "engine_ready_s": 2400
+      },
+      "pretest": "Python compile PASS; current server, GPU compute, port, memory and lock revalidated by worker before launch."
+    },
+    {
+      "amendment_id": "Q225-A08",
+      "registered_utc": "2026-11-16T04:26:03Z",
+      "status": "PREREGISTERED",
+      "reason": "A07 loaded and reached API readiness, then the first exact 8K request failed at Strata verifier window 5. Engine diagnostic: CUDA1 free VRAM 435 MiB, current late-window reserve 500 MiB; it explicitly recommends 833 MiB or lower max context. This attempt follows the direct recommended reserve correction.",
+      "hypothesis": "Raising only --vram-reserve-later-mib from 500 to 833 MiB will retain enough CUDA1 space for delayed verifier graph capture and allow an exact 8K/128 request to complete.",
+      "changes_only": [
+        "late-window VRAM reserve 500 -> 833 MiB, as directly recommended by the v0.4.0 engine diagnostic",
+        "unique A08 runner/config/log/result output paths",
+        "A08 runner stops the benchmark client and its own service immediately when the exact verifier OOM marker appears, avoiding engine auto-reload loops"
+      ],
+      "held_constant": [
+        "same verified IQ3_S GGUF shards, Speedy pack and MTP RT",
+        "same Speedy v0.4.0 engine, Strata args, dual RTX3090, layer split26, max context16384, KV int8/resident8192",
+        "same llama-benchy 0.4.0, exact prompt8192/output128, concurrency1, no cache or warmup, seeds42/43/44",
+        "same conservative sampling and continue gate P>=1000 and D>=90 tok/s"
+      ],
+      "resources": {
+        "unit": "q225-speedy-iq3s-q173-8k-a08.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "engine_ready_s": 2400,
+        "outer_readiness_s": 2700
+      },
+      "stop_conditions": [
+        "Stop after first server/runtime OOM, malformed token count, foreign inference service, GPU not attributable to the A08 cgroup, memory safety preflight failure or server watchdog.",
+        "No Q172 or LHA quality test is included in this throughput screen."
+      ],
+      "prior_result_receipt": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a07-inference-oom.json",
+        "sha256": "7e7f00398be57a48baaed7b387f801243b80520b2b28b10b7699cf3091d3c6e1"
+      },
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a08-reserve833.json",
+          "sha256": "1cb31fbddcd9a9500a41603b73e2ccf1c3d988551a8ee2dd04b3222c2f5284dc"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a08-reserve833.py",
+          "sha256": "0e327b402e4f4842a746167bb4f637ab85cdd71d985c4cfc703df0e765b0aced"
+        }
+      },
+      "pretest": "A07 completed and cleaned up; both GPUs released to display-only. Python syntax compile and exact config diff verified before launch.",
+      "receipt_path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/amendment-a08-prereg.json",
+      "receipt_sha256": "5b3b8933fcd5e89d497d3ca53cb78971e0b5fe54af0713922bdf5fe1312bae82"
+    },
+    {
+      "amendment_id": "Q225-A09",
+      "registered_utc": "2026-11-16T04:29:46Z",
+      "status": "PREREGISTERED",
+      "reason": "A08 never reached CUDA: the server rejected reuse of A07 readiness receipt path before launching the engine. Correct output-path isolation; retain the reserve change explicitly recommended after A07 OOM.",
+      "hypothesis": "With A07’s documented reserve correction (833 MiB), a unique readiness path will allow startup and exact 8K/128 inference; the runner will stop immediately if verifier OOM remains.",
+      "changes_only": [
+        "unique A09 readiness, engine/server log, run result and progress paths",
+        "late-window reserve remains 833 MiB",
+        "same immediate verifier-OOM benchmark-client abort guard"
+      ],
+      "held_constant": [
+        "same verified IQ3_S target/model/MTP files, Speedy v0.4.0 / Strata, dual RTX3090, context16384, KV int8/resident8192, layer-split26, MTP spec4",
+        "same exact Q173 screen: prompt8192/output128, concurrency1, no cache/warmup, seeds42/43/44, conservative sampling",
+        "same P>=1000 and D>=90 tok/s continuation gate; no Q172 included"
+      ],
+      "resources": {
+        "unit": "q225-speedy-iq3s-q173-8k-a09.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "engine_ready_s": 2400,
+        "outer_readiness_s": 2700
+      },
+      "stop_conditions": [
+        "Stop on first runtime OOM and prevent automatic reload loops.",
+        "Stop on a foreign inference server, GPU attribution failure, preflight memory failure or timeout."
+      ],
+      "prior_attempt_receipts": [
+        {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a07-inference-oom.json",
+          "sha256": "7e7f00398be57a48baaed7b387f801243b80520b2b28b10b7699cf3091d3c6e1"
+        },
+        {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a08-preinference-ready-file-collision.json",
+          "sha256": "db5b3b1f740fe793ab755f072e3cd0c8d9ff4bbcdf2d6213951cdb98ee13f05d"
+        }
+      ],
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a09-reserve833.json",
+          "sha256": "8f8f6ae68a8055e1edfa1c9b26e5ca19c688f0ba96ea26f229290b28ae32dcea"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a09-reserve833.py",
+          "sha256": "6f5701d016f5eec2c05e72322667d05b7425da1e30a036f236961faab8c3f145"
+        }
+      },
+      "pretest": "A08 failed before GPU; A07 cgroup stopped and cleanup verified. Config differs from A08 only in log path; syntax and reserve invariants validated before launch.",
+      "receipt_path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/amendment-a09-prereg.json",
+      "receipt_sha256": "75254d4089f158cd8981bd75240fe5d40d22a8e03856f5e9c0e20eb0c0327f1c"
+    },
+    {
+      "amendment_id": "Q225-A10",
+      "registered_utc": "2026-11-16T04:32:05Z",
+      "status": "PREREGISTERED",
+      "reason": "A09 failed before CUDA because `serve.server` opened the engine log relative to the runtime cwd. A10 resolves that log to an absolute path and retains the A07-recommended 833 MiB late-window reserve.",
+      "hypothesis": "The now-isolated A10 outputs and absolute log path will allow the pinned server to load; with reserve833 the exact Q173 seed42 request should avoid the A07 verifier OOM.",
+      "changes_only": [
+        "absolute A10 engine log path; A09 path was relative",
+        "unique A10 readiness/log/run/progress outputs",
+        "reserve-later remains833MiB; same OOM-abort guard"
+      ],
+      "held_constant": [
+        "IQ3_S target/pack/MTP and Speedy v0.4.0 Strata binary",
+        "both RTX3090s; context16384, KV int8/resident8192, layer split26, MTP spec4",
+        "Q173 exact8192 prompt/128 output, concurrency1, no cache/warmup, seeds42/43/44",
+        "sampling and continue gate P>=1000, D>=90 tok/s; quality Q172 not included"
+      ],
+      "resources": {
+        "unit": "q225-speedy-iq3s-q173-8k-a10.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "engine_ready_s": 2400,
+        "outer_readiness_s": 2700
+      },
+      "stop_conditions": [
+        "Stop on first runtime OOM and prevent auto-reload.",
+        "Stop if any foreign inference server appears, a GPU cannot be attributed, memory preflight fails, or watchdog expires."
+      ],
+      "prior_attempt_receipt": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a09-preinference-relative-logpath.json",
+        "sha256": "0722c47aaec7b3c8a99cfce4141e751e3a947d97d317e00f1faeac8fbf1575d1"
+      },
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a10-reserve833.json",
+          "sha256": "ffa9fd187890145df46d6a1ea767048b2062a6126573d5d4fcc1d79555280ee3"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a10-reserve833.py",
+          "sha256": "788862ca711c7ce284f2364e69bd694bd0e04fdad37d547abf745c5a4c5f841b"
+        }
+      },
+      "pretest": "A09 service failed and cleaned up before CUDA; port18489 free. Config validated for reserve833 and absolute existing log parent; Python syntax compile required.",
+      "receipt_path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/amendment-a10-prereg.json",
+      "receipt_sha256": "fdb8416b2df3f89dcb93198269eb4639455f3fd8973df1c113e8bd7c30842820"
+    },
+    {
+      "amendment_id": "Q225-A11",
+      "registered_utc": "2026-11-16T04:55:29Z",
+      "status": "PREREGISTERED",
+      "reason": "A10 reached API health but the first exact 8K request OOMed on CUDA1 during verifier window5. CUDA1 had 1168 MiB free at readiness; reserve-later833 did not leave enough room.",
+      "hypothesis": "Increasing only the later-card reserve from 833 to 2048 MiB should leave approximately 1.2 GiB more VRAM on the PNY stage for Strata verifier graph capture and permit the exact Q173 first request to generate tokens.",
+      "changes_only": [
+        "--vram-reserve-later-mib 833 -> 2048; no other model/runtime/harness/GPU/context/sampling changes",
+        "unique A11 ready, log, run, progress and preflight paths"
+      ],
+      "held_constant": [
+        "Verified IQ3_S two-shard GGUF, Speedy v0.4.0 RTX30 binary, same generated pack and MTP-RT artifacts",
+        "both RTX3090s (ASUS GPU0 + PNY GPU1), layer split26, pipeline windows2, max context16384, KV int8/resident8192, MTP spec4",
+        "Q173-style exact8192 prompt/128 output, concurrency1, no cache/warmup, serial seeds42/43/44",
+        "same sampling, OOM-abort guard, screen gates mean prefill>=1000 and decode>=90 tok/s; Q172 not included"
+      ],
+      "resource_policy": {
+        "unit": "q225-speedy-iq3s-q173-8k-a11.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "outer_readiness_s": 2700,
+        "engine_ready_s": 2400
+      },
+      "stop_conditions": [
+        "Stop on first verifier OOM, before engine auto-reload; no retry within the same attempt",
+        "Stop if foreign inference server appears, GPU attribution/preflight fails, temperature>=82C, host PSI avg10>=10%, or watchdog expires"
+      ],
+      "prior_attempt": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a10-inference-oom-window5.json",
+        "sha256": "ca10b9cbc0eafae57eef2ab64bb73602c2755a0ee12dfa3b0c0610a24352c3cb"
+      },
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a11-reserve2048.json",
+          "sha256": "77dafc96dd27404e1516306d20b16b1864c4d2a8a0145f72c6d8971835c05467"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a11-reserve2048.py",
+          "sha256": "fe128fab4b6f0ef076d25290d00e73cbf30ff9657fd13bc9676c49c18ea44418"
+        }
+      },
+      "pretest": "A10 unit exited and port18489 is free; config changes only later-card reserve; runner static compile PASS; exact model/MTP files and required boot GPU gates are rechecked by runner immediately before launch.",
+      "receipt_path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/amendment-a11-prereg.json",
+      "receipt_sha256": "00625b6fcbf10889775e7fdc89d1b6356c115c6a21495132e1802420bd090f10"
+    },
+    {
+      "amendment_id": "Q225-A12",
+      "registered_utc": "2026-11-16T04:59:06Z",
+      "status": "PREREGISTERED",
+      "reason": "A11 exited before CUDA because its log path was relative to the Speedy source cwd. Preserve the experimental reserve2048 setting and correct only this setup path using an absolute path.",
+      "hypothesis": "With the A11 relative-path defect corrected, the same 2048 MiB later-card reserve can be tested against the A10 window5 CUDA1 verifier OOM.",
+      "changes_only": [
+        "later-card reserve remains2048MiB (the preregistered A10→A11 experimental change)",
+        "set unique engine-log path to absolute profile path; A11 had a relative-path setup failure",
+        "unique A12 readiness/log/run/progress outputs"
+      ],
+      "held_constant": [
+        "same verified IQ3_S shards, Speedy v0.4.0 binary, generated pack, MTP-RT files, and two GPUs",
+        "same layer split26, pipeline windows2, max context16384, KV int8/resident8192, MTP spec4",
+        "same exact Q173-style 8192 prompt/128 output, serial seeds42/43/44, sampling and gates P>=1000 and D>=90",
+        "same detached-systemd resource bounds and OOM-abort guard; no Q172 in this screen"
+      ],
+      "resource_policy": {
+        "unit": "q225-speedy-iq3s-q173-8k-a12.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "outer_readiness_s": 2700,
+        "engine_ready_s": 2400
+      },
+      "stop_conditions": [
+        "stop on first verifier OOM before any auto-reload",
+        "stop if foreign inference appears, GPU attribution/preflight fails, temp>=82C, PSI avg10>=10%, or watchdog expires"
+      ],
+      "prior_attempt": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a11-preinference-relative-logpath.json",
+        "sha256": "830e1a61de0afdcf14b7af7df9a6d3468e5189d1bf3e2fc7dc6b788a6b334c0e"
+      },
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a12-reserve2048.json",
+          "sha256": "91fdb63ebf299bb3bae054790827076774b3ad506c19e2019d49bd2742afa229"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a12-reserve2048.py",
+          "sha256": "411eb3f7b278a41b0bb0d84a46cc96f343e6cb561a979bc7859dadf82d5f85cd"
+        }
+      },
+      "pretest": "A11 service exited before model load and port18489 is free; absolute log path and parent directory validated; runner static compile PASS; one-variable experimental reserve change remains from A10. Fresh preflight runs again before CUDA.",
+      "receipt_path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/amendment-a12-prereg.json",
+      "receipt_sha256": "3d53f5d1c6db83813dd40ea008d923c26c1326c8f08b59a3701a25145b16b5e9"
+    },
+    {
+      "amendment_id": "Q225-A13",
+      "registered_utc": "2026-11-16T05:19:35Z",
+      "status": "PREREGISTERED",
+      "reason": "A12 reached API health but the first request failed at verifier window5 even with 1983 MiB free on CUDA1; windows1-4 captured. Reserve2048 was insufficient.",
+      "hypothesis": "Reducing only MTP speculative width from4 to2 should cap verifier capture at a smaller window and allow the exact 8K/128 request to produce tokens without the window5 OOM.",
+      "changes_only": [
+        "--spec 4 -> 2 (same IQ3_S MTP RT draft)",
+        "unique A13 readiness/log/run/progress outputs; absolute engine log retained"
+      ],
+      "held_constant": [
+        "later-card reserve2048MiB, same verified IQ3_S shards/pack/MTP RT/Speedy v0.4.0 binary",
+        "both RTX3090s, layer split26, pipeline windows2, max context16384, KV int8/resident8192",
+        "same Q173-style exact8192 prompt/128 output, serial seeds42/43/44, no cache/warmup, same sampling",
+        "same 3-seed screen gate P>=1000 and D>=90 tok/s; Q172 not included"
+      ],
+      "resource_policy": {
+        "unit": "q225-speedy-iq3s-q173-8k-a13.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "outer_readiness_s": 2700,
+        "engine_ready_s": 2400
+      },
+      "stop_conditions": [
+        "stop on first runtime OOM before auto-reload",
+        "stop if foreign inference appears, GPU attribution/preflight fails, temp>=82C, PSI avg10>=10%, or watchdog expires"
+      ],
+      "prior_attempt": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a12-inference-oom-window5-reserve2048.json",
+        "sha256": "6ef26ac6d8ee73bd931320160c303538649254bc6c06482348487e745d15ff61"
+      },
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a13-reserve2048-spec2.json",
+          "sha256": "32d34fb69d10fe54b6c65e3e10af66d33b423b8317d00e14cc6c541c2e08e439"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a13-reserve2048-spec2.py",
+          "sha256": "3d85a4f90d074ac750f98977d7d78463e5c1679fcb4c9197d47511e13a9b3ed4"
+        }
+      },
+      "pretest": "A12 systemd unit exited and port18489 is free. Config changes only spec4→2 relative to A12; log absolute and parent exists; static compile PASS; fresh preflight repeats immediately before load.",
+      "receipt_path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/amendment-a13-prereg.json",
+      "receipt_sha256": "8925dca879ea4ada012ef4c6caa1d519934cda1d9e516dfa2c21736587a79eb7"
+    },
+    {
+      "amendment_id": "Q225-A14",
+      "registered_utc": "2026-11-16T05:21:39Z",
+      "status": "FAIL_INFERENCE_VERIFIER_INSTANTIATE_OOM",
+      "reason": "A14 reached API health at 1069.953s, but failed before any request with verify: instantiate: out of memory. After weights, GPU0/GPU1 had 2438/2007 MiB free; host RAM pressure was low. See A14 terminal receipt.",
+      "hypothesis": "Repeating the registered spec2/reserve2048 screen with the exact config path matched to the runner will remove this setup failure and allow the benchmark to reach inference.",
+      "changes_only": [
+        "make config filename match runner CONFIG constant exactly; verify file existence and SHA in prelaunch gate",
+        "unique A14 engine-log, ready, request and progress outputs"
+      ],
+      "held_constant": [
+        "spec2 and later-card reserve2048MiB",
+        "verified IQ3_S shards/pack/MTP RT/Speedy v0.4.0, both RTX3090s, layer split26, pipeline windows2",
+        "max_context16384, KV int8/resident8192, exact Q173-style8192/128, seeds42/43/44, sampling and P>=1000/D>=90 gate",
+        "detached systemd limits and stop-on-first-OOM guard; no Q172 in this throughput screen"
+      ],
+      "resource_policy": {
+        "unit": "q225-speedy-iq3s-q173-8k-a14.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "outer_readiness_s": 2700,
+        "engine_ready_s": 2400
+      },
+      "stop_conditions": [
+        "stop on first OOM before engine auto-reload",
+        "stop if foreign server, GPU attribution/preflight failure, temp>=82C, PSI avg10>=10%, or watchdog expiry"
+      ],
+      "prior_attempt": {
+        "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a13-preinference-config-filename.json",
+        "sha256": "2db1c46707dd6376a2cc6769cc865cadf899e57276493cb74f7c023a40217aad"
+      },
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a14-reserve2048.json",
+          "sha256": "2ac9fedd4209694a2125ee8a28e466c35cbc969a705529e021226d22a66e26f0"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a14-reserve2048-spec2.py",
+          "sha256": "088c61bdd8ea2b9de508b7b745b99309d999aa6d0c58a7bbedf4a3c47aad2152"
+        }
+      },
+      "pretest": "Static compile PASS; parsed runner CONFIG path resolves to the preregistered config and SHA matches; absolute log exists; next fresh preflight must also verify no server and port18489 free.",
+      "receipt_path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/amendment-a14-prereg.json",
+      "receipt_sha256": "73be8ebc933848cec92276ee983dd4bab332079450aba3023ed87d7ddd4f66fc",
+      "result_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a14-verifier-instantiate-oom.json",
+      "result_receipt_sha256": "a898b23bbc42cda42ec37949bf1088eda31280419b4fba0166e6ff938e5b89e9"
+    },
+    {
+      "amendment_id": "Q225-A15",
+      "registered_utc": "2026-11-16T05:50:06Z",
+      "status": "FAIL_INFERENCE_VERIFIER_DEVICE_ARENA_NO_FIT",
+      "reason": "A14 loaded the model and reached API health in 1069.953s but Strata failed before the first token while instantiating the first verifier CUDA graph. It had 2438 MiB free on GPU0 and 2007 MiB on GPU1 after weights, with no host RAM pressure. Speedy source documents pipeline-windows 2 as adding a second verifier per stage and recommends pipeline-windows 0 when allocations do not fit; test that targeted memory reduction while retaining MTP spec2.",
+      "hypothesis": "Disabling the duplicate pipelined verifier graph will leave enough VRAM for verifier instantiation and allow the exact 8192/128 Q173 request to generate tokens.",
+      "changes_only": [
+        "--pipeline-windows 2 -> 0",
+        "remove paired STRATA_PIPELINE_PENALTIES=1 because decode pipeline is disabled"
+      ],
+      "held_constant": [
+        "same verified IQ3_S shards, Speedy v0.4.0 binary, generated IQ3_S pack, MTP RT and --spec 2",
+        "both RTX3090s, layer split26, reserve700/later2048MiB, context16384, KV int8/resident8192",
+        "same Q173-style exact8192 prompt/128 output, serial seeds42/43/44, no cache or warmup, same sampling and throughput gate",
+        "same detached systemd memory/CPU/runtime bounds and stop on first verifier OOM; no Q172 in this screen"
+      ],
+      "resource_policy": {
+        "unit": "q225-speedy-iq3s-q173-8k-a15.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "outer_readiness_s": 2700,
+        "engine_ready_s": 2400
+      },
+      "stop_conditions": [
+        "stop on first verifier OOM before auto-reload",
+        "stop if foreign inference appears, preflight/GPU attribution fails, temperature>=82C, PSI avg10>=10%, or watchdog expires"
+      ],
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a15-reserve2048-spec2-pw0.json",
+          "sha256": "c9e2d065c25fa37de74a9af368492babf39adafcd273ae6f3f4536c4646c17f5"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a15-reserve2048-spec2-pw0.py",
+          "sha256": "dede6f73d609b8f54dd621bffb80548fd86f0611922e288d0ea8417ac93537d0"
+        },
+        "static_compile": "PASS"
+      },
+      "receipt_path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/amendment-a15-prereg.json",
+      "receipt_sha256": "8824612fd49ee24c0b6994e931459a1aa071a308d1e90c68eed11f3945759782",
+      "preflight_correction": {
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/preflight-a15-attempt01-checksum-pin.json",
+        "sha256": "bea61a756a98dc9b93a0b4076f7e4eba0e316eeed3a8e3f5151a9d58b7c67728",
+        "gpu_compute_started": false,
+        "runner_change": "Fixed receipt hash pin; RESULTS.md now appends A15 summary and retains A14 history."
+      },
+      "prelaunch_setup_attempt01": {
+        "attempt_id": "Q225-A15-LAUNCH-01",
+        "status": "FAIL_PREINFERENCE_RELATIVE_ENGINE_LOG_PATH",
+        "timestamp_utc": "2026-11-16T05:53:44Z",
+        "error": "The Python server raised FileNotFoundError opening relative artifacts/.../logs/strata-engine-a15.log while constructing StrataEngine. It failed before spawning the strata binary or creating a CUDA compute process.",
+        "server_log": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/logs/server-a15-launch01-logpath-failure.log",
+        "port18489_free": true,
+        "gpu_compute_started": false,
+        "model_load_started": false,
+        "corrective_action": "Set config log to absolute path /media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/logs/strata-engine-a15.log; no benchmark parameter changed; static compile and artifact checks rerun.",
+        "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a15-preinference-log-path.json",
+        "receipt_sha256": "74eb994610387b314d27d452efcd5271c2b80fe346880f050949c63e0eb17b55",
+        "server_log_sha256": "51d580d749ca3ee2bfe32877ee4a7dfb250e926212b0d53b9b694468628d2798"
+      },
+      "result_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a15-verifier-arena-no-fit.json",
+      "result_receipt_sha256": "326992641f9ec06663b8b981c495c38f2a4c0b76f4c52a57fc1d46d77abd23dc",
+      "observed_result": "Model fully loaded; engine session started; API never became healthy because the 63.6 MiB verifier arena did not fit. 0 requests/0 tokens; P/D/Q172 N/D.",
+      "launch02_systemd_invocation_id": "aaae1dfdfc904f1b93baf264411e1ca3"
+    },
+    {
+      "amendment_id": "Q225-A16",
+      "registered_utc": "2026-11-16T06:20:32Z",
+      "status": "FAIL_INFERENCE_VERIFIER_DEVICE_ARENA_NO_FIT",
+      "reason": "A15 loaded the verified IQ3_S model on both RTX 3090s, but API readiness failed before any prompt because Strata could not fit its 63.6 MiB verifier device arena. The engine selected an 17.23 GiB expert cache on CUDA1 while reserve-later was 2048 MiB. Increasing this reserve should reduce auto expert-cache occupancy and leave the verifier allocation room.",
+      "hypothesis": "Increasing only the later-GPU reserve from 2048 to 4096 MiB will allow the 63.6 MiB verifier arena to fit and let the exact Q173 8K request generate tokens.",
+      "changes_only": [
+        "--vram-reserve-later-mib 2048 -> 4096"
+      ],
+      "held_constant": [
+        "same IQ3_S target shards, Speedy v0.4.0 runtime/archive, generated pack, MTP RT and spec2",
+        "dual RTX 3090 UUIDs, layer split26, reserve-first700MiB, pipeline-windows0, context16384, KV int8/resident8192",
+        "same exact Q173-style prompt8192/output128, serial seeds42/43/44, llama-benchy 0.4.0, sampling, no cache/warmup, and throughput gate",
+        "same detached systemd resource limits (MemoryMax96G, CPUQuota400%, RuntimeMax5400s), first-failure cleanup; no Q172 in this screen"
+      ],
+      "source_result_receipt": "profiles/speedy-iq3s/receipts/attempt-a15-verifier-arena-no-fit.json",
+      "source_result_sha256": "326992641f9ec06663b8b981c495c38f2a4c0b76f4c52a57fc1d46d77abd23dc",
+      "resource_policy": {
+        "unit": "q225-speedy-iq3s-q173-8k-a16.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "outer_readiness_s": 2700,
+        "engine_ready_s": 2400
+      },
+      "stop_conditions": [
+        "stop before request if verifier allocation still fails; stop on first OOM without retry",
+        "stop if any foreign inference server, failed preflight/GPU attribution, temperature>=82C, PSI avg10>=10%, or watchdog expiry"
+      ],
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a16-reserve4096-spec2-pw0.json",
+          "sha256": "4968e962884348232835fa81ff1ad1a9517827df17594e213ee2516d6b8b794b"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a16-reserve4096-spec2-pw0.py",
+          "sha256": "2a2112ea2aa5c2b484a695a3ee3c4f90d9f70572f9698eee1ba9e7cd3c439fae"
+        },
+        "static_compile": "PASS"
+      },
+      "pretest": "Python static compile PASS; config log path is absolute and exactly the A16 engine log; reserve-later is the only inference setting change. Fresh artifact verification, preflight, Sheet readback required before CUDA.",
+      "preflight_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/preflight-a16-corrected.json",
+      "preflight_sha256": "3bbd6388cb1b4e30b973e7347a44096ed918be2f84b792c0c07f17c2dd8a04ce",
+      "setup_correction": {
+        "attempt": "Q225-A16-LAUNCH-01",
+        "receipt": "profiles/speedy-iq3s/receipts/attempt-a16-preinference-relative-log-path.json",
+        "receipt_sha256": "f51ca7c3954c36f68afc35e8c74f3732fcf4bef0c1f6bcddca4071dd92abea7e",
+        "change": "Set config log to absolute Path.resolve(); add static prelaunch assertion that log path is absolute and equals ENGINE_LOG. No inference-factor change."
+      },
+      "receipt_sha256": "52a457ae2057bd0ca6ae61a689df195d8f4cc549831ca8ac563b32db329022eb",
+      "launch02_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/launch-a16-attempt02.json",
+      "launch02_receipt_sha256": "176e9a562c6452698d652ca310041d9de678d8b7bc0fe814ab4a5bf6136110d0",
+      "systemd_invocation_id": "0dbdb71960e845ffb86ee5deee7d462d",
+      "result_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a16-verifier-arena-no-fit.json",
+      "result_receipt_sha256": "b73ef18308fe3ffd190d5ed8e2753b35139fe3f77200085604a43946fd8ddae6",
+      "observed_result": "Model/session loaded on both GPUs; reserve4096 reduced CUDA1 auto cache to15.23GiB; 63.6MiB verifier arena still did not fit. 0 requests/tokens; no P/D/Q172."
+    }
+  ],
+  "attempt_results": [
+    {
+      "attempt_id": "Q225-A07",
+      "status": "FAIL_INFERENCE_OOM",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a07-inference-oom.json",
+      "receipt_sha256": "7e7f00398be57a48baaed7b387f801243b80520b2b28b10b7699cf3091d3c6e1",
+      "cold_init_s": 1070.778,
+      "successful_requests": 0,
+      "prefill_tps": null,
+      "decode_tps": null,
+      "quality_q172": null
+    },
+    {
+      "attempt_id": "Q225-A08",
+      "status": "FAIL_PREINFERENCE_STALE_READY_PATH",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a08-preinference-ready-file-collision.json",
+      "receipt_sha256": "db5b3b1f740fe793ab755f072e3cd0c8d9ff4bbcdf2d6213951cdb98ee13f05d",
+      "gpu_compute_started": false
+    },
+    {
+      "attempt_id": "Q225-A09",
+      "status": "FAIL_PREINFERENCE_RELATIVE_LOG_PATH",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a09-preinference-relative-logpath.json",
+      "receipt_sha256": "0722c47aaec7b3c8a99cfce4141e751e3a947d97d317e00f1faeac8fbf1575d1",
+      "gpu_compute_started": false
+    },
+    {
+      "attempt_id": "Q225-A10",
+      "status": "FAIL_INFERENCE_VERIFIER_OOM_WINDOW5",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a10-inference-oom-window5.json",
+      "receipt_sha256": "ca10b9cbc0eafae57eef2ab64bb73602c2755a0ee12dfa3b0c0610a24352c3cb",
+      "gpu_compute_started": true,
+      "ready_seconds": 917.501,
+      "generated_tokens": 0,
+      "prefill_tok_s": null,
+      "decode_tok_s": null,
+      "Q172": null
+    },
+    {
+      "attempt_id": "Q225-A11",
+      "status": "FAIL_PREINFERENCE_RELATIVE_ENGINE_LOG_PATH",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a11-preinference-relative-logpath.json",
+      "receipt_sha256": "830e1a61de0afdcf14b7af7df9a6d3468e5189d1bf3e2fc7dc6b788a6b334c0e",
+      "gpu_compute_started": false
+    },
+    {
+      "attempt_id": "Q225-A12",
+      "status": "RUNNING_MODEL_LOADING",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/launch-a12.json",
+      "receipt_sha256": "2771243fc45e8b2cedd6073480354d58f9c65c8ce7884d148934d2ec08c1c716",
+      "systemd_invocation_id": "70229b97d0bb4e409377ddf7ab9d9597",
+      "gpu_compute_started": true,
+      "latest_progress_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/progress-a12-loading-928s.json",
+      "latest_progress_sha256": "ee31897657e0270f20950ece6f686a7688f9b8db68e18ebe2c7fb4af264fec62"
+    },
+    {
+      "attempt_id": "Q225-A13",
+      "status": "FAIL_PREINFERENCE_CONFIG_MISSING",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a13-preinference-config-filename.json",
+      "receipt_sha256": "2db1c46707dd6376a2cc6769cc865cadf899e57276493cb74f7c023a40217aad",
+      "gpu_compute_started": false
+    },
+    {
+      "attempt_id": "Q225-A14",
+      "status": "RUNNING_DETACHED",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/launch-a14.json",
+      "receipt_sha256": "7daeed275647151c79c911c62d84369adc3fe574119a9f84c889a26a6790868b",
+      "systemd_invocation_id": "d5443a2c7eb4400586d5d917cb1dc749",
+      "gpu_compute_started": false
+    },
+    {
+      "attempt_id": "Q225-A15-LAUNCH-02",
+      "status": "FAIL_INFERENCE_VERIFIER_DEVICE_ARENA_NO_FIT",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a15-verifier-arena-no-fit.json",
+      "receipt_sha256": "326992641f9ec06663b8b981c495c38f2a4c0b76f4c52a57fc1d46d77abd23dc",
+      "model_loaded": true,
+      "api_ready": false,
+      "requests": 0,
+      "generated_tokens": 0,
+      "prefill_tok_s": null,
+      "decode_tok_s": null,
+      "quality_q172": null
+    },
+    {
+      "attempt_id": "Q225-A16-LAUNCH-01",
+      "status": "FAIL_PREINFERENCE_RELATIVE_ENGINE_LOG_PATH",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a16-preinference-relative-log-path.json",
+      "receipt_sha256": "f51ca7c3954c36f68afc35e8c74f3732fcf4bef0c1f6bcddca4071dd92abea7e",
+      "systemd_invocation_id": "2cecbb4c5c894f888603fa763d3a381d",
+      "gpu_compute_started": false
+    },
+    {
+      "attempt_id": "Q225-A16-LAUNCH-02",
+      "status": "FAIL_INFERENCE_VERIFIER_DEVICE_ARENA_NO_FIT",
+      "receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a16-verifier-arena-no-fit.json",
+      "receipt_sha256": "b73ef18308fe3ffd190d5ed8e2753b35139fe3f77200085604a43946fd8ddae6",
+      "systemd_invocation_id": "0dbdb71960e845ffb86ee5deee7d462d",
+      "gpu_compute_started": false,
+      "model_loaded": true,
+      "api_ready": false,
+      "requests": 0,
+      "generated_tokens": 0
+    },
+    {
+      "attempt_id": "Q225-A17",
+      "status": "FAIL_INFERENCE_VERIFIER_DEVICE_ARENA_NO_FIT",
+      "registered_utc": "2026-11-16T06:49:59+00:00",
+      "hypothesis": "Removing the MTP draft layer frees enough device memory for the 63.6 MiB verifier arena; prompt-lookup --spec remains enabled.",
+      "single_factor_change": "Set mtp=false and drafting=off, removing --mtp/--spec-min-p; retain --spec 2. Keep reserve-later4096, pipeline-windows0, model, GPUs, context, sampler, harness and protocol fixed.",
+      "protocol": "Q173-style 8K screen: prompt8192/output128 exact, concurrency1, seeds42/43/44 serial, llama-benchy0.4.0, no cache/adaptation/warmup.",
+      "decision_gate": "All three requests complete; cleanup PASS; mean prefill >=1000 and decode >=90 tok/s. Throughput screen only; no Q172 or adoption claim.",
+      "resource_policy": {
+        "unit": "q225-speedy-iq3s-q173-8k-a17.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "outer_readiness_s": 2700,
+        "engine_ready_s": 2400
+      },
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a17-reserve4096-spec2-pw0-mtp-off.json",
+          "sha256": "611b6bf7e75b478b55ca4ca54562b6981882b5ad78064aff9884e708b1072053"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a17-reserve4096-spec2-pw0-mtp-off.py",
+          "sha256": "053b578060a34be3fd97c1dc6287416696e0a2e7d4218c44d92a0a64713a0969"
+        },
+        "static_compile": "PASS"
+      },
+      "stop_conditions": [
+        "stop if verifier allocation fails before API readiness",
+        "stop on OOM/foreign inference server",
+        "stop if preflight/helper/P2P/unlock fails, temp>=82C, PSI avg10>=10%, or watchdog expiry"
+      ],
+      "pretest": "A17 config explicitly disables MTP/draft, removes all draft flags and retains prompt-lookup --spec 2. Python static compile PASS. Fresh preflight and Sheet readback required before CUDA.",
+      "preflight_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/preflight-a17.json",
+      "preflight_sha256": "519254e959726edab5129fea5aec9f62a8bbb09c015057d4b2a155f8c13f688c",
+      "preflight_snapshot": {
+        "timestamp_utc": "2026-11-16T06:51:22Z",
+        "snapshot": {
+          "gpus": {
+            "0": {
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 962,
+              "memory_total_mib": 24576,
+              "temperature_c": 47
+            },
+            "1": {
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 108,
+              "memory_total_mib": 24576,
+              "temperature_c": 31
+            }
+          },
+          "compute": {
+            "0": [],
+            "1": []
+          },
+          "mem_available_kib": 119054976,
+          "memory_pressure_avg10": 0.0
+        },
+        "p2p": "OK bidireccional",
+        "gpu_unlock": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+        "asus_reservation": "StatusText=0000:01:00.0: 1636/1636 frames held, 0 pending",
+        "boot_helper": "PASS",
+        "foreign_servers": []
+      },
+      "sheet_prereg_readback": "PASS",
+      "ready_utc": "2026-11-16T06:51:48+00:00",
+      "launch_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/launch-a17.json",
+      "launch_receipt_sha256": "38165a0dda32499d3806a0d459cdd05bfd72e897f39419e3310460b8fcda9821",
+      "systemd_invocation_id": "3213d5c0650346a1bed1a89b6cd5d127",
+      "worker_pid": 2230700,
+      "result_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a17-verifier-arena-no-fit.json",
+      "result_receipt_sha256": "10c897a8a1e47d4253d1e32cdc6131c6a61bdc73c3c1858955193bb656173574",
+      "postflight_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/postflight-a17.json",
+      "postflight_sha256": "96116fd93604c69e227d2a51730995dadc4667735b7e211f9b448c1a733da1fb",
+      "observed_result": "MTP off was confirmed in effective argv; model/expert weights loaded, but prompt-lookup --spec2 still failed the 63.6MiB verifier arena before API. 0 requests/tokens; no throughput/quality metrics."
+    },
+    {
+      "attempt_id": "Q225-A18",
+      "status": "FAIL_PREINFERENCE_SPEC_MINIMUM",
+      "registered_utc": "2026-11-16T07:10:12+00:00",
+      "hypothesis": "The arena failure persists with MTP off because --spec 2 retains a four-token verify window; --spec 0 selects plain decode and should bypass that verifier allocation.",
+      "single_factor_change": "A17 -> A18: --spec 2 -> --spec 0 only. MTP/draft remains off; reserve-later4096, pipeline-windows0, model, dual GPUs, context, sampling, harness and workload unchanged.",
+      "protocol": "Q173-style exact prompt8192/output128, concurrency1, seeds42/43/44 serial, llama-benchy0.4.0, no cache/adaptation/warmup.",
+      "decision_gate": "All three requests complete and cleanup PASS; screen gate mean P>=1000/D>=90 tok/s. Throughput only; no Q172.",
+      "resource_policy": {
+        "unit": "q225-speedy-iq3s-q173-8k-a18.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "outer_readiness_s": 2700,
+        "engine_ready_s": 2400
+      },
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a18-reserve4096-spec0-pw0-mtp-off.json",
+          "sha256": "5daef1891087bf510b292312c2495c4f80752b2e54351f34687b4eea246a00b7"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a18-reserve4096-spec0-pw0-mtp-off.py",
+          "sha256": "87dcd823dffd21c238e70fc1acdf10d6bcb38bfe3cfc15bd32bf5a4d7c75002a"
+        },
+        "static_compile": "PASS"
+      },
+      "stop_conditions": [
+        "stop if API/verifier does not become ready or error occurs",
+        "stop on first OOM/foreign inference server",
+        "stop if preflight/helper/P2P/unlock fails, temperature>=82C, PSI avg10>=10%, or watchdog expiry"
+      ],
+      "source_evidence": "Pinned Speedy source sycl/src/program/generate.cpp documents --spec 0 as plain decode; A17 log shows --spec2 retained a 63.6MiB verifier arena even with MTP off.",
+      "pretest": "MTP/draft flags absent, mtp=false/drafting=off, --spec0 asserted by runner; Python static compile PASS. Fresh preflight + Sheet readback required before CUDA.",
+      "preflight_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/preflight-a18.json",
+      "preflight_sha256": "01467a1b82f7cbf13cb3c3024f0105605ab7ab65a425ce1c33313b1bb74ecd26",
+      "preflight_snapshot": {
+        "timestamp_utc": "2026-11-16T07:10:42Z",
+        "snapshot": {
+          "gpus": {
+            "0": {
+              "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 958,
+              "memory_total_mib": 24576,
+              "temperature_c": 46
+            },
+            "1": {
+              "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+              "name": "NVIDIA GeForce RTX 3090",
+              "memory_used_mib": 108,
+              "memory_total_mib": 24576,
+              "temperature_c": 31
+            }
+          },
+          "compute": {
+            "0": [],
+            "1": []
+          },
+          "mem_available_kib": 119045968,
+          "memory_pressure_avg10": 0.0
+        },
+        "p2p": "OK bidireccional",
+        "gpu_unlock": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+        "asus_reservation": "StatusText=0000:01:00.0: 1636/1636 frames held, 0 pending",
+        "boot_helper": "PASS",
+        "foreign_servers": []
+      },
+      "sheet_prereg_readback": "PASS",
+      "ready_utc": "2026-11-16T07:10:54+00:00",
+      "launch_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/launch-a18.json",
+      "launch_receipt_sha256": "7c1177dc249cf337c28ea60c5806966eebad6f8a3c81cebb37db7e6e1eb99434",
+      "systemd_invocation_id": "64838255ce77426cb9a60d75b4db598a",
+      "worker_pid": 2266117,
+      "result_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a18-preinference-spec-minimum.json",
+      "result_receipt_sha256": "7d0407c7bdf20b01e0667dc1bd7a61cc854a9acc1a63d7e7450e1bdfebcc0c05",
+      "observed_result": "Rejected before CUDA because native IQ pack requires --spec >=2; no model load/request/metrics.",
+      "gpu_compute_started": false
+    },
+    {
+      "attempt_id": "Q225-A19",
+      "status": "FAIL_Q173_HARNESS_TOKENIZER_AND_EARLY_STOP",
+      "registered_utc": "2026-11-16T07:20:41+00:00",
+      "hypothesis": "The 63.6 MiB verifier arena fails because the automatically sized first-stage expert cache leaves insufficient ASUS VRAM. Capping --expert-cache from auto to 6000 slots should restore enough headroom while retaining native-IQ-compatible --spec 2.",
+      "single_factor_change": "A17 valid spec2/MTP-off configuration, change only --expert-cache auto -> 6000 slots. Keep reserve-later4096, pipeline-windows0, dual RTX3090 layer split, model, context, sampler and Q173 workload fixed.",
+      "protocol": "Q173-style exact prompt8192/output128, concurrency1, seeds42/43/44 serial, llama-benchy0.4.0, no cache/adaptation/warmup.",
+      "decision_gate": "All three exact requests complete; cleanup PASS; screen gate mean prefill>=1000 and decode>=90 tok/s. Throughput only; no Q172.",
+      "resource_policy": {
+        "unit": "q225-speedy-iq3s-q173-8k-a19.service",
+        "MemoryMax": "96G",
+        "CPUQuota": "400%",
+        "RuntimeMaxSec": 5400,
+        "KillMode": "control-group",
+        "OOMPolicy": "kill",
+        "outer_readiness_s": 2700,
+        "engine_ready_s": 2400
+      },
+      "artifacts": {
+        "config": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a19-cache6000-spec2-pw0-mtp-off.json",
+          "sha256": "bd2b2c9a3c9d47a8b5165fa649a04dc905b1e7265df2eadf8e4b1e8ec905819c"
+        },
+        "runner": {
+          "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a19-cache6000-spec2-pw0-mtp-off.py",
+          "sha256": "71be367f47648fb83e992a6bbbf78159a6a9e763e215e71a98e3a73391d38c8e"
+        },
+        "static_compile": "PASS"
+      },
+      "source_evidence": "Pinned Speedy generate.cpp: --expert-cache auto estimates slots from CUDA free bytes after weights/session/drafter and reserve (around lines 4500-4570); explicit layer-split cache is capped to the computed fit. A17 logged CUDA0 cache 14.06 GiB and CUDA1 16.24 GiB before the 63.6 MiB verifier-arena failure. A18 established native IQ pack rejects spec<2, so A19 keeps spec2.",
+      "stop_conditions": [
+        "stop if API/verifier does not become ready or runtime error occurs",
+        "stop on OOM/foreign inference server",
+        "stop if preflight/helper/P2P/unlock fails, temperature>=82C, PSI avg10>=10%, or watchdog expiry"
+      ],
+      "prerequisites": "Fresh exclusive-lock check, source/config hash verification, Sheet preregistration readback, then fresh hardware/server preflight before CUDA.",
+      "artifact_correction": "CONFIG path corrected before launch; no model/CUDA.",
+      "sheet_prereg_readback": "PASS",
+      "preflight_sha256": "b6dfc5741894bccb1e75d0f041bf8cfaeb90e23209d45b776256e8ccd780f06d",
+      "launch_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/launch-a19.json",
+      "launch_receipt_sha256": "9d578be039a19a5725eeca5f52de1f030cc9b6c81a1481523d6e1424f0d50c87",
+      "systemd_invocation_id": "a2d10becea134c3b87f8307ea4d74c8c",
+      "worker_pid": 2289259,
+      "result_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a19-q173-screen-invalid-tokenizer.json",
+      "result_receipt_sha256": "4c43a421c72f1fe53424ff6d318447e56fdb3c149d57e3a58254d258ff45279a",
+      "postflight_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/postflight-a19.json",
+      "postflight_sha256": "ccc83ef54a4eabf883f7a2035c58f2cfdc608a7bc53e58bfb9c034657f5451ba",
+      "observed_result": {
+        "q173_gate": "FAIL/INVALID SCREEN",
+        "prefill_tps": "N/D for exact 8K Q173; engine diagnostics only, mean 2395.63 over three prompts of 7344–7573 tokens",
+        "decode_tps": "24.15 tok/s mean of two full 128-token responses only (seeds42/44), diagnostic and far below 90 tok/s follow-up gate",
+        "quality_q172": null,
+        "continue_ladder": false
+      },
+      "gpu_compute_started": true
+    }
+  ]
+}

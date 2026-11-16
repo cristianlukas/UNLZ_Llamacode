@@ -1,0 +1,12 @@
+{"schema":"llama-benchy-progress.v1","type":"header","ts":1794814424.9474616,"llama_benchy_version":"0.4.0"}
+{"schema":"llama-benchy-progress.v1","type":"latency_measured","ts":1794814425.6600938,"latency_s":0.0017569743116231014,"mode":"generation"}
+{"schema":"llama-benchy-progress.v1","type":"request_start","ts":1794814425.6646843,"request_id":0,"model":"qwen3.8-flash-next-iq3_s","base_url":"http://127.0.0.1:18489/v1","prompt_size":8192,"response_size":128,"context_size":0,"concurrency":1,"run_index":0,"target_label":""}
+{"schema":"llama-benchy-progress.v1","type":"request_first_response","ts":1794814425.746384,"request_id":0,"ttfr_s":0.08159542598878033}
+{"schema":"llama-benchy-progress.v1","type":"request_first_token","ts":1794814428.7622144,"request_id":0,"ttft_s":3.097415940981591}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1794814428.7622752,"request_id":0,"count":1,"snippet":"I","estimated":true}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1794814428.8499103,"request_id":0,"count":1,"snippet":" have","estimated":true}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1794814428.8615022,"request_id":0,"count":1,"snippet":" the","estimated":true}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1794814428.9492958,"request_id":0,"count":1,"snippet":" photograph","estimated":true}
+{"schema":"llama-benchy-progress.v1","type":"tokens","ts":1794814429.0436006,"request_id":0,"count":1,"snippet":".","estimated":true}
+{"schema":"llama-benchy-progress.v1","type":"request_end","ts":1794814429.0623775,"request_id":0,"total_tokens":6,"prompt_tokens":7344,"decode_seconds":0.30018536001443863,"error":""}
+{"schema":"llama-benchy-progress.v1","type":"bench_complete","ts":1794814429.0638096,"status":"ok"}

@@ -1,0 +1,56 @@
+{
+  "attempt_id": "Q225-A19",
+  "status": "FAIL_Q173_HARNESS_TOKENIZER_AND_EARLY_STOP",
+  "registered_utc": "2026-11-16T07:20:41+00:00",
+  "hypothesis": "The 63.6 MiB verifier arena fails because the automatically sized first-stage expert cache leaves insufficient ASUS VRAM. Capping --expert-cache from auto to 6000 slots should restore enough headroom while retaining native-IQ-compatible --spec 2.",
+  "single_factor_change": "A17 valid spec2/MTP-off configuration, change only --expert-cache auto -> 6000 slots. Keep reserve-later4096, pipeline-windows0, dual RTX3090 layer split, model, context, sampler and Q173 workload fixed.",
+  "protocol": "Q173-style exact prompt8192/output128, concurrency1, seeds42/43/44 serial, llama-benchy0.4.0, no cache/adaptation/warmup.",
+  "decision_gate": "All three exact requests complete; cleanup PASS; screen gate mean prefill>=1000 and decode>=90 tok/s. Throughput only; no Q172.",
+  "resource_policy": {
+    "unit": "q225-speedy-iq3s-q173-8k-a19.service",
+    "MemoryMax": "96G",
+    "CPUQuota": "400%",
+    "RuntimeMaxSec": 5400,
+    "KillMode": "control-group",
+    "OOMPolicy": "kill",
+    "outer_readiness_s": 2700,
+    "engine_ready_s": 2400
+  },
+  "artifacts": {
+    "config": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/config/speedy-iq3s-dual-q173-8k-a19-cache6000-spec2-pw0-mtp-off.json",
+      "sha256": "bd2b2c9a3c9d47a8b5165fa649a04dc905b1e7265df2eadf8e4b1e8ec905819c"
+    },
+    "runner": {
+      "path": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/scripts/run_q173_screen-a19-cache6000-spec2-pw0-mtp-off.py",
+      "sha256": "71be367f47648fb83e992a6bbbf78159a6a9e763e215e71a98e3a73391d38c8e"
+    },
+    "static_compile": "PASS"
+  },
+  "source_evidence": "Pinned Speedy generate.cpp: --expert-cache auto estimates slots from CUDA free bytes after weights/session/drafter and reserve (around lines 4500-4570); explicit layer-split cache is capped to the computed fit. A17 logged CUDA0 cache 14.06 GiB and CUDA1 16.24 GiB before the 63.6 MiB verifier-arena failure. A18 established native IQ pack rejects spec<2, so A19 keeps spec2.",
+  "stop_conditions": [
+    "stop if API/verifier does not become ready or runtime error occurs",
+    "stop on OOM/foreign inference server",
+    "stop if preflight/helper/P2P/unlock fails, temperature>=82C, PSI avg10>=10%, or watchdog expiry"
+  ],
+  "prerequisites": "Fresh exclusive-lock check, source/config hash verification, Sheet preregistration readback, then fresh hardware/server preflight before CUDA.",
+  "artifact_correction": "A19 runner CONFIG path corrected before process launch; no CUDA/model load occurred.",
+  "sheet_prereg_readback": "PASS",
+  "preflight_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/preflight-a19-artifacts.json",
+  "preflight_sha256": "b6dfc5741894bccb1e75d0f041bf8cfaeb90e23209d45b776256e8ccd780f06d",
+  "launch_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/launch-a19.json",
+  "launch_receipt_sha256": "9d578be039a19a5725eeca5f52de1f030cc9b6c81a1481523d6e1424f0d50c87",
+  "systemd_invocation_id": "a2d10becea134c3b87f8307ea4d74c8c",
+  "worker_pid": 2289259,
+  "result_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a19-q173-screen-invalid-tokenizer.json",
+  "result_receipt_sha256": "4c43a421c72f1fe53424ff6d318447e56fdb3c149d57e3a58254d258ff45279a",
+  "postflight_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/postflight-a19.json",
+  "postflight_sha256": "ccc83ef54a4eabf883f7a2035c58f2cfdc608a7bc53e58bfb9c034657f5451ba",
+  "observed_result": {
+    "q173_gate": "FAIL/INVALID SCREEN",
+    "prefill_tps": "N/D for exact 8K Q173; engine diagnostics only, mean 2395.63 over three prompts of 7344–7573 tokens",
+    "decode_tps": "24.15 tok/s mean of two full 128-token responses only (seeds42/44), diagnostic and far below 90 tok/s follow-up gate",
+    "quality_q172": null,
+    "continue_ladder": false
+  }
+}

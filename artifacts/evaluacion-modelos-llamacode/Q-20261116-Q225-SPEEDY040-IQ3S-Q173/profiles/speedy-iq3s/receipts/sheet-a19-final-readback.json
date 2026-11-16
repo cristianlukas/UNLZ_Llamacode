@@ -1,0 +1,38 @@
+{
+  "timestamp_utc": "2026-11-16T07:43:09.230426+00:00",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Resultados",
+  "row": 509,
+  "updated_ranges": [
+    "Resultados!D509:E509",
+    "Resultados!M509:N509",
+    "Resultados!R509:R509",
+    "Resultados!T509:AH509"
+  ],
+  "readback_verified": true,
+  "readback_summary": {
+    "status": "A19 finished; Q173 exact invalid; decode gate failed; no promotion or ladder",
+    "prompt_tokens_actual": [
+      7573,
+      7344,
+      7496
+    ],
+    "completion_tokens_actual": [
+      128,
+      6,
+      128
+    ],
+    "diagnostic_prefill_tps_mean": 2395.633333333333,
+    "diagnostic_decode_tps_mean_full_128_only": 24.15,
+    "q172": "N/D — no ejecutado",
+    "cold_init_seconds": 560.413,
+    "hot_init": "N/D",
+    "postflight": "PASS; GPUs free; port18489 free; helper, ASUS reservation, P2P, gpu_unlock PASS"
+  },
+  "evidence_sha256": {
+    "attempt_a19": "4c43a421c72f1fe53424ff6d318447e56fdb3c149d57e3a58254d258ff45279a",
+    "results_json": "76dc1ae2f51526aaf5415d7debf93310cea706d4268f0bb3f02430d7ee075f5b",
+    "server_ready": "fdef3a8123a0d859dc6c731c18b7e8d61be777d893d26f49284ca11cfb7c7ad8",
+    "postflight": "ccc83ef54a4eabf883f7a2035c58f2cfdc608a7bc53e58bfb9c034657f5451ba"
+  }
+}

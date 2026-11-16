@@ -1,0 +1,18 @@
+{
+  "attempt_id": "Q225-A19",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "sheet": "Resultados",
+  "sheet_id": 1972251122,
+  "ranges": [
+    "Resultados!D509:E509",
+    "Resultados!AC509:AF509"
+  ],
+  "readback_verified": true,
+  "readback": {
+    "status": "A19 READY; corrected config path, static/artifact verification and fresh preflight PASS; detached launch next",
+    "preflight": "PASS 2026-11-16T07:21:58Z; GPUs 913/108MiB; MemAvailable118.98GiB; PSI0; P2P, unlock, ASUS reservation/helper PASS; no foreign servers",
+    "config_sha256": "bd2b2c9a3c9d47a8b5165fa649a04dc905b1e7265df2eadf8e4b1e8ec905819c",
+    "runner_sha256": "71be367f47648fb83e992a6bbbf78159a6a9e763e215e71a98e3a73391d38c8e",
+    "preflight_sha256": "b6dfc5741894bccb1e75d0f041bf8cfaeb90e23209d45b776256e8ccd780f06d"
+  }
+}

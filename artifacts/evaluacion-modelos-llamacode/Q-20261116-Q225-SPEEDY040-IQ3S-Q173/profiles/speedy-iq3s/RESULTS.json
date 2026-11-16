@@ -1,0 +1,94 @@
+{
+  "test_id": "Q225-SPEEDY040-IQ3S-Q173-8K-SCREEN",
+  "attempt_id": "Q225-A19",
+  "status": "FAIL_Q173_HARNESS_TOKENIZER_AND_EARLY_STOP",
+  "timestamp_utc": "2026-11-16T07:38:52+00:00",
+  "requests": 3,
+  "valid_exact_q173_requests": 0,
+  "actual_generated_tokens": 262,
+  "prefill_mean_tok_s": null,
+  "decode_mean_tok_s": 24.15,
+  "quality_q172": null,
+  "actual_prompt_tps_diagnostic_mean": 2395.633333333333,
+  "runs": [
+    {
+      "seed": 42,
+      "actual_prompt_tokens": 7573,
+      "actual_completion_tokens": 128,
+      "request_prompt_setting": 8192,
+      "request_output_setting": 128,
+      "benchy_prefill_tps": null,
+      "benchy_decode_tps": 23.081231566863504,
+      "benchy_ttft_ms": 3391.349846991943,
+      "benchy_status": "ok",
+      "event_sha256": "9b19ca7be4d905558860508a6954bd2fb86be6238004ad40b7a12ca1e608940e",
+      "result_sha256": "81cfbf1983490550e234ba4a2354550ee5f6a115244674f2ef8bdd8b18ddff73"
+    },
+    {
+      "seed": 43,
+      "actual_prompt_tokens": 7344,
+      "actual_completion_tokens": 6,
+      "request_prompt_setting": 8192,
+      "request_output_setting": 128,
+      "benchy_prefill_tps": 91985.75179910721,
+      "benchy_decode_tps": 17.769000048321807,
+      "benchy_ttft_ms": 3097.415940981591,
+      "benchy_status": "ok",
+      "event_sha256": "07c87b27e25b70cb8c6df39d6ae940f3139a3c0fbd2a25832bbfd51f878845da",
+      "result_sha256": "6bdcb56ca0142b74b310af11335855e52aa13a093a46a1b5ab86a7f8e85694ce"
+    },
+    {
+      "seed": 44,
+      "actual_prompt_tokens": 7496,
+      "actual_completion_tokens": 128,
+      "request_prompt_setting": 8192,
+      "request_output_setting": 128,
+      "benchy_prefill_tps": 1886540.9414447427,
+      "benchy_decode_tps": 25.3529057758454,
+      "benchy_ttft_ms": 3101.6091460187454,
+      "benchy_status": "ok",
+      "event_sha256": "3deada4fe057df7988e5935e3cadd754fe98f3b37c4943900669d2cb2bc3c207",
+      "result_sha256": "0cfd71cfe83aaf843489551d44d18660082d62c9b2e2a2210a1b3394557f2ece"
+    }
+  ],
+  "engine_direct_metrics": [
+    {
+      "prompt_tokens": 7573,
+      "reused_tokens": 0,
+      "prompt_read_tokens": 7573,
+      "prefill_ms": 3365,
+      "prefill_tps": 2250.5,
+      "generated_tokens": 128,
+      "decode_ms": 5514,
+      "decode_tps": 23.2
+    },
+    {
+      "prompt_tokens": 7344,
+      "reused_tokens": 0,
+      "prompt_read_tokens": 7344,
+      "prefill_ms": 3003,
+      "prefill_tps": 2445.9,
+      "generated_tokens": 6,
+      "decode_ms": 312,
+      "decode_tps": 19.2
+    },
+    {
+      "prompt_tokens": 7496,
+      "reused_tokens": 0,
+      "prompt_read_tokens": 7496,
+      "prefill_ms": 3010,
+      "prefill_tps": 2490.5,
+      "generated_tokens": 128,
+      "decode_ms": 5095,
+      "decode_tps": 25.1
+    }
+  ],
+  "error": "Harness tokenizer fallback caused non-8192 prompts; seed43 stopped at 6 tokens; direct engine stats retained as diagnostics only.",
+  "result_receipt": "artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/attempt-a19-q173-screen-invalid-tokenizer.json",
+  "result_receipt_sha256": "4c43a421c72f1fe53424ff6d318447e56fdb3c149d57e3a58254d258ff45279a",
+  "postflight": "PASS",
+  "decision_gate": {
+    "continue_ladder": false,
+    "reason": "Exact Q173 invalid; diagnostic decode24.15 tok/s on two complete outputs is below 90 tok/s gate."
+  }
+}

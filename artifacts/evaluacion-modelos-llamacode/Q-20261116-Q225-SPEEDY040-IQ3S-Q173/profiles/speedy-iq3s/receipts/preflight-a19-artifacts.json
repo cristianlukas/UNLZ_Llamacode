@@ -1,0 +1,207 @@
+{
+  "status": "PASS",
+  "preflight": {
+    "timestamp_utc": "2026-11-16T07:24:07Z",
+    "snapshot": {
+      "gpus": {
+        "0": {
+          "uuid": "GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 989,
+          "memory_total_mib": 24576,
+          "temperature_c": 45
+        },
+        "1": {
+          "uuid": "GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049",
+          "name": "NVIDIA GeForce RTX 3090",
+          "memory_used_mib": 108,
+          "memory_total_mib": 24576,
+          "temperature_c": 31
+        }
+      },
+      "compute": {
+        "0": [],
+        "1": []
+      },
+      "mem_available_kib": 118987480,
+      "memory_pressure_avg10": 0.0
+    },
+    "p2p": "OK bidireccional",
+    "gpu_unlock": "gpu_unlock.targets=0000:01:00.0,0000:03:00.0",
+    "asus_reservation": "StatusText=0000:01:00.0: 1636/1636 frames held, 0 pending",
+    "boot_helper": "PASS",
+    "foreign_servers": []
+  },
+  "verified": [
+    {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q225-Speedy-v0.4.0/strata-linux-x64-rtx30.zip",
+      "bytes": 53374865,
+      "sha256": "3827c0ca8ddd19dd757bd87c57426c01db63048c1b1574cba83edc3a8bac9fad"
+    },
+    {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q225-Speedy-v0.4.0/engine-v0.4.0/strata",
+      "bytes": 105516376,
+      "sha256": "extracted from pinned archive"
+    },
+    {
+      "path": "/media/cristian/HDD extra/LlamaCode-evals/Q211-qwen38-iq3s-mtp/target/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+      "bytes": 54817524224,
+      "sha256": "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3"
+    },
+    {
+      "path": "/media/cristian/HDD extra/LlamaCode-evals/Q211-qwen38-iq3s-mtp/target/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+      "bytes": 28800138432,
+      "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    },
+    {
+      "path": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/data/mtp/rt/dense.bin",
+      "bytes": 116099072,
+      "sha256": "c724dc0b0822ada5d2977bf5bde821605feabaa64ea2e0045b67ca656329070a"
+    },
+    {
+      "path": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/data/mtp/rt/experts.bin",
+      "bytes": 707788800,
+      "sha256": "09398406be61f1f54c93861f449e48b8df0bfccbc9ec9b2b7636775a6ea9244f"
+    },
+    {
+      "path": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/data/mtp/rt/draft_vocab.bin",
+      "bytes": 425196,
+      "sha256": "b1e1d3a7a9e4bf862dcd5923ce661fb59bbd07907e594df5cf86a62ac235cb91"
+    }
+  ],
+  "verified_pack": [
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/dense.bin",
+      "bytes": 1538035200,
+      "sha256": "d2af3d8331e5c7a1985d1d589747230f9d56719a6d33c7cddc9ee6b81cde6b13"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/index.txt",
+      "bytes": 93685,
+      "sha256": "b2a014878c3b61d6a6f915e194055a5e68ede34f9465dd1cb13249d902f008ac"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/native_experts.txt",
+      "bytes": 3304,
+      "sha256": "d9ac2dfa3ee63c55c9c6a6db26f72da0cec0ee41733f007e5cbbbba71617aa5d"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/conversions.json",
+      "bytes": 306,
+      "sha256": "51df3cd6ffd0d38c2da8e2d3a95a604b4a96c20b06fc639a9bf477282a42b86a"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer/vocab.json",
+      "bytes": 5737005,
+      "sha256": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer/chat_template.jinja",
+      "bytes": 9993,
+      "sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer/tokenizer.json",
+      "bytes": 541,
+      "sha256": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer/merges.txt",
+      "bytes": 3353258,
+      "sha256": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer/token_type.json",
+      "bytes": 744960,
+      "sha256": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b"
+    }
+  ],
+  "artifact_hashes_reused_from": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/receipts/preflight-a04-artifacts.json",
+  "artifact_stat_identity_checked": [
+    {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q225-Speedy-v0.4.0/strata-linux-x64-rtx30.zip",
+      "bytes": 53374865,
+      "sha256": "3827c0ca8ddd19dd757bd87c57426c01db63048c1b1574cba83edc3a8bac9fad"
+    },
+    {
+      "path": "/media/cristian/Disco local/Modelos-eval/Q225-Speedy-v0.4.0/engine-v0.4.0/strata",
+      "bytes": 105516376,
+      "sha256": "extracted from pinned archive"
+    },
+    {
+      "path": "/media/cristian/HDD extra/LlamaCode-evals/Q211-qwen38-iq3s-mtp/target/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+      "bytes": 54817524224,
+      "sha256": "4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3"
+    },
+    {
+      "path": "/media/cristian/HDD extra/LlamaCode-evals/Q211-qwen38-iq3s-mtp/target/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+      "bytes": 28800138432,
+      "sha256": "316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113"
+    },
+    {
+      "path": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/data/mtp/rt/dense.bin",
+      "bytes": 116099072,
+      "sha256": "c724dc0b0822ada5d2977bf5bde821605feabaa64ea2e0045b67ca656329070a"
+    },
+    {
+      "path": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/data/mtp/rt/experts.bin",
+      "bytes": 707788800,
+      "sha256": "09398406be61f1f54c93861f449e48b8df0bfccbc9ec9b2b7636775a6ea9244f"
+    },
+    {
+      "path": "/media/cristian/Disco local/Models/ASTRA-IQ3_S-calibrated-20261006/data/mtp/rt/draft_vocab.bin",
+      "bytes": 425196,
+      "sha256": "b1e1d3a7a9e4bf862dcd5923ce661fb59bbd07907e594df5cf86a62ac235cb91"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/dense.bin",
+      "bytes": 1538035200,
+      "sha256": "d2af3d8331e5c7a1985d1d589747230f9d56719a6d33c7cddc9ee6b81cde6b13"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/index.txt",
+      "bytes": 93685,
+      "sha256": "b2a014878c3b61d6a6f915e194055a5e68ede34f9465dd1cb13249d902f008ac"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/native_experts.txt",
+      "bytes": 3304,
+      "sha256": "d9ac2dfa3ee63c55c9c6a6db26f72da0cec0ee41733f007e5cbbbba71617aa5d"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/conversions.json",
+      "bytes": 306,
+      "sha256": "51df3cd6ffd0d38c2da8e2d3a95a604b4a96c20b06fc639a9bf477282a42b86a"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer/vocab.json",
+      "bytes": 5737005,
+      "sha256": "4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer/chat_template.jinja",
+      "bytes": 9993,
+      "sha256": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer/tokenizer.json",
+      "bytes": 541,
+      "sha256": "c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer/merges.txt",
+      "bytes": 3353258,
+      "sha256": "4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332"
+    },
+    {
+      "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261116-Q225-SPEEDY040-IQ3S-Q173/profiles/speedy-iq3s/generated-pack/iq3_s/tokenizer/token_type.json",
+      "bytes": 744960,
+      "sha256": "5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b"
+    }
+  ],
+  "artifact_receipt_sha256": "51b75c64d871c34fd3cad997b44f7cca53ff7d53a5669195c9bf572fb078decf",
+  "artifact_stat_snapshot_sha256": "21e60517a80582a96e378f3918ce5d23e8b50464c12b8cdbae1e5569931205ff",
+  "pack_receipt_sha256": "e8f0264b5ed77e9c18e5781b41a9678c47a57fad590ba144b499a2865fc0278b",
+  "config_sha256": "bd2b2c9a3c9d47a8b5165fa649a04dc905b1e7265df2eadf8e4b1e8ec905819c",
+  "runtime_executable_sha256": "extracted from pinned archive"
+}
