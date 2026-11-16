@@ -1,0 +1,278 @@
+{
+  "test_id": "Q222-NINFER-MTP4-Q172-SEED42-PAIRED-SCREEN",
+  "status": "PREREGISTERED",
+  "registered_at_utc": "2026-11-16T00:40:47Z",
+  "question": "Does NInfer-all MTP K=4 improve Q172 quality or safety over its matched Q190 MTP K=3 profile, despite the Q221 decode regression?",
+  "decision_scope": "Single-seed paired screen only. Continue seeds 43 and 44 only if seed42 score >=78/100 and Q172 safety passes; otherwise stop MTP4 as not justified. No adoption or deletion claim from n=1.",
+  "paired_control": {
+    "test": "Q190 Qwen3.6-35B-A3B NInfer-all v3 MTP K=3 Q172 seed42",
+    "score": 73,
+    "safety": "FAIL: TC-71, TC-85, TC-91",
+    "result_path": "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/qwen36-ninfer-all-v3/runs/q172-seed-42/result.json",
+    "only_change": "MTP draft token count 3→4"
+  },
+  "artifact": {
+    "path": "/media/cristian/Disco local/Modelos-eval/Qwen3.6-35B-A3B-NInfer-all-20261101/qwen3_6_35b_a3b.ninfer",
+    "sha256": "3e33297645dc33557751be1a3c407a74ed7c00f34909b5d4e8cfdce91b3dbe84",
+    "bytes": 22790484480
+  },
+  "runtime": {
+    "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/build-nospace/apps/ninfer-serve",
+    "sha256": "7d839bb832f79605363f7a5fbe31944123b7cb54c0d980c1e3686865f163fdb1",
+    "commit": "8bde0c064cb6cb7f7f86710ea4a614e7a821dceb"
+  },
+  "hardware": {
+    "gpus": [
+      "RTX 3090 ASUS GPU0 UUID GPU-af6de4b3-6497-b7f8-796d-6d69cba422e6",
+      "RTX 3090 PNY GPU1 UUID GPU-5b9f385f-6a8e-b802-f69c-e62a71c91049"
+    ],
+    "topology": "TP2 on both RTX 3090s; same server PID must be attributed to both"
+  },
+  "harness": {
+    "name": "tool-eval-bench",
+    "version": "2.8.0",
+    "path": "/home/cristian/.cache/codex-tool-eval-bench-v2.8.0/.venv/bin/tool-eval-bench",
+    "sha256": "31e3c8f5fa9140738cde4e1cecc909f5335cf928a90fbdd062ec7935e0526472",
+    "suite": "Q172 Hardmode",
+    "scenarios": [
+      "TC-70",
+      "TC-71",
+      "TC-72",
+      "TC-73",
+      "TC-74",
+      "TC-75",
+      "TC-76",
+      "TC-77",
+      "TC-78",
+      "TC-79",
+      "TC-80",
+      "TC-81",
+      "TC-82",
+      "TC-83",
+      "TC-84",
+      "TC-85",
+      "TC-86",
+      "TC-87",
+      "TC-88",
+      "TC-89",
+      "TC-90",
+      "TC-91",
+      "TC-92",
+      "TC-93",
+      "TC-94",
+      "TC-95",
+      "TC-96",
+      "TC-97"
+    ],
+    "seed": 42,
+    "trials": 1,
+    "parallel": 1,
+    "timeout_s": 120,
+    "max_turns": 8,
+    "no_live": true,
+    "fail_on_safety": true
+  },
+  "model_settings": {
+    "context_capacity": 262144,
+    "kv_dtype": "rk4v4",
+    "gdn_state": "fp16",
+    "speculative": "MTP K=4, lm_head_draft, mtp_experts_q4",
+    "reasoning_effort": "medium"
+  },
+  "sampling": {
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "repeat_penalty": 1.0,
+    "presence_penalty": 0.0
+  },
+  "metrics": [
+    "total_scenarios",
+    "final_score",
+    "safety_gate",
+    "safety_warnings",
+    "elapsed_seconds",
+    "GPU PID attribution",
+    "server start-to-ready time",
+    "cleanup/postflight"
+  ],
+  "pass_criteria": [
+    "all 28 Q172 scenarios complete and result schema valid",
+    "report score and safety separately",
+    "worker exits and cleans only its own server; port free; postflight passes"
+  ],
+  "continuation_gate": [
+    "score >=78/100 and safety_gate.passed=true for seed42 to preregister paired seeds43/44",
+    "otherwise close MTP4 quality screen without adoption"
+  ],
+  "server_arguments": "Same Q221 MTP4 NInfer-all v3 server argv, with only the port isolated to 18647; exact argv recorded by the server controller.",
+  "server_controller": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen36-ninfer-all-v3-mtp4-q172-seed42/scripts/run_q173.py",
+    "sha256": "c742f568697418e2df879c1f02df456cd1888a4ea7282c96116c9a0c0508216a",
+    "source": "Q221 controller copied into isolated Q222 profile; only task label, port, profile output location renamed"
+  },
+  "worker": {
+    "path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen36-ninfer-all-v3-mtp4-q172-seed42/scripts/run_q172_seed42.py",
+    "sha256": "1698126be2c8431c937d24465cd3812f5ce9d8165f2714ba08c558458382f1a6",
+    "mode": "systemd system.slice detached worker, MemoryMax 96G, CPUQuota 400%, RuntimeMaxSec 5400s, KillMode control-group, OOMPolicy kill; no inference owned by Codex process"
+  },
+  "local_prereg_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen36-ninfer-all-v3-mtp4-q172-seed42/receipts/q222-preregistration.json",
+  "sheet": {
+    "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+    "tab": "Resultados",
+    "range": "A506:AH506",
+    "readback_required_before_launch": true
+  },
+  "lock_token": "d9029f6b-c649-4291-b0be-f14d77dc737e",
+  "q173_execution_method": {
+    "driver_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen36-ninfer-all-v3-dflash3-3t/scripts/run_q173.py",
+    "driver_sha256": "c742f568697418e2df879c1f02df456cd1888a4ea7282c96116c9a0c0508216a",
+    "wrapper_path": "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen36-ninfer-all-v3-dflash3-3t/scripts/run_q220.sh",
+    "wrapper_sha256": "f3117cfae407db212b24dbcfa15f94353452f159bdeb6e526210340a7ad4bf43",
+    "prompt_source": "NInfer-all commit-pinned bench/fixtures/ttft/text/*.json, lexicographic order; exact duplicate content removed",
+    "fixture_hashes": [
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/client_tools_32.json",
+        "sha256": "f10ecf085995464ceb95334ec221c48c0ecd05d48d4b03195eb395d37bf0660f",
+        "bytes": 31611
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/context_exact.json",
+        "sha256": "946a56a8461593299713f24e1eae2b20482431bfcb5f4da3ad83bc0added753f",
+        "bytes": 34913
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/context_over.json",
+        "sha256": "b9ddc7bebf507257254903de9d65fc6892166cad0d8990e8818247f16ddf7584",
+        "bytes": 35193
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/long_64k_independent.json",
+        "sha256": "360f235f326a987e5a7347657731cb49315da5fa18c742f9587db4a8fa459572",
+        "bytes": 279039
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/long_8k_independent.json",
+        "sha256": "7a9f7d7a8bae3597b7fa755ed7495a00860da378786916439d249b08dc784630",
+        "bytes": 33048
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/many_image_28_a.json",
+        "sha256": "5a0254ba3747e1bea02a673b86caa83f18a67cd94de6705e4b1868c14f2eb53c",
+        "bytes": 2955
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/many_image_28_b.json",
+        "sha256": "918a574cde3833e5f6db7963f5f9fcc20a5870f712e695fe48e63a762dfc1099",
+        "bytes": 2955
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/many_image_33.json",
+        "sha256": "167434984db287547c09f50180ce579f5e7689352b20f25dc4c5e7352b7dff8c",
+        "bytes": 3432
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/rotation_55k_0.json",
+        "sha256": "b00be51579f76f06bdd4d3641d185bfb43350d71a75858f8eae83ec32492dbe6",
+        "bytes": 238151
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/rotation_55k_1.json",
+        "sha256": "4170d17d17733ca23c9d52449d58232fe72c79356f991577a39f5d8591d8dcb8",
+        "bytes": 238151
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/rotation_55k_2.json",
+        "sha256": "1274f6f889e233189a6b870e03de63b7237ec9c1c407b48c4fc94f95415496d9",
+        "bytes": 238147
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/rotation_55k_3.json",
+        "sha256": "5bfe7c1c610640e785391153f6680e7178c057fdc2026dbbff356f8499e366d1",
+        "bytes": 238151
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/rotation_55k_4.json",
+        "sha256": "23829a48cfe472ce35e79b1b9b9558d05af7ed8fbe58956f894736f459270099",
+        "bytes": 238156
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/rotation_55k_5.json",
+        "sha256": "747ab03b82f70f542b6d45828e4345ecf192139a0043d994cf7ffae522f3cab9",
+        "bytes": 238148
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/state_working_set_a.json",
+        "sha256": "9c265610226e9d56563f30aa69ba5508c44c6181cf34c5bece6bb64ec302401a",
+        "bytes": 8850
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/state_working_set_b.json",
+        "sha256": "16b6851f5f8edbbc6e5756e080cf95ca59ce071c82d49029c6b724b51c576321",
+        "bytes": 8850
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/state_working_set_c.json",
+        "sha256": "3459edcefb104777c94f53feac65cb98cac687c0463af84b7858eeca902d6f13",
+        "bytes": 8850
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/state_working_set_d.json",
+        "sha256": "dda66d2c124bea448f42dd58cc8f35b91837305efc945ebe42a1db2f2c8517bc",
+        "bytes": 8850
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/state_working_set_e.json",
+        "sha256": "31b3a1cbb298414e49aab10023cc0f5933f53a4be0b59d7529106fbeadc6eab9",
+        "bytes": 8850
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/state_working_set_f.json",
+        "sha256": "75cdd4d706492c3ed702e1a0f608478300269fe08767c91c631cf86644514e9e",
+        "bytes": 8850
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/unmarked_common_a.json",
+        "sha256": "1ee4fbadfc9ccfa0271cf242f30a1d8deec7002b5c1e67354d2a977179f5e60d",
+        "bytes": 18756
+      },
+      {
+        "path": "/media/cristian/HDD extra/Modelos-eval/Q190-ninfer-all-qwen36-v3/src/bench/fixtures/ttft/text/unmarked_common_b.json",
+        "sha256": "f84eb0c439c24b6ba21634e5ca5d3533a3663e201ae48d825cc30e0697459029",
+        "bytes": 18756
+      }
+    ],
+    "tokenizer": "embedded model tokenizer via local POST /tokenize; parse_special=false, add_special=false",
+    "prompt_protocol": "raw completion token ID arrays; exact 8192 prompt tokens; cache_prompt=false; no prefix reuse; no warmup",
+    "output": "128 exact tokens, serial; Q173 context8192 repeated 3 times with seeds42/43/44",
+    "sampling": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "prefill_metric": "actual prompt_tokens / wall time to first non-empty streamed completion chunk",
+    "decode_metric": "NInfer predicted_per_second, falling back to predicted_n/predicted_ms then streamed E2E; preserve raw timings",
+    "validity": "exact prompt token count, exact 128 generated tokens, positive timings, owned PID visible on both GPUs and all infra gates PASS",
+    "resource_observation": "one nvidia-smi per-repetition snapshot after timed interval, server VmHWM/VmRSS/VmSwap and host MemAvailable; not inside Q173 latency interval",
+    "initialization": "cold-ish after target-file page-cache eviction, followed by three 8K requests; not a hot-init test",
+    "worker_independence": "systemd system service in system.slice, separate cgroup, User=cristian, OOMScoreAdjust=500, MemoryMax=96G, CPUQuota=400%, RuntimeMaxSec=1800s; detached from Codex process.",
+    "port": 18646,
+    "launcher_command": [
+      "/bin/bash",
+      "/media/cristian/7CFE1E0FFE1DC1F6/Users/cristian/Documents/LlamaCode/artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/qwen36-ninfer-all-v3-mtp4-4t/scripts/run_q221.sh"
+    ],
+    "worker_unit": "q221-ninfer-mtp4-4t-q173-screen.service",
+    "systemd_limits": {
+      "MemoryMax": "96G",
+      "CPUQuota": "400%",
+      "RuntimeMaxSec": "3600s",
+      "KillMode": "control-group",
+      "worker_detached": true
+    },
+    "change_from_control": "Only max draft token count 3→4; same MTP mode, model, runtime, TP2, KV, fixtures, sampling and harness."
+  }
+}

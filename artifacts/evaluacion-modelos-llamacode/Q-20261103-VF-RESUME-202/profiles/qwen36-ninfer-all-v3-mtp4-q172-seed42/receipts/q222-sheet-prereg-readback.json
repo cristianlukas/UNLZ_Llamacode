@@ -1,0 +1,30 @@
+{
+  "test_id": "Q222-NINFER-MTP4-Q172-SEED42-PAIRED-SCREEN",
+  "verified_at_utc": "2026-11-16T00:42:43Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "range": "Resultados!A506:AH506",
+  "readback": "PASS",
+  "key_values": {
+    "A506": "Q222-NINFER-MTP4-Q172-SEED42-PAIRED-SCREEN",
+    "E506": "PREREGISTERED · paired Q172 screen only; continue seeds43/44 only if seed42 ≥78/100 and safety passes; no adoption claim at n=1",
+    "J506": "2 · RTX 3090 (GPU0+GPU1; TP2)",
+    "T506": "PENDING · Q172 not executed yet",
+    "AF506": "Plan/receipts: profiles/qwen36-ninfer-all-v3-mtp4-q172-seed42/PLAN.md; prereg SHA-256 eb49319146a717fbf1f77494f10414d17f4cbad13278f9c231beb2a997fc3495"
+  },
+  "format_readback": "Arial 10, wrap, top aligned matches row505; no validation/chips present",
+  "preflight": {
+    "status": "PASS",
+    "foreign_inference_servers": [],
+    "p2p": "OK both directions",
+    "gpu_unlock": "0000:01:00.0,0000:03:00.0",
+    "boot_helper": "PASS",
+    "port_free": true
+  },
+  "prereg_sha256": "eb49319146a717fbf1f77494f10414d17f4cbad13278f9c231beb2a997fc3495",
+  "running_state_at_utc": "2026-11-16T00:43:23Z",
+  "running_readback": "PASS",
+  "running_cells": {
+    "Resultados!E506": "RUNNING · detached worker preregistered; launching after fresh preflight PASS; no score yet",
+    "Resultados!AD506": "Prelaunch CPU/static check PASS; fresh live preflight PASS: both 3090, no foreign server, P2P/helper/unlock/quarantine PASS; dedicated port free. Worker detached in bounded system.slice."
+  }
+}
