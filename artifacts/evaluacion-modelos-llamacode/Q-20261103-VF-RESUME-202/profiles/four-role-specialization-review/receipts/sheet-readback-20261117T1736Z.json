@@ -1,0 +1,44 @@
+{
+  "timestamp_utc": "2026-11-17T17:36:43Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado",
+  "changes": [
+    {
+      "sheet": "Modelos locales por peso",
+      "range": "B2:C2",
+      "before": [
+        "LUNA · CANDIDATO RESTRINGIDO (sin tools)",
+        "LUNA speed screen PASS vs SOL Q206; no domina same-engine MTP3; Q172 safety n=1 FAIL"
+      ],
+      "after": [
+        "EVALUACIÓN · MTP4 (sin rol)",
+        "No asignar LUNA: Q253 ladder P/D 4600.61/214.04 vs MTP3 5155.87/230.02; Q172 79 n=1, TC-82/91 FAIL."
+      ]
+    },
+    {
+      "sheet": "Modelos locales por peso",
+      "range": "B14",
+      "before": "",
+      "after": "LUNA · CANDIDATO RESTRINGIDO (MTP3; sin tools)"
+    },
+    {
+      "sheet": "Accionables",
+      "range": "G139:K139",
+      "after": {
+        "G": "Modelos locales por peso filas 2,9,14,29,70,76,81,83; recibos Q190/Q206/Q209/Q222/Q232/Q253",
+        "H": "ASTRA Maya-XS DS4_SPLIT=39,1 como candidata por Q172; DSX T16 conserva mejor LHA, falta Q172 emparejado. SOL Flash-Next RCO IQ2_XS NInfer-all v3 Q206 fc12, equilibrio general. TERRA Ternary Bonsai 2 NInfer v3 para generación output-heavy: más decode y Q172 que SOL, menos prefill. LUNA Qwen3.6-35B-A3B NInfer MTP3 Q190, candidato rápido; MTP4 no supera MTP3 en ladder. No promover ni borrar pesos por esta clasificación.",
+        "I": "ASTRA Maya Q172 89,33 n=3, P514,86/D19,57; DSX Q172 86,33 n=3, P429,14/D25,33, LHA79,2 vs Maya76. SOL Q17281,67 n=3/P2154,41/D86,72/LHA60,8. TERRA Q17283,33 n=3/P1513,90/D157,44/LHA60. LUNA MTP3 Q17274 (73/70/79) n=3; P5155,87/D230,02; LHA100 n=5. MTP4 Q17279 n=1, TC-82/91 fail; Q253 P4600,61/D214,04, 6,95% debajo de MTP3 en decode. Q172 no es inteligencia general.",
+        "J": "Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/RESULTS.md; Q206-LONGHORIZON-LUKA-20261103/RESULTS.md; Q-20261115-MAYA-DS4SPLIT39-Q173/RESULTS.md; Q-20261029-VF-ITERATION-190/profiles/ternary-bonsai-ninfer-v3; Q206-LONGHORIZON-LUKA-20261103/profiles/sol-flashnext-ninferall-q206-build-fc12/RESULTS.md; Q253 MTP4 final-results.json; Q232 DFlash5 RESULTS.md",
+        "K": "Todos los perfiles recomendados fallan al menos un gate crítico Q172: ASTRA TC-92; SOL TC-74/82/92; TERRA TC-74/92; LUNA MTP3 TC-91. LHA-1 PASS no anula estos fallos. Uso sugerido: tareas técnicas de bajo riesgo, sin autorización de tools/acciones externas ni datos sensibles. MTP4 también falla TC-82/91 y es n=1."
+      }
+    },
+    {
+      "sheet": "Inventario de modelos",
+      "range": "R76",
+      "after": "Q221 MTP K=4 did not improve against Q190 MTP3: P−1.12%, D−4.38%. Q253 ladder: P4600.61/D214.04, 6.95% lower mean decode than Q190 MTP3 (5155.87/230.02); Q172=79 n=1 with TC-82/91 fail. MTP4 is not assigned LUNA. The same .ninfer target artifact is used by MTP3 Q190, which is the current LUNA candidate (Q172=74 n=3; LHA-1=100 n=5); TC-91 prevents tools. Keep the runtime profile separate and preserve artifact pending use audit."
+    }
+  ],
+  "readback": "PASS; exact values verified for Modelos locales por peso B2:C2, B14; Accionables G139:K139; Inventario de modelos R76.",
+  "tests_run": 0,
+  "gpu_used": false
+}

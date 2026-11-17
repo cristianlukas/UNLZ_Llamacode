@@ -1,0 +1,22 @@
+{
+  "recorded_at_utc": "2026-11-17T17:58:56Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado",
+  "verification": "Exact readback after correction of wording; no benchmark/inference/GPU.",
+  "ranges": {
+    "Accionables!H139:I139": [
+      "Asignar roles como especialistas, no como una escala universal. ASTRA: DSX Q190=86,33 y Maya DS4 Q206=89,33 en Q172 2.8.0, 131072 tokens, seeds42–44 y reasoning medium/budget75; diferencia pareada media +3 para Maya, descriptiva con n=3, no prueba estadística. El umbral preregistrado de 5 puntos era parte del gate de borrado junto con menor velocidad, no un umbral de superioridad. La Maya original Q190 (84,67) es otro perfil. SOL: Flash-Next IQ2_XS NInfer-all v3 Q206 fc12. TERRA: Ternary Bonsai 2 NInfer v3 para generación output-heavy: P1513,90/D157,44/Q17283,33 frente a SOL P2154,41/D86,72/Q17281,67; intercambio entre prefill y decode, sin dominancia general. LUNA: Qwen3.6-35B-A3B NInfer MTP3. Qwen IQ3_S, KVARK y variantes DFlash sin Q172 multi-semilla comparable quedan sin rol.",
+      "Roles provisionales: ASTRA = Maya DS4 por mayor Q172 observado; conservar DSX como alternativa de decode/LHA. No se declara que Maya sea estadísticamente superior. SOL = Flash-Next IQ2_XS NInfer para equilibrio/prompt-heavy. TERRA = Ternary Bonsai NInfer para output-heavy. LUNA = Qwen3.6-35B-A3B MTP3 para throughput y tareas de bajo riesgo. No son etiquetas de inteligencia global: TERRA/SOL cruzan métricas y ASTRA DSX/Maya también."
+    ],
+    "Accionables!N139": "2026-11-17 17:58:56 UTC",
+    "Modelos locales por peso!AA81": "Q190 histórico: DSX 86,33 vs Maya original 84,67 en seeds42–44; no usar ese score para el perfil Maya DS4. Comparación actual DSX Q190 vs Maya DS4 Q206: Tool-Eval 2.8.0, contexto131072, seeds42–44, reasoning medium/budget75. DSX 89/84/86 (86,33); Maya DS4 88/89/91 (89,33); delta pareado Maya−DSX −1/+5/+5, media +3 con n=3, descriptivo. El umbral preregistrado de 5 puntos era parte del gate de borrado junto con menor velocidad; no es un umbral estadístico de superioridad. Maya DS4: P514,86/D19,57/LHA76; DSX P429,14/D25,33/LHA79,2. Ambos TC-92 fail3/3; no-go autonomía/multi-tenant.",
+    "Modelos locales por peso!AA83": "Q206 DS4 Q172 media89,33 (88/89/91), n=3; comparación con DSX Q190 (86,33) en misma suite, contexto y seeds: diferencia +3 descriptiva, sin inferencia estadística. No heredar a este perfil el Maya Q190 histórico 84,67. El umbral preregistrado de 5 puntos era parte del gate de borrado, junto con menor velocidad, no un umbral de superioridad. P514,86/D19,57; LHA-1 76 de cohorte aparte. TC-92 falló 3/3; TC-89 también en seed42. No apto multi-tenant/autonomía."
+  },
+  "source_files": {
+    "artifacts/evaluacion-modelos-llamacode/Q-20261103-VF-RESUME-202/profiles/four-role-specialization-review/RESULTS.md": "edc7bfa749615ed723d71a30d39e046338b388ea4721942a3ca317d9c2832828",
+    "artifacts/evaluacion-modelos-llamacode/Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/RESULTS.md": "285ea03ae324476940cca161c717e051852940718fda4f699cb383794eeaebc4",
+    "artifacts/evaluacion-modelos-llamacode/Q206-LONGHORIZON-LUKA-20261103/profiles/maya-xs-iq1s-pny-ds4split39-q172/RESULTS.md": "e383ef096aef20076334e5be0dd2b7f3a25347656fe62dbc7575604602cfbdda",
+    "artifacts/evaluacion-modelos-llamacode/Q206-LONGHORIZON-LUKA-20261103/profiles/maya-xs-iq1s-pny-ds4split39-q172/PLAN.md": "830518f58a3bd19fbd6ce6475eeaf6c0cf30820cfd6f83d03877d47c97dd73a3"
+  },
+  "correction_status": "Superseded by sheet-readback-20261117T1809Z.json after current row lookup by profile name; do not use its row alignment."
+}

@@ -1,0 +1,25 @@
+{
+  "recorded_at_utc": "2026-11-17T18:09:51Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "spreadsheet_title": "Listado",
+  "verification": "Rows searched by exact model/profile name after updates; readback verified profile-to-note alignment. Google Sheets rows can move.",
+  "profiles": {
+    "Modelos locales por peso!B8": "LUNA · CANDIDATO RESTRINGIDO (MTP3; sin tools)",
+    "Modelos locales por peso!B12": "EVALUACIÓN · MTP4 (sin rol)",
+    "Modelos locales por peso!B16": "TERRA",
+    "Modelos locales por peso!B69": "SOL",
+    "Modelos locales por peso!B80": "ASTRA · ALTERNATIVA",
+    "Modelos locales por peso!B114": "ASTRA · PRINCIPAL"
+  },
+  "notes": {
+    "Modelos locales por peso!AA80": "Q190 Q173 macro 4 contextos; Q172 DSX 89/84/86, media86,33. Q190 Maya original 88/91/75 (84,67) es otro perfil; no usarlo para la Maya DS4 actual. Comparación DSX Q190 vs Maya DS4 Q206: 89/84/86 vs 88/89/91, seeds42–44, Q172 2.8.0, ctx131072, medium/budget75; deltas Maya−DSX −1/+5/+5, media+3 descriptiva n=3, no prueba de superioridad. DSX P429,14/D25,33/LHA79,2; Maya DS4 P514,86/D19,57/LHA76. Ambos TC-92 fail3/3; no-go autonomía/multi-tenant.",
+    "Modelos locales por peso!AA81": "Prefill N/D; decode 22,86 tok/s (Q19 HE20). Q172/LHA N/D para esta fila. No asignar ASTRA/SOL/TERRA/LUNA sin identificar variante y fingerprint. Si corresponde a UD-IQ4_XS, existen HE20 20/20 (una semilla) y Q31 BCB 0 soluciones aceptadas; confirmar fingerprint antes de atribuir.",
+    "Modelos locales por peso!AA83": "Qwen3.8-27B UD-Q4_K_XL GGUF+mmproj; QWEN38-VISION eval-only. Q190 Q173 dual, cinco contextos: P714,00/D21,83; Q172 seed42=79/100, TC-74/85/92 FAIL, no-go autonomía. LHA-1 60,8 de cohorte separada. No heredarle resultados de Maya-XS ni de otro runtime.",
+    "Modelos locales por peso!AA114": "Q209 Q173: cinco contextos (8K×3; 32K/64K/131K/261888×1), 7/7 salidas exactas de 128 tokens; a 261888 P593,171/D17,471, TTFT441,555s; 523904 excluido. Q206 Q172 DS4 88/89/91, media89,33 n=3. Comparación DSX Q190 89/84/86, media86,33: deltas Maya−DSX −1/+5/+5, +3 descriptivo; mismos escenarios/contexto/seeds42–44, no prueba estadística ni gate de borrado. Maya Q190 histórica 84,67 no se hereda. TC-92 fail3/3 (seed42 también TC-89); no-go multi-tenant/autonomía."
+  },
+  "acc_actionable_row139": {
+    "source": "Stable profile names and Q-ID references, no fragile row numbers.",
+    "last_updated_utc": "2026-11-17 18:09:51 UTC",
+    "status": "Readback PASS"
+  }
+}

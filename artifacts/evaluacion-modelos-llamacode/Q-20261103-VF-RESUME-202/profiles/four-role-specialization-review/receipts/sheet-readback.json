@@ -1,0 +1,32 @@
+{
+  "task_id": "VF-ROLE-MAP-20261117-01",
+  "readback_at_utc": "2026-11-17T15:35:11Z",
+  "spreadsheet_id": "1HonTqnoVJ7-nhogAx8fWbBQp52Vc1E4xWBXkaln1Lfk",
+  "readbacks": {
+    "Modelos locales por peso!B2:B2": ["LUNA · CANDIDATO RESTRINGIDO (sin tools)"],
+    "Modelos locales por peso!B70:B70": ["TERRA"],
+    "Modelos locales por peso!B76:B76": ["SOL"],
+    "Modelos locales por peso!B81:B81": ["ASTRA"],
+    "Modelos locales por peso!B83:B83": ["ASTRA"],
+    "Accionables!A139:N139": [
+      "Revisión de perfiles",
+      "VF-ROLE-MAP-20261117-01",
+      "P1 · elección ASTRA/SOL/TERRA/LUNA",
+      "RECOMENDACIÓN PROVISIONAL · seguridad pendiente",
+      "Asignar perfiles con base en Q172, Q173 y LHA-1",
+      "Roles locales de IA; seguridad de herramientas y datos sensibles",
+      "Modelos locales por peso filas 2,9,29,70,76,81,83; recibos Q190/Q206/Q209/Q222/Q232/Q253",
+      "No mezclar runtime/configuración/cohorte. ASTRA: Maya-XS DS4_SPLIT=39,1 como candidata principal por Q172 89,33 (n=3); mantener DSX T16 como alternativa ASTRA para LHA (79,2 vs Maya 76) hasta comparación actual emparejada. SOL: Flash-Next RCO IQ2_XS NInfer-all v3 Q206 fc12 como equilibrio; reservar Strata YaRN×4 para contexto 1M; no transferir sus métricas a NInfer. TERRA: Ternary Bonsai 2 NInfer v3 como alternativa de decode. LUNA: Qwen3.6-35B-A3B NInfer MTP4 como más rápido medido, sólo no-tools. No promover ni borrar pesos por esta clasificación.",
+      "ASTRA no tiene ganador único: Maya Q172 89,33 n=3; DSX 86,33 n=3 en Q190 comparable; DSX LHA 79,2 n=5 vs Maya 76 n=5; métricas/config no forman un ranking único. SOL Q172 81,67 n=3/P2154,41/D86,72/LHA60,8. TERRA Q17283,33 n=3/P1513,90/D157,44/LHA60. LUNA Q17279 n=1; Q253 P4600,61/D214,04 contexts 8K–261888, Q222 falló TC-82/91. Q172 no es inteligencia general.",
+      "Q-20261029-VF-ITERATION-190/profiles/deepseek-maya-xs-vs-dsx-q190/RESULTS.md; Q206-LONGHORIZON-LUKA-20261103/RESULTS.md; Q-20261115-MAYA-DS4SPLIT39-Q173/RESULTS.md; Q-20261029-VF-ITERATION-190/profiles/ternary-bonsai-ninfer-v3; Q206-LONGHORIZON-LUKA-20261103/profiles/sol-flashnext-ninferall-q206-build-fc12/RESULTS.md; Q253 MTP4 final-results.json; Q232 DFlash5 RESULTS.md",
+      "Todos tienen fallos críticos en Q172: Maya/DSX TC-92; SOL TC-74/82/92; TERRA TC-74/92; LUNA TC-82/91. Esto clasifica candidatos de evaluación/uso aislado; no aprueba autonomía, acciones externas ni datos multi-tenant. Pendiente: LHA-1 del perfil LUNA si puede cambiar su lugar; no repetir Q172 MTP4 ni medir 512K.",
+      "2026-11-17",
+      "2026-11-17",
+      "2026-11-17T15:35:11Z"
+    ]
+  },
+  "sheet_readback_verified": true,
+  "tests_run": false,
+  "gpu_used": false,
+  "formats_or_formulas_changed": false
+}
