@@ -171,6 +171,7 @@ class AppControllerTests : public QObject
 private slots:
     void initTestCase();
     void googleWorkspaceSettingsStayDisconnectedUntilExplicitConnect();
+    void googleWorkspaceClientIdUsesRuntimeDefault();
     void buildPlatformIsCompileTimeQtPlatform();
     void exportUserDataToWritesBackup();
     void githubReleaseIsConvertedToUpdateFlag();
@@ -1222,6 +1223,17 @@ void AppControllerTests::initTestCase()
 
 void AppControllerTests::googleWorkspaceSettingsStayDisconnectedUntilExplicitConnect()
 {
+    struct ClientIdEnvironmentRestore {
+        bool wasSet;
+        QByteArray value;
+        ~ClientIdEnvironmentRestore()
+        {
+            if (wasSet) qputenv("LLAMACODE_GOOGLE_OAUTH_CLIENT_ID", value);
+            else qunsetenv("LLAMACODE_GOOGLE_OAUTH_CLIENT_ID");
+        }
+    } restore{qEnvironmentVariableIsSet("LLAMACODE_GOOGLE_OAUTH_CLIENT_ID"),
+              qgetenv("LLAMACODE_GOOGLE_OAUTH_CLIENT_ID")};
+    qunsetenv("LLAMACODE_GOOGLE_OAUTH_CLIENT_ID");
     QSettings settings;
     settings.remove(QStringLiteral("googleWorkspace/clientId"));
     settings.remove(QStringLiteral("googleWorkspace/scopes"));
@@ -1237,6 +1249,34 @@ void AppControllerTests::googleWorkspaceSettingsStayDisconnectedUntilExplicitCon
     app.disconnectGoogleWorkspace();
     QVERIFY(!app.googleWorkspaceConnected());
     QCOMPARE(app.googleWorkspaceStatus(), QStringLiteral("No conectado"));
+    settings.remove(QStringLiteral("googleWorkspace/clientId"));
+}
+
+void AppControllerTests::googleWorkspaceClientIdUsesRuntimeDefault()
+{
+    struct ClientIdEnvironmentRestore {
+        bool wasSet;
+        QByteArray value;
+        ~ClientIdEnvironmentRestore()
+        {
+            if (wasSet) qputenv("LLAMACODE_GOOGLE_OAUTH_CLIENT_ID", value);
+            else qunsetenv("LLAMACODE_GOOGLE_OAUTH_CLIENT_ID");
+        }
+    } restore{qEnvironmentVariableIsSet("LLAMACODE_GOOGLE_OAUTH_CLIENT_ID"),
+              qgetenv("LLAMACODE_GOOGLE_OAUTH_CLIENT_ID")};
+    qputenv("LLAMACODE_GOOGLE_OAUTH_CLIENT_ID",
+            QByteArrayLiteral("packaged-client.apps.googleusercontent.com"));
+    QSettings settings;
+    settings.setValue(QStringLiteral("googleWorkspace/clientId"),
+                      QStringLiteral("saved-client.apps.googleusercontent.com"));
+    {
+        AppController app;
+        QCOMPARE(app.googleWorkspaceClientId(),
+                 QStringLiteral("packaged-client.apps.googleusercontent.com"));
+        QVERIFY(!app.googleWorkspaceConnected());
+        QCOMPARE(settings.value(QStringLiteral("googleWorkspace/clientId")).toString(),
+                 QStringLiteral("saved-client.apps.googleusercontent.com"));
+    }
     settings.remove(QStringLiteral("googleWorkspace/clientId"));
 }
 

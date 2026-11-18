@@ -1094,8 +1094,15 @@ incluidos).
 
 - **Google Workspace**: desde Configuración → Correo o desde la configuración
   de Ingi-Charla podés conectar
-  Gmail, Google Calendar y Google Tasks con OAuth de escritorio y PKCE. Ingresá
-  un OAuth Client ID de tipo *Desktop app* creado en Google Cloud. Ingi puede
+  Gmail, Google Calendar y Google Tasks con OAuth de escritorio y PKCE. Las
+  versiones de LlamaCode pueden incluir el OAuth Client ID público de tipo
+  *Desktop app*, para que sólo tengas que pulsar **Conectar Google** y autorizar
+  desde el navegador. En builds propias se puede definir
+  `LC_GOOGLE_OAUTH_CLIENT_ID` al configurar CMake, o
+  `LLAMACODE_GOOGLE_OAUTH_CLIENT_ID` en el entorno de ejecución. Si no hay un ID
+  configurado, la sección de Google explica el requisito y permite ingresarlo
+  una vez como ajuste local. Este ID identifica la aplicación; el cliente de
+  escritorio usa PKCE y no necesita guardar un client secret. Ingi puede
   buscar/leer correos, listar eventos, consultar disponibilidad sin leer detalles
   de eventos y consultar listas/tareas. La lectura es el permiso inicial. Como
   opción adicional, Gmail compose permite gestionar borradores y enviar correo;

@@ -94,6 +94,13 @@ QtObject {
               "el acceso de Ingi-Charla abre su diálogo de conexión")
         check(charla.indexOf("GoogleWorkspaceSettingsSection") > 0,
               "el diálogo comparte los scopes y acciones de Configuración → Correo")
+        const googleSettings = read("GoogleWorkspaceSettingsSection.qml")
+        check(googleSettings.indexOf("Abrir Google Cloud") > 0,
+              "Google: explica y enlaza la configuración sólo si falta un Client ID")
+        check(googleSettings.indexOf("Qt.openUrlExternally(\"https://console.cloud.google.com/auth/clients\")") > 0,
+              "Google: abre el navegador predeterminado para configurar una build propia")
+        check(googleSettings.indexOf("App.googleWorkspaceClientId.trim().length > 0") > 0,
+              "Google: una build configurada habilita la conexión directa")
 
         // Monitor: todo sale de App.monitor y el reporte se copia desde el header.
         const monitor = read("MonitorPage.qml.txt")

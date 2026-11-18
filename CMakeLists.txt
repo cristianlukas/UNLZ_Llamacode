@@ -12,6 +12,8 @@ option(LC_STRICT_WARNINGS "Enable stricter compiler warnings for project targets
 option(LC_WARNINGS_AS_ERRORS "Treat project compiler warnings as errors" OFF)
 option(LC_ENABLE_CLANG_TIDY "Run clang-tidy during C++ builds when available" OFF)
 option(LC_USE_OPENCV "Use OpenCV acceleration for visual template matching when available" ON)
+set(LC_GOOGLE_OAUTH_CLIENT_ID "$ENV{LLAMACODE_GOOGLE_OAUTH_CLIENT_ID}" CACHE STRING
+    "Public OAuth 2.0 client ID for the LlamaCode desktop application")
 
 # MSVC añade /RTC1 automáticamente a Debug. Es incompatible con /O2; quitarlo
 # en la configuración, antes de declarar los targets, permite que Debug sea un
@@ -372,6 +374,7 @@ target_include_directories(llamacode_core PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/gen
 target_compile_definitions(llamacode_core PRIVATE
     LC_BUNDLED_SKILLS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/skills"
     LC_STUDIA_TOOLS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tools/studia"
+    "LC_GOOGLE_OAUTH_CLIENT_ID=\"${LC_GOOGLE_OAUTH_CLIENT_ID}\""
     "$<$<CONFIG:Debug>:LC_BUILD_CHANNEL=\"debug\">"
     "$<$<NOT:$<CONFIG:Debug>>:LC_BUILD_CHANNEL=\"prod\">")
 target_link_libraries(llamacode_core PUBLIC
@@ -849,6 +852,7 @@ if (BUILD_TESTS)
         tests/qml/tst_navigation_policy.qml
         tests/qml/tst_navbar.qml
         tests/qml/tst_page_contracts.qml
+        qml/components/GoogleWorkspaceSettingsSection.qml
         qml/components/NavBar.qml
         tests/qml/tst_setup_wizard_policy.qml
         tests/qml/tst_lazy_page_loader.qml

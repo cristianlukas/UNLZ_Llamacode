@@ -145,6 +145,15 @@ QString AppController::buildPlatform() const
 
 namespace {
 
+QString bundledGoogleWorkspaceClientId()
+{
+#ifdef LC_GOOGLE_OAUTH_CLIENT_ID
+    return QStringLiteral(LC_GOOGLE_OAUTH_CLIENT_ID).trimmed();
+#else
+    return {};
+#endif
+}
+
 // Cambiar este revision cuando se modifique el prompt operativo de
 // runAgentBenchmark. Asi las compuertas HE0/HE20/BCB no reutilizan resultados
 // generados con instrucciones distintas aunque el HarnessSpec persistido no
@@ -1628,8 +1637,14 @@ AppController::AppController(QObject *parent) : QObject(parent)
         applyHardwareSummary(m_hardwareWatcher.result());
     });
     migrateIntegrationSecrets();
-    m_googleWorkspaceClientId = QSettings().value(
+    const QString runtimeGoogleClientId = qEnvironmentVariable(
+        "LLAMACODE_GOOGLE_OAUTH_CLIENT_ID").trimmed();
+    const QString savedGoogleClientId = QSettings().value(
         QStringLiteral("googleWorkspace/clientId")).toString().trimmed();
+    m_googleWorkspaceClientId = !runtimeGoogleClientId.isEmpty()
+        ? runtimeGoogleClientId
+        : !savedGoogleClientId.isEmpty() ? savedGoogleClientId
+        : bundledGoogleWorkspaceClientId();
     m_googleWorkspaceAuth = new GoogleWorkspaceSecurity::GoogleWorkspaceAuth(this);
     m_googleWorkspaceRefreshTimer = new QTimer(this);
     m_googleWorkspaceRefreshTimer->setSingleShot(true);

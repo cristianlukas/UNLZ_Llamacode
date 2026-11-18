@@ -7,6 +7,7 @@ import LlamaCode 1.0
 ColumnLayout {
     id: section
     objectName: "googleWorkspaceSettingsSection"
+    property bool showClientIdEditor: App.googleWorkspaceClientId.trim().length === 0
     Layout.fillWidth: true
     spacing: 10
 
@@ -17,18 +18,43 @@ ColumnLayout {
         font.bold: true
     }
     Text {
-        text: "Conexión OAuth de escritorio. La lectura empieza con permisos mínimos; al conectar o habilitar permisos adicionales, LlamaCode abre el navegador predeterminado para que autorices a Google. La app nunca te pide la contraseña de Google."
+        text: "Conectá Google una vez y autorizá el acceso en el navegador predeterminado. Las versiones configuradas por LlamaCode pueden iniciar con un clic; una build propia puede necesitar configurar el Client ID de escritorio. La app nunca te pide la contraseña de Google."
         color: Theme.textSecondary
         font.pixelSize: 12
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
     }
+    Text {
+        visible: App.googleWorkspaceClientId.trim().length === 0
+        text: "Esta build no tiene configurado el Client ID OAuth de LlamaCode, así que Google todavía no puede abrir el inicio de sesión. Si mantenés esta build, creá un cliente de tipo Desktop app una vez y pegá su ID aquí."
+        color: Theme.warnText
+        font.pixelSize: 12
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+    }
+    RowLayout {
+        visible: App.googleWorkspaceClientId.trim().length === 0
+        Layout.fillWidth: true
+        LcButton {
+            text: "Abrir Google Cloud"
+            secondary: true
+            onClicked: Qt.openUrlExternally("https://console.cloud.google.com/auth/clients")
+        }
+    }
     LcTextField {
         id: googleClientId
+        visible: section.showClientIdEditor
         Layout.fillWidth: true
         placeholderText: "Google OAuth Client ID (Desktop app)"
         text: App.googleWorkspaceClientId
         onEditingFinished: App.googleWorkspaceClientId = text.trim()
+    }
+    LcButton {
+        visible: App.googleWorkspaceClientId.trim().length > 0
+                 && !App.googleWorkspaceConnected && !section.showClientIdEditor
+        text: "Cambiar Client ID"
+        secondary: true
+        onClicked: section.showClientIdEditor = true
     }
     Flow {
         Layout.fillWidth: true
