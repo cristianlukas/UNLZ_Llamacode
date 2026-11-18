@@ -109,6 +109,7 @@ private slots:
     void gmailDraftIsValidatedEncodedAndCreatedOnce();
     void gmailDraftDoesNotRetryAmbiguousFailures();
     void googleTaskCreateValidatesPayloadAndDoesNotRetry();
+    void googleTaskUpdateAndCompleteUsePatchWithoutRetry();
     void calendarEventCreateValidatesTimeZoneAndDoesNotInviteOrRetry();
     void calendarAndTasksBuildReadOnlyRequests();
     void freeBusyUsesLeastPrivilegeAndPostsBoundedRequest();
@@ -382,6 +383,67 @@ void GoogleWorkspaceApiTests::calendarEventCreateValidatesTimeZoneAndDoesNotInvi
     QVERIFY(!uncertain.ok);
     QVERIFY(uncertain.error.contains(QStringLiteral("Revisá el calendario")));
     QCOMPARE(ambiguousServer.requestCount(), 1);
+}
+
+void GoogleWorkspaceApiTests::googleTaskUpdateAndCompleteUsePatchWithoutRetry()
+{
+    ApiEndpointStub updateServer;
+    QVERIFY(updateServer.listen(QHostAddress::LocalHost, 0));
+    updateServer.setResponse(200, QByteArrayLiteral("{\"id\":\"task-1\",\"title\":\"Informe final\"}"));
+    GoogleWorkspaceApi updateApi;
+    QVERIFY(updateApi.setApiBaseForTests(baseFor(updateServer)));
+    const QJsonObject fields{
+        {QStringLiteral("title"), QStringLiteral("Informe final")},
+        {QStringLiteral("notes"), QString()},
+        {QStringLiteral("due_date"), QStringLiteral("2026-11-24")}};
+    const ApiResult updated = updateApi.updateTask(
+        QStringLiteral("tasks-token"), scopesFor(Capability::TasksWrite),
+        QStringLiteral("list-1"), QStringLiteral("task-1"), fields);
+    QVERIFY2(updated.ok, qPrintable(updated.error));
+    QCOMPARE(updateServer.requestCount(), 1);
+    const QByteArray updateRequest = updateServer.lastRequest();
+    QVERIFY(updateRequest.startsWith(
+        QByteArrayLiteral("PATCH /tasks/v1/lists/list-1/tasks/task-1 ")));
+    const qsizetype updateBodyStart = updateRequest.indexOf(QByteArrayLiteral("\r\n\r\n")) + 4;
+    const QJsonObject updateBody = QJsonDocument::fromJson(updateRequest.mid(updateBodyStart)).object();
+    QCOMPARE(updateBody.value(QStringLiteral("title")).toString(), QStringLiteral("Informe final"));
+    QVERIFY(updateBody.contains(QStringLiteral("notes")));
+    QCOMPARE(updateBody.value(QStringLiteral("notes")).toString(), QString());
+    QCOMPARE(updateBody.value(QStringLiteral("due")).toString(), QStringLiteral("2026-11-24T00:00:00.000Z"));
+
+    const ApiResult invalidEmpty = updateApi.updateTask(
+        QStringLiteral("token"), scopesFor(Capability::TasksWrite),
+        QStringLiteral("list-1"), QStringLiteral("task-1"), {});
+    QVERIFY(!invalidEmpty.ok);
+    const ApiResult invalidField = updateApi.updateTask(
+        QStringLiteral("token"), scopesFor(Capability::TasksWrite),
+        QStringLiteral("list-1"), QStringLiteral("task-1"),
+        QJsonObject{{QStringLiteral("status"), QStringLiteral("completed")}});
+    QVERIFY(!invalidField.ok);
+    const ApiResult wrongScope = updateApi.completeTask(
+        QStringLiteral("token"), scopesFor(Capability::TasksRead),
+        QStringLiteral("list-1"), QStringLiteral("task-1"));
+    QVERIFY(!wrongScope.ok);
+    QCOMPARE(updateServer.requestCount(), 1);
+
+    ApiEndpointStub completeServer;
+    QVERIFY(completeServer.listen(QHostAddress::LocalHost, 0));
+    completeServer.setResponseSequence({{503, QByteArrayLiteral("{\"error\":\"temporary\"}")},
+                                        {200, QByteArrayLiteral("{\"id\":\"task-2\",\"status\":\"completed\"}")}});
+    GoogleWorkspaceApi completeApi;
+    QVERIFY(completeApi.setApiBaseForTests(baseFor(completeServer)));
+    const ApiResult completed = completeApi.completeTask(
+        QStringLiteral("tasks-token"), scopesFor(Capability::TasksWrite),
+        QStringLiteral("list-1"), QStringLiteral("task-2"));
+    QVERIFY(!completed.ok);
+    QVERIFY(completed.error.contains(QStringLiteral("Revisá la lista de tareas")));
+    QCOMPARE(completeServer.requestCount(), 1);
+    const QByteArray completeRequest = completeServer.lastRequest();
+    QVERIFY(completeRequest.startsWith(
+        QByteArrayLiteral("PATCH /tasks/v1/lists/list-1/tasks/task-2 ")));
+    const qsizetype completeBodyStart = completeRequest.indexOf(QByteArrayLiteral("\r\n\r\n")) + 4;
+    const QJsonObject completeBody = QJsonDocument::fromJson(completeRequest.mid(completeBodyStart)).object();
+    QCOMPARE(completeBody.value(QStringLiteral("status")).toString(), QStringLiteral("completed"));
 }
 
 void GoogleWorkspaceApiTests::calendarAndTasksBuildReadOnlyRequests()

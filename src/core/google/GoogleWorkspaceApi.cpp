@@ -300,6 +300,58 @@ ApiResult GoogleWorkspaceApi::createTask(const QString &accessToken,
                             + QStringLiteral("/tasks"), payload);
 }
 
+ApiResult GoogleWorkspaceApi::updateTask(const QString &accessToken,
+                                         const QStringList &grantedScopes,
+                                         const QString &taskListId,
+                                         const QString &taskId,
+                                         const QJsonObject &fields) const
+{
+    static const QSet<QString> allowedFields{
+        QStringLiteral("title"), QStringLiteral("notes"), QStringLiteral("due_date")};
+    if (!safePathId(taskListId) || !safePathId(taskId) || fields.isEmpty())
+        return {false, 0, {}, QStringLiteral("La lista, tarea o los campos a actualizar son inválidos.")};
+    for (auto it = fields.constBegin(); it != fields.constEnd(); ++it)
+        if (!allowedFields.contains(it.key()) || !it.value().isString())
+            return {false, 0, {}, QStringLiteral("La actualización contiene un campo desconocido o inválido.")};
+
+    QJsonObject payload;
+    if (fields.contains(QStringLiteral("title"))) {
+        const QString title = fields.value(QStringLiteral("title")).toString().trimmed();
+        if (title.isEmpty() || title.size() > 1024)
+            return {false, 0, {}, QStringLiteral("El título de la tarea está vacío o supera 1024 caracteres.")};
+        payload.insert(QStringLiteral("title"), title);
+    }
+    if (fields.contains(QStringLiteral("notes"))) {
+        const QString notes = fields.value(QStringLiteral("notes")).toString();
+        if (notes.size() > 8192)
+            return {false, 0, {}, QStringLiteral("Las notas de la tarea superan 8192 caracteres.")};
+        payload.insert(QStringLiteral("notes"), notes);
+    }
+    if (fields.contains(QStringLiteral("due_date"))) {
+        const QString dueDate = fields.value(QStringLiteral("due_date")).toString().trimmed();
+        const QDate date = QDate::fromString(dueDate, Qt::ISODate);
+        if (dueDate.size() != 10 || !date.isValid() || date.toString(Qt::ISODate) != dueDate)
+            return {false, 0, {}, QStringLiteral("La fecha programada debe usar YYYY-MM-DD.")};
+        payload.insert(QStringLiteral("due"), dueDate + QStringLiteral("T00:00:00.000Z"));
+    }
+    return patchMutation(Capability::TasksWrite, accessToken, grantedScopes,
+                         QStringLiteral("/tasks/v1/lists/") + taskListId
+                             + QStringLiteral("/tasks/") + taskId, payload);
+}
+
+ApiResult GoogleWorkspaceApi::completeTask(const QString &accessToken,
+                                           const QStringList &grantedScopes,
+                                           const QString &taskListId,
+                                           const QString &taskId) const
+{
+    if (!safePathId(taskListId) || !safePathId(taskId))
+        return {false, 0, {}, QStringLiteral("La lista o la tarea son inválidas.")};
+    return patchMutation(Capability::TasksWrite, accessToken, grantedScopes,
+                         QStringLiteral("/tasks/v1/lists/") + taskListId
+                             + QStringLiteral("/tasks/") + taskId,
+                         QJsonObject{{QStringLiteral("status"), QStringLiteral("completed")}});
+}
+
 ApiResult GoogleWorkspaceApi::createCalendarEvent(const QString &accessToken,
                                                   const QStringList &grantedScopes,
                                                   const QString &calendarId,
@@ -447,6 +499,17 @@ ApiResult GoogleWorkspaceApi::postMutation(Capability capability, const QString 
                     path, {}, QJsonDocument(body).toJson(QJsonDocument::Compact), true);
 }
 
+ApiResult GoogleWorkspaceApi::patchMutation(Capability capability, const QString &accessToken,
+                                            const QStringList &grantedScopes,
+                                            const QString &path,
+                                            const QJsonObject &body) const
+{
+    // PATCH muta estado externo, por lo que un timeout/5xx queda incierto y
+    // no se repite automáticamente.
+    return sendOnce(capability, accessToken, grantedScopes, QByteArrayLiteral("PATCH"),
+                    path, {}, QJsonDocument(body).toJson(QJsonDocument::Compact), true);
+}
+
 ApiResult GoogleWorkspaceApi::send(Capability capability, const QString &accessToken,
                                    const QStringList &grantedScopes, const QByteArray &method,
                                    const QString &path, const QUrlQuery &query,
@@ -515,15 +578,17 @@ ApiResult GoogleWorkspaceApi::sendOnce(Capability capability, const QString &acc
     request.setRawHeader(QByteArrayLiteral("Authorization"),
                          QByteArrayLiteral("Bearer ") + accessToken.toUtf8());
     request.setRawHeader(QByteArrayLiteral("Accept"), QByteArrayLiteral("application/json"));
-    if (method == QByteArrayLiteral("POST"))
+    if (method != QByteArrayLiteral("GET"))
         request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                          QNetworkRequest::ManualRedirectPolicy);
     request.setTransferTimeout(15000);
 
     QNetworkAccessManager manager;
-    QNetworkReply *reply = method == QByteArrayLiteral("POST")
-        ? manager.post(request, body) : manager.get(request);
+    QNetworkReply *reply = method == QByteArrayLiteral("GET")
+        ? manager.get(request)
+        : method == QByteArrayLiteral("POST") ? manager.post(request, body)
+                                                : manager.sendCustomRequest(request, method, body);
     QEventLoop loop;
     QTimer timeout;
     timeout.setSingleShot(true);

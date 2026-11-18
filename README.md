@@ -259,8 +259,9 @@ iniciadas por el usuario siguen siendo una función separada.
   aprobación por cada acción. El scope `gmail.compose` también permite técnicamente
   enviar correo; LlamaCode no ofrece una herramienta de envío Google. Los datos del
   borrador se envían a Google cuando se aprueba su creación. Opcionalmente, puede
-  crear tareas Google tras cada aprobación; el permiso de Tasks también permite
-  editar, organizar y borrar tareas, pero la app no expone esas operaciones. El
+  crear, editar campos puntuales y completar tareas Google tras cada aprobación;
+  el permiso de Tasks también permite organizar y borrar tareas, pero la app no
+  expone esas operaciones. El
   vencimiento de Tasks es una fecha programada y no conserva hora. También puede
   crear eventos personales sin invitados tras aprobación; el permiso Calendar es
   amplio y permite leer, editar y borrar eventos, mientras que LlamaCode sólo ofrece
@@ -1102,7 +1103,8 @@ incluidos).
   automáticos. Si la conexión falla después del POST, Ingi indica que hay que
   revisar Borradores antes de repetirlo. Se pueden habilitar aparte la creación de
   tareas y eventos personales: las tarjetas muestran el payload exacto y requieren
-  aprobación por acción incluso en modos automáticos. Google Tasks usa una fecha
+  aprobación por acción incluso en modos automáticos. Google Tasks permite crear,
+  editar campos puntuales y marcar tareas completadas; no borrar ni reordenar. Usa una fecha
   `YYYY-MM-DD` que sólo representa el día programado, no un plazo límite, y no
   conserva hora; para hora exacta, usá un recordatorio local.
   Los eventos no admiten invitados, así LlamaCode no envía invitaciones. Los scopes

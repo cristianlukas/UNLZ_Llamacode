@@ -35,6 +35,11 @@ public:
     ApiResult createTask(const QString &accessToken, const QStringList &grantedScopes,
                          const QString &taskListId, const QString &title,
                          const QString &notes, const QString &dueDate) const;
+    ApiResult updateTask(const QString &accessToken, const QStringList &grantedScopes,
+                         const QString &taskListId, const QString &taskId,
+                         const QJsonObject &fields) const;
+    ApiResult completeTask(const QString &accessToken, const QStringList &grantedScopes,
+                           const QString &taskListId, const QString &taskId) const;
     ApiResult createCalendarEvent(const QString &accessToken,
                                   const QStringList &grantedScopes,
                                   const QString &calendarId, const QString &summary,
@@ -65,6 +70,9 @@ private:
     ApiResult postMutation(Capability capability, const QString &accessToken,
                            const QStringList &grantedScopes, const QString &path,
                            const QJsonObject &body) const;
+    ApiResult patchMutation(Capability capability, const QString &accessToken,
+                            const QStringList &grantedScopes, const QString &path,
+                            const QJsonObject &body) const;
     ApiResult send(Capability capability, const QString &accessToken,
                    const QStringList &grantedScopes, const QByteArray &method,
                    const QString &path, const QUrlQuery &query,

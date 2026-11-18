@@ -155,6 +155,11 @@ QString VoiceAssistant::approvalQuestion(const QVariantMap &call, const QString 
         action = en ? QStringLiteral("create a Gmail draft") : QStringLiteral("crear un borrador en Gmail");
     else if (tool == QLatin1String("google_tasks_create"))
         action = en ? QStringLiteral("create a Google task") : QStringLiteral("crear una tarea en Google Tasks");
+    else if (tool == QLatin1String("google_tasks_update"))
+        action = en ? QStringLiteral("update a Google task") : QStringLiteral("actualizar una tarea en Google Tasks");
+    else if (tool == QLatin1String("google_tasks_complete"))
+        action = en ? QStringLiteral("mark a Google task as complete")
+                    : QStringLiteral("marcar una tarea de Google Tasks como completada");
     else if (tool == QLatin1String("google_calendar_create_event"))
         action = en ? QStringLiteral("create a Calendar event without guests")
                     : QStringLiteral("crear un evento de Calendar sin invitados");

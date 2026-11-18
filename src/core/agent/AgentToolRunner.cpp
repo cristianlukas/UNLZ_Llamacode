@@ -4666,6 +4666,26 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 output = QStringLiteral("Tarea creada en Google Tasks (id: %1).")
                     .arg(response.data.value(QStringLiteral("id")).toString());
             }
+        } else if (name == QLatin1String("google_tasks_update")) {
+            QJsonObject fields;
+            for (const QString &field : {QStringLiteral("title"), QStringLiteral("notes"),
+                                         QStringLiteral("due_date")})
+                if (args.contains(field)) fields.insert(field, args.value(field));
+            response = api.updateTask(
+                m_googleAccessToken, m_googleGrantedScopes,
+                args.value(QStringLiteral("task_list_id")).toString(),
+                args.value(QStringLiteral("task_id")).toString(), fields);
+            if (response.ok)
+                output = QStringLiteral("Tarea actualizada en Google Tasks (id: %1).")
+                    .arg(response.data.value(QStringLiteral("id")).toString());
+        } else if (name == QLatin1String("google_tasks_complete")) {
+            response = api.completeTask(
+                m_googleAccessToken, m_googleGrantedScopes,
+                args.value(QStringLiteral("task_list_id")).toString(),
+                args.value(QStringLiteral("task_id")).toString());
+            if (response.ok)
+                output = QStringLiteral("Tarea completada en Google Tasks (id: %1).")
+                    .arg(response.data.value(QStringLiteral("id")).toString());
         } else if (name == QLatin1String("google_calendar_events")) {
             QString timeMin = args.value(QStringLiteral("time_min")).toString().trimmed();
             QString timeMax = args.value(QStringLiteral("time_max")).toString().trimmed();

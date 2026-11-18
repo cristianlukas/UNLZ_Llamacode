@@ -299,7 +299,12 @@ void AgentToolsTests::googleWorkspaceToolsFailClosedWithoutCredentials()
         {QStringLiteral("google_tasks_lists"), {}},
         {QStringLiteral("google_tasks_list"), {{QStringLiteral("task_list_id"), QStringLiteral("list-1")}}},
         {QStringLiteral("google_tasks_create"), {{QStringLiteral("task_list_id"), QStringLiteral("list-1")},
-                                                    {QStringLiteral("title"), QStringLiteral("Tarea")}}}};
+                                                    {QStringLiteral("title"), QStringLiteral("Tarea")}}},
+        {QStringLiteral("google_tasks_update"), {{QStringLiteral("task_list_id"), QStringLiteral("list-1")},
+                                                    {QStringLiteral("task_id"), QStringLiteral("task-1")},
+                                                    {QStringLiteral("title"), QStringLiteral("Tarea nueva")}}},
+        {QStringLiteral("google_tasks_complete"), {{QStringLiteral("task_list_id"), QStringLiteral("list-1")},
+                                                      {QStringLiteral("task_id"), QStringLiteral("task-1")}}}};
     for (const auto &entry : cases) {
         const QVariantMap result = call(entry.first, entry.second);
         QVERIFY2(!result.value(QStringLiteral("ok")).toBool(), qPrintable(entry.first));
