@@ -65,6 +65,63 @@ ColumnLayout {
 
             Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
 
+            Text {
+                text: "Google Workspace · Gmail, Calendar y Tasks"
+                color: Theme.textPrimary
+                font.pixelSize: 13
+                font.bold: true
+            }
+            Text {
+                text: "Conexión OAuth de escritorio con permisos de lectura. No habilita enviar correo ni modificar eventos o tareas. Creá un OAuth Client ID de tipo aplicación de escritorio en Google Cloud."
+                color: Theme.textSecondary
+                font.pixelSize: 12
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+            }
+            LcTextField {
+                id: googleClientId
+                Layout.fillWidth: true
+                placeholderText: "Google OAuth Client ID"
+                text: App.googleWorkspaceClientId
+                onEditingFinished: App.googleWorkspaceClientId = text.trim()
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                LcButton {
+                    text: App.googleWorkspaceBusy ? "Conectando…" : "Conectar Google"
+                    enabled: !App.googleWorkspaceBusy && !App.googleWorkspaceConnected
+                             && googleClientId.text.trim().length > 0
+                    onClicked: {
+                        App.googleWorkspaceClientId = googleClientId.text.trim()
+                        App.connectGoogleWorkspace()
+                    }
+                }
+                LcButton {
+                    visible: App.googleWorkspaceConnected
+                    text: "Desconectar"
+                    onClicked: App.disconnectGoogleWorkspace()
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: App.googleWorkspaceStatus
+                    color: App.googleWorkspaceConnected ? Theme.accent : Theme.textMuted
+                    font.pixelSize: 11
+                    wrapMode: Text.WordWrap
+                }
+            }
+            Text {
+                Layout.fillWidth: true
+                text: App.googleWorkspaceCanRemember
+                      ? "El refresh token se guarda cifrado por el sistema. Desconectar elimina la copia local; la autorización remota se revoca desde la configuración de seguridad de tu cuenta Google."
+                      : "No hay keyring disponible: la conexión dura hasta cerrar LlamaCode y el refresh token no se guarda. Desconectar elimina la sesión local."
+                color: Theme.textMuted
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
+
             // Cuentas existentes
             Repeater {
                 model: section.accounts

@@ -117,6 +117,7 @@
 #include <QUuid>
 #include <QDirIterator>
 #include <functional>
+#include <limits>
 #include <QSet>
 #include <memory>
 #include <QFile>
@@ -1627,6 +1628,89 @@ AppController::AppController(QObject *parent) : QObject(parent)
         applyHardwareSummary(m_hardwareWatcher.result());
     });
     migrateIntegrationSecrets();
+    m_googleWorkspaceClientId = QSettings().value(
+        QStringLiteral("googleWorkspace/clientId")).toString().trimmed();
+    m_googleWorkspaceAuth = new GoogleWorkspaceSecurity::GoogleWorkspaceAuth(this);
+    m_googleWorkspaceRefreshTimer = new QTimer(this);
+    m_googleWorkspaceRefreshTimer->setSingleShot(true);
+    connect(m_googleWorkspaceAuth,
+            &GoogleWorkspaceSecurity::GoogleWorkspaceAuth::authorizationUrlReady, this,
+            [this](const QUrl &url) {
+        if (!QDesktopServices::openUrl(url)) {
+            m_googleWorkspaceStatus = QStringLiteral(
+                "No pude abrir el navegador predeterminado. Revisalo e intentá de nuevo.");
+            emit googleWorkspaceChanged();
+        }
+    });
+    connect(m_googleWorkspaceAuth,
+            &GoogleWorkspaceSecurity::GoogleWorkspaceAuth::tokensReady, this,
+            [this](const GoogleWorkspaceSecurity::TokenSet &tokens) {
+        m_googleAccessToken = tokens.accessToken;
+        if (!tokens.refreshToken.isEmpty()) m_googleRefreshToken = tokens.refreshToken;
+        if (!tokens.grantedScopes.isEmpty()) m_googleGrantedScopes = tokens.grantedScopes;
+        QSettings settings;
+        settings.setValue(QStringLiteral("googleWorkspace/scopes"), m_googleGrantedScopes);
+        bool persisted = false;
+        if (!m_googleRefreshToken.isEmpty() && googleWorkspaceCanRemember())
+            persisted = m_secrets.set(QStringLiteral("google/workspace/refreshToken"),
+                                      m_googleRefreshToken);
+        const qint64 refreshInSeconds = qMax<qint64>(30, tokens.expiresInSeconds - 60);
+        m_googleWorkspaceRefreshTimer->start(static_cast<int>(
+            qMin<qint64>(refreshInSeconds * 1000, std::numeric_limits<int>::max())));
+        m_googleWorkspaceStatus = persisted
+            ? QStringLiteral("Conectado · permisos de lectura")
+            : QStringLiteral("Conectado hasta cerrar LlamaCode · token sólo en memoria");
+        if (auto *backend = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+            backend->setGoogleWorkspaceCredentials(m_googleAccessToken, m_googleGrantedScopes);
+        emit googleWorkspaceChanged();
+    });
+    connect(m_googleWorkspaceAuth,
+            &GoogleWorkspaceSecurity::GoogleWorkspaceAuth::operationFailed, this,
+            [this](const QString &message) {
+        m_googleWorkspaceRefreshTimer->stop();
+        m_googleAccessToken.clear();
+        if (auto *backend = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+            backend->setGoogleWorkspaceCredentials({}, {});
+        m_googleWorkspaceStatus = QStringLiteral("Error de conexión: %1").arg(message);
+        emit googleWorkspaceChanged();
+    });
+    connect(m_googleWorkspaceAuth,
+            &GoogleWorkspaceSecurity::GoogleWorkspaceAuth::revocationFinished, this,
+            [this](bool success) {
+        m_googleWorkspaceStatus = success
+            ? QStringLiteral("No conectado · autorización revocada en Google")
+            : QStringLiteral("Desconectado localmente · Google no confirmó la revocación remota");
+        emit googleWorkspaceChanged();
+    });
+    connect(m_googleWorkspaceAuth,
+            &GoogleWorkspaceSecurity::GoogleWorkspaceAuth::busyChanged, this,
+            [this](bool busy) {
+        if (busy && m_googleAccessToken.isEmpty()) {
+            m_googleWorkspaceStatus = m_googleWorkspaceAuth->revoking()
+                ? QStringLiteral("Revocando acceso remoto de Google…")
+                : QStringLiteral("Esperando autorización de Google…");
+        }
+        emit googleWorkspaceChanged();
+    });
+    connect(m_googleWorkspaceRefreshTimer, &QTimer::timeout, this, [this]() {
+        if (m_googleRefreshToken.isEmpty() || m_googleWorkspaceClientId.isEmpty()) return;
+        m_googleWorkspaceStatus = QStringLiteral("Renovando autorización de Google…");
+        emit googleWorkspaceChanged();
+        m_googleWorkspaceAuth->refresh(m_googleWorkspaceClientId, m_googleRefreshToken,
+                                       m_googleGrantedScopes);
+    });
+    if (googleWorkspaceCanRemember()) {
+        m_googleRefreshToken = m_secrets.resolve(QStringLiteral("google/workspace/refreshToken"));
+        m_googleGrantedScopes = QSettings().value(
+            QStringLiteral("googleWorkspace/scopes")).toStringList();
+    }
+    if (!m_googleRefreshToken.isEmpty() && !m_googleWorkspaceClientId.isEmpty()) {
+        m_googleWorkspaceStatus = QStringLiteral("Renovando autorización de Google…");
+        m_googleWorkspaceAuth->refresh(m_googleWorkspaceClientId, m_googleRefreshToken,
+                                       m_googleGrantedScopes);
+    } else {
+        m_googleWorkspaceStatus = QStringLiteral("No conectado");
+    }
     // Un cierre/crash durante un hot-swap no debe dejar seleccionado al planner.
     // Recuperamos el ejecutor como perfil activo; el plan validado permanece en
     // hybrid-plans y podrá reutilizarse en el retry explícito del usuario.
@@ -6336,6 +6420,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
         cb->setAuxiliaryServerConfig(m_agentAuxiliaryUrl, m_agentAuxiliaryEmbeddingModel,
                                      m_agentAuxiliaryRerankModel, m_agentAuxiliaryKey);
         cb->setMailAccounts(mailAccountsResolved());
+        cb->setGoogleWorkspaceCredentials(m_googleAccessToken, m_googleGrantedScopes);
         cb->setWebProviders(webProviderConfigs());
         cb->setMailAutoSend(m_mailAutoSend);
         cb->setHitlDestructive(m_hitlDestructive);
@@ -12312,6 +12397,72 @@ void AppController::setMailAutoSend(bool on)
     if (LlamaAgentBackend *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
         cb->setMailAutoSend(on);
     emit mailAutoSendChanged();
+}
+
+bool AppController::googleWorkspaceCanRemember() const
+{
+#ifdef Q_OS_WIN
+    return true; // SecretStore usa Credential Store o DPAPI en Windows.
+#else
+    return m_secrets.usingKeychain();
+#endif
+}
+
+void AppController::setGoogleWorkspaceClientId(const QString &clientId)
+{
+    const QString normalized = clientId.trimmed();
+    if (normalized == m_googleWorkspaceClientId) return;
+    if (!m_googleAccessToken.isEmpty() || !m_googleRefreshToken.isEmpty())
+        disconnectGoogleWorkspace();
+    m_googleWorkspaceClientId = normalized;
+    writeSetting(QStringLiteral("googleWorkspace/clientId"), normalized);
+    emit googleWorkspaceChanged();
+}
+
+void AppController::connectGoogleWorkspace()
+{
+    if (!m_googleWorkspaceAuth || m_googleWorkspaceAuth->busy()) return;
+    if (m_googleWorkspaceClientId.isEmpty()) {
+        m_googleWorkspaceStatus = QStringLiteral(
+            "Ingresá el OAuth Client ID de tipo aplicación de escritorio.");
+        emit googleWorkspaceChanged();
+        return;
+    }
+    const QList<GoogleWorkspaceSecurity::Capability> capabilities{
+        GoogleWorkspaceSecurity::Capability::GmailRead,
+        GoogleWorkspaceSecurity::Capability::CalendarEventsRead,
+        GoogleWorkspaceSecurity::Capability::CalendarFreeBusy,
+        GoogleWorkspaceSecurity::Capability::TasksRead};
+    if (!m_googleWorkspaceAuth->start(m_googleWorkspaceClientId, capabilities)) {
+        m_googleWorkspaceStatus = QStringLiteral(
+            "No pude iniciar OAuth. Verificá el Client ID y que no haya otra conexión en curso.");
+        emit googleWorkspaceChanged();
+    }
+}
+
+void AppController::disconnectGoogleWorkspace()
+{
+    const QString tokenToRevoke = !m_googleRefreshToken.isEmpty()
+        ? m_googleRefreshToken : m_googleAccessToken;
+    if (m_googleWorkspaceAuth) m_googleWorkspaceAuth->cancel();
+    if (m_googleWorkspaceRefreshTimer) m_googleWorkspaceRefreshTimer->stop();
+    if (googleWorkspaceCanRemember())
+        m_secrets.remove(QStringLiteral("google/workspace/refreshToken"));
+    m_googleAccessToken.clear();
+    m_googleRefreshToken.clear();
+    m_googleGrantedScopes.clear();
+    QSettings().remove(QStringLiteral("googleWorkspace/scopes"));
+    if (auto *backend = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        backend->setGoogleWorkspaceCredentials({}, {});
+    m_googleWorkspaceStatus = QStringLiteral("No conectado");
+    emit googleWorkspaceChanged();
+    if (!tokenToRevoke.isEmpty() && m_googleWorkspaceAuth) {
+        if (!m_googleWorkspaceAuth->revoke(tokenToRevoke)) {
+            m_googleWorkspaceStatus = QStringLiteral(
+                "Desconectado localmente · no se pudo iniciar la revocación remota");
+            emit googleWorkspaceChanged();
+        }
+    }
 }
 
 void AppController::setHitlDestructive(bool on)

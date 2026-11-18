@@ -104,6 +104,9 @@ set(CORE_SOURCES
     src/core/integrations/OpenCodeIntegration.cpp
     src/core/integrations/ClaudeDesktopIntegration.cpp
     src/core/SecretStore.cpp
+    src/core/google/GoogleWorkspaceSecurity.cpp
+    src/core/google/GoogleWorkspaceAuth.cpp
+    src/core/google/GoogleWorkspaceApi.cpp
     src/core/profiles/HarnessSpec.cpp
     src/core/profiles/HarnessEngine.cpp
     src/core/profiles/ProfileTypes.cpp
@@ -256,6 +259,9 @@ set(HEADERS
     src/core/agent/OpencodeBackend.h
     src/core/agent/RawChatBackend.h
     src/core/agent/LlamaAgentBackend.h
+    src/core/google/GoogleWorkspaceSecurity.h
+    src/core/google/GoogleWorkspaceAuth.h
+    src/core/google/GoogleWorkspaceApi.h
     src/core/agent/ReasoningWire.h
     src/core/agent/McpClient.h
     src/core/agent/AgentToolRunner.h
@@ -780,6 +786,7 @@ if (BUILD_TESTS)
     add_lc_test(test_agent_tools        tests/test_agent_tools.cpp)
     add_lc_test(test_portable_skills    tests/test_portable_skills.cpp)
     add_lc_test(test_agent_wire         tests/test_agent_wire.cpp)
+    add_lc_test(test_q100_subagent_probe tests/test_q100_subagent_probe.cpp)
     add_lc_test(test_hotspots           tests/test_hotspots.cpp)
     add_lc_test(test_master_cli         tests/test_master_cli.cpp)
     add_lc_test(test_managed_agent_runs tests/test_managed_agent_runs.cpp)
@@ -788,6 +795,9 @@ if (BUILD_TESTS)
     add_lc_test(test_astra_strata_config tests/test_astra_strata_config.cpp)
     add_lc_test(test_mermaid            tests/test_mermaid.cpp)
     add_lc_test(test_mail               tests/test_mail.cpp)
+    add_lc_test(test_google_workspace_security tests/test_google_workspace_security.cpp)
+    add_lc_test(test_google_workspace_auth tests/test_google_workspace_auth.cpp)
+    add_lc_test(test_google_workspace_api tests/test_google_workspace_api.cpp)
     add_lc_test(test_voice              tests/test_voice.cpp)
     add_lc_test(test_tasks              tests/test_tasks.cpp)
     add_lc_test(test_engineering_workflows tests/test_engineering_workflows.cpp)

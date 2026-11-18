@@ -170,6 +170,7 @@ private slots:
     void initTestCase();
     void buildPlatformIsCompileTimeQtPlatform();
     void exportUserDataToWritesBackup();
+    void googleWorkspaceSettingsStayDisconnectedUntilExplicitConnect();
     void githubReleaseIsConvertedToUpdateFlag();
     void updateChannelDefaultsToBuildChannel();
     void githubDebugReleaseIsChannelScoped();
@@ -1219,6 +1220,26 @@ void AppControllerTests::buildPlatformIsCompileTimeQtPlatform()
 #if defined(Q_OS_WIN)
     QCOMPARE(app.buildPlatform(), QStringLiteral("windows"));
 #elif defined(Q_OS_LINUX)
+void AppControllerTests::googleWorkspaceSettingsStayDisconnectedUntilExplicitConnect()
+{
+    QSettings settings;
+    settings.remove(QStringLiteral("googleWorkspace/clientId"));
+    settings.remove(QStringLiteral("googleWorkspace/scopes"));
+    AppController app;
+    QVERIFY(!app.googleWorkspaceConnected());
+    QCOMPARE(app.googleWorkspaceStatus(), QStringLiteral("No conectado"));
+    app.setGoogleWorkspaceClientId(QStringLiteral("  test-client.apps.googleusercontent.com  "));
+    QCOMPARE(app.googleWorkspaceClientId(),
+             QStringLiteral("test-client.apps.googleusercontent.com"));
+    QCOMPARE(settings.value(QStringLiteral("googleWorkspace/clientId")).toString(),
+             app.googleWorkspaceClientId());
+    QVERIFY(!app.googleWorkspaceConnected());
+    app.disconnectGoogleWorkspace();
+    QVERIFY(!app.googleWorkspaceConnected());
+    QCOMPARE(app.googleWorkspaceStatus(), QStringLiteral("No conectado"));
+    settings.remove(QStringLiteral("googleWorkspace/clientId"));
+}
+
     QCOMPARE(app.buildPlatform(), QStringLiteral("linux"));
 #elif defined(Q_OS_MACOS)
     QCOMPARE(app.buildPlatform(), QStringLiteral("macos"));

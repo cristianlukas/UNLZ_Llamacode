@@ -241,6 +241,9 @@ public:
     // reenvían al worker. mailAutoSend=true permite que email_send NO pida
     // aprobación (default false: enviar correo es acción externa irreversible).
     void setMailAccounts(const QVariantList &accounts);
+    // Credenciales efímeras para Gmail/Calendar/Tasks de sólo lectura.
+    void setGoogleWorkspaceCredentials(const QString &accessToken,
+                                       const QStringList &grantedScopes);
     void setWebProviders(const QVariantList &providers);
     // Política de skills portables proveniente del HarnessSpec.
     void setPortableSkillPolicy(const HarnessSkillsModule &policy);
@@ -875,6 +878,8 @@ private:
 
     QVariantList m_mcpConfig;        // config de servers MCP (de AppController)
     QVariantList m_mailAccounts;     // cuentas de correo (password resuelto)
+    QString m_googleAccessToken;     // sólo memoria; no se serializa ni se agrega al prompt
+    QStringList m_googleGrantedScopes;
     QVariantList m_webProviders;     // proveedores web externos opt-in
     HarnessSkillsModule m_skillPolicy; // ausente = todas las skills portables
     bool         m_mailAutoSend = false; // permitir email_send sin aprobación

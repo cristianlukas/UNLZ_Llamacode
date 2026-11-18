@@ -31,6 +31,7 @@
 #include "core/agent/AgentDeliverableStore.h"
 #include "core/agent/AgentRoomStore.h"
 #include "core/SecretStore.h"
+#include "core/google/GoogleWorkspaceAuth.h"
 #include "core/gateway/LlmGateway.h"
 #include "core/voice/VoiceServerManager.h"
 #include "core/voice/VoiceTypes.h"
@@ -197,6 +198,11 @@ class AppController : public QObject
     Q_PROPERTY(QString agentAuxiliaryRerankModel READ agentAuxiliaryRerankModel WRITE setAgentAuxiliaryRerankModel NOTIFY agentAuxiliaryChanged)
     Q_PROPERTY(QString agentAuxiliaryKey READ agentAuxiliaryKey WRITE setAgentAuxiliaryKey NOTIFY agentAuxiliaryChanged)
     Q_PROPERTY(bool mailAutoSend READ mailAutoSend WRITE setMailAutoSend NOTIFY mailAutoSendChanged)
+    Q_PROPERTY(QString googleWorkspaceClientId READ googleWorkspaceClientId WRITE setGoogleWorkspaceClientId NOTIFY googleWorkspaceChanged)
+    Q_PROPERTY(QString googleWorkspaceStatus READ googleWorkspaceStatus NOTIFY googleWorkspaceChanged)
+    Q_PROPERTY(bool googleWorkspaceConnected READ googleWorkspaceConnected NOTIFY googleWorkspaceChanged)
+    Q_PROPERTY(bool googleWorkspaceBusy READ googleWorkspaceBusy NOTIFY googleWorkspaceChanged)
+    Q_PROPERTY(bool googleWorkspaceCanRemember READ googleWorkspaceCanRemember CONSTANT)
     Q_PROPERTY(bool hitlDestructive READ hitlDestructive WRITE setHitlDestructive NOTIFY hitlDestructiveChanged)
     Q_PROPERTY(bool desktopIndicatorVisible READ desktopIndicatorVisible WRITE setDesktopIndicatorVisible NOTIFY desktopIndicatorChanged)
     Q_PROPERTY(bool desktopAgentActive READ desktopAgentActive NOTIFY desktopIndicatorChanged)
@@ -1196,6 +1202,16 @@ public:
     void setDesktopIndicatorVisible(bool on);
     bool desktopAgentActive() const { return m_desktopAgentActive; }
     QString desktopAgentAction() const { return m_desktopAgentAction; }
+    QString googleWorkspaceClientId() const { return m_googleWorkspaceClientId; }
+    void setGoogleWorkspaceClientId(const QString &clientId);
+    QString googleWorkspaceStatus() const { return m_googleWorkspaceStatus; }
+    bool googleWorkspaceConnected() const { return !m_googleAccessToken.isEmpty(); }
+    bool googleWorkspaceBusy() const {
+        return m_googleWorkspaceAuth && m_googleWorkspaceAuth->busy();
+    }
+    bool googleWorkspaceCanRemember() const;
+    Q_INVOKABLE void connectGoogleWorkspace();
+    Q_INVOKABLE void disconnectGoogleWorkspace();
     Q_INVOKABLE QVariantMap desktopCursorState() const;
 
     bool autoStartAgentOnLaunch() const { return m_autoStartAgentOnLaunch; }
@@ -1781,6 +1797,7 @@ signals:
     void lanClientsChanged();
     void lanServersChanged();
     void lanProfileReady(const QString &launchProfileId, const QString &error);
+    void googleWorkspaceChanged();
     void modelLoadStatusChanged();
     void idleAutoStopChanged();
     void agentContextChanged();
@@ -2401,6 +2418,13 @@ private:
     QString     m_desktopAgentAction;
     bool        m_autoStartAgentOnLaunch = false; // arrancar agente al abrir la app (tasks por horario)
     bool        m_agentStartWithServer = false;   // arrancar agente cuando el server queda listo
+    GoogleWorkspaceSecurity::GoogleWorkspaceAuth *m_googleWorkspaceAuth = nullptr;
+    QTimer *m_googleWorkspaceRefreshTimer = nullptr;
+    QString m_googleWorkspaceClientId;
+    QString m_googleWorkspaceStatus;
+    QString m_googleAccessToken;                 // efímero, sólo memoria
+    QString m_googleRefreshToken;                // memoria o keyring/DPAPI
+    QStringList m_googleGrantedScopes;
 
     // Gateway (proxy Anthropic/OpenAI + auto-load)
     LlmGateway *m_gateway = nullptr;
