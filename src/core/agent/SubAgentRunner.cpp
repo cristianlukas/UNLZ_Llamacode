@@ -130,7 +130,7 @@ void SubAgentRunner::start()
     connect(m_worker, &AgentToolRunner::toolExecuted, this, &SubAgentRunner::onToolExecuted);
     m_workerThread->start();
 
-    QString sys = systemPrompt(m_cwd, m_honey);
+    QString sys = m_systemOverride.isEmpty() ? systemPrompt(m_cwd, m_honey) : m_systemOverride;
     if (m_readOnly) {
         sys += QStringLiteral(
             "\n\nPOLÍTICA DE RAMA INDEPENDIENTE: esta rama es solo lectura. No uses "
@@ -160,16 +160,7 @@ void SubAgentRunner::runCompletion()
     if (m_done) return;
     if (++m_iters > kMaxIters) { finishUp(m_lastAssistantText + QStringLiteral("\n[corte: límite de iteraciones]"), false); return; }
 
-    QJsonArray tools = LlamaAgentBackend::toolSchemas();
-    if (m_readOnly) {
-        QJsonArray filtered;
-        for (const QJsonValue &value : tools) {
-            const QString name = value.toObject().value(QStringLiteral("function"))
-                                     .toObject().value(QStringLiteral("name")).toString();
-            if (!subAgentReadOnlyBlocked(name, {}, m_readOnlyShell)) filtered.append(value);
-        }
-        tools = filtered;
-    }
+    const QJsonArray tools = filteredToolSchemas(m_readOnly, m_readOnlyShell, m_desktopBlocked);
     const QJsonObject payload = buildCompletionPayload(
         m_messages, tools, m_modelId, m_temperature, m_reasoningEffort,
         m_reasoningBudget, m_maxOutputTokens);
@@ -277,12 +268,38 @@ void SubAgentRunner::handleStreamFinished(bool ok, const QString &err)
     runCompletion();
 }
 
+QJsonArray SubAgentRunner::filteredToolSchemas(bool readOnly, bool readOnlyShell, bool desktopBlocked)
+{
+    QJsonArray filtered;
+    for (const QJsonValue &value : LlamaAgentBackend::toolSchemas()) {
+        const QString name = value.toObject().value(QStringLiteral("function"))
+                                 .toObject().value(QStringLiteral("name")).toString();
+        if (readOnly && subAgentReadOnlyBlocked(name, {}, readOnlyShell)) continue;
+        if (desktopBlocked && name.startsWith(QLatin1String("desktop_"))) continue;
+        filtered.append(value);
+    }
+    return filtered;
+}
+
 bool SubAgentRunner::dispatchCall(const QJsonObject &call)
 {
     const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
     const QString name = fn.value(QStringLiteral("name")).toString();
     const QString id = call.value(QStringLiteral("id")).toString();
     const QString argStr = subArgsToString(fn.value(QStringLiteral("arguments")));
+
+    // Aunque no se le ofrezca, un modelo puede inventar la llamada: rechazarla.
+    if (m_desktopBlocked && name.startsWith(QLatin1String("desktop_"))) {
+        emit progressed(m_id, QStringLiteral("⛔ %1 (bloqueada: el escritorio es del agente principal)").arg(name));
+        m_messages.append(QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("tool")},
+            {QStringLiteral("tool_call_id"), id},
+            {QStringLiteral("content"), QStringLiteral(
+                "[tarea en segundo plano: '%1' está bloqueada; el mouse y el teclado los "
+                "usa el agente principal. Resolvelo sin operar el escritorio o decí que "
+                "hace falta hacerlo en primer plano.]").arg(name)}});
+        return false;
+    }
 
     if (m_readOnly) {
         QJsonParseError readOnlyParseError;

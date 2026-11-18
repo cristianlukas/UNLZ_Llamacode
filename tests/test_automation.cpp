@@ -11,12 +11,14 @@
 #include "core/automation/DesktopComputerUse.h"
 #include "core/automation/DesktopRecoveryPolicy.h"
 #include "core/automation/LinuxDesktopBackend.h"
+#include "core/automation/AgentDesktopCli.h"
 #include "core/automation/TeachKeyBuffer.h"
 
 class AutomationTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void agentDesktopParsesEnvelopeWindowsAndSnapshot();
     void screenGrabRectIsRelativeToTheMonitor();
     void blankCaptureIsDetected();
     void initTestCase();
@@ -1595,6 +1597,64 @@ void AutomationTests::blankCaptureIsDetected()
                 for (int x = 12 + col * 73; x < 80 + col * 73; ++x)
                     dark.setPixel(x, y, qRgb(80, 80, 80));
     QVERIFY(!DesktopComputerUse::imageLooksBlank(dark));
+}
+
+// agent-desktop (Vercel Labs) como backend de controles: sobre JSON, ventana por
+// PID y árbol de refs → filas de desktop_controls. Salida real de agent-desktop
+// 1.2.0 contra gnome-calculator (GTK4), recortada.
+void AutomationTests::agentDesktopParsesEnvelopeWindowsAndSnapshot()
+{
+    QString error;
+    QVERIFY(!AgentDesktopCli::parseEnvelope(
+        R"({"version":"2.6","ok":false,"command":"snapshot","error":{"code":"ACTION_NOT_SUPPORTED","message":"native window unproven"}})", &error).isValid());
+    QVERIFY(error.contains(QStringLiteral("ACTION_NOT_SUPPORTED")));
+    QVERIFY(!AgentDesktopCli::parseEnvelope("no json", &error).isValid());
+
+    const QVariant windows = AgentDesktopCli::parseEnvelope(R"({"ok":true,"data":[
+        {"accessible":true,"app_name":"gnome-calculator","id":"w-other","is_focused":false,"pid":99},
+        {"accessible":true,"app_name":"gnome-calculator","id":"w-calc","is_focused":true,"pid":566971},
+        {"accessible":true,"app_name":"gnome-calculator","id":"w-calc-2","is_focused":false,"pid":566971}]})", &error);
+    QVERIFY(error.isEmpty());
+    QCOMPARE(AgentDesktopCli::windowIdForPid(windows, 566971), QStringLiteral("w-calc"));
+    QCOMPARE(AgentDesktopCli::windowIdForPid(windows, 99), QStringLiteral("w-other"));
+    QVERIFY(AgentDesktopCli::windowIdForPid(windows, 1).isEmpty());
+
+    const QVariant snap = AgentDesktopCli::parseEnvelope(R"({"ok":true,"data":{"app":"gnome-calculator","ref_count":3,
+        "tree":{"children":[{"children":[
+          {"available_actions":["RightClick","SetValue","TypeText","SetFocus"],"ref_id":"@s1:e4","role":"textfield","value":"9",
+           "bounds":{"x":444.0,"y":365.0,"width":382.0,"height":45.0}},
+          {"available_actions":["Click","SetFocus"],"name":"3","ref_id":"@s1:e7","role":"button",
+           "bounds":{"x":602.0,"y":590.0,"width":69.0,"height":44.0}},
+          {"available_actions":["Click","SetFocus"],"name":"×","ref_id":"@s1:e9","role":"button","states":["disabled"]}]}],"role":"window"}}})", &error);
+    const QVariantList rows = AgentDesktopCli::rowsFromSnapshot(snap, QString(), 50);
+    QCOMPARE(rows.size(), 3);
+    const QVariantMap field = rows.at(0).toMap();
+    QCOMPARE(field.value("controlId").toString(), QStringLiteral("ad:@s1:e4"));
+    QCOMPARE(field.value("value").toString(), QStringLiteral("9"));
+    QVERIFY(!field.value("invokable").toBool());
+    const QVariantMap three = rows.at(1).toMap();
+    QCOMPARE(three.value("name").toString(), QStringLiteral("3"));
+    QCOMPARE(three.value("x").toInt(), 602);
+    QVERIFY(three.value("invokable").toBool());
+    QVERIFY(three.value("enabled").toBool());
+    QVERIFY(!rows.at(2).toMap().value("enabled").toBool());
+    QCOMPARE(AgentDesktopCli::rowsFromSnapshot(snap, QStringLiteral("×"), 50).size(), 1);
+    QCOMPARE(AgentDesktopCli::rowsFromSnapshot(snap, QString(), 2).size(), 2);
+
+    QVERIFY(AgentDesktopCli::isControlId(QStringLiteral("ad:@s1:e7")));
+    QVERIFY(!AgentDesktopCli::isControlId(QStringLiteral("atspi:abc")));
+    QCOMPARE(AgentDesktopCli::refFromControlId(QStringLiteral("ad:@s1:e7")), QStringLiteral("@s1:e7"));
+    QCOMPARE(AgentDesktopCli::actionArgs("@s1:e7", "invoke", {}), (QStringList{"click", "@s1:e7"}));
+    QCOMPARE(AgentDesktopCli::actionArgs("@s1:e4", "set_value", "42"), (QStringList{"set-value", "@s1:e4", "42"}));
+    QCOMPARE(AgentDesktopCli::actionArgs("@s1:e4", "read", {}),
+             (QStringList{"get", "@s1:e4", "--property", "text"}));
+    QVERIFY(AgentDesktopCli::actionArgs("@s1:e4", "range_set", "3").isEmpty());
+
+    // Sin binario (ruta explícita inexistente) no está disponible y no se ejecuta nada.
+    qputenv("LLAMACODE_AGENT_DESKTOP", "/nonexistent/agent-desktop");
+    QVERIFY(!AgentDesktopCli::available());
+    QVERIFY(!AgentDesktopCli::run({QStringLiteral("status")}, &error).isValid());
+    qunsetenv("LLAMACODE_AGENT_DESKTOP");
 }
 
 QTEST_MAIN(AutomationTests)

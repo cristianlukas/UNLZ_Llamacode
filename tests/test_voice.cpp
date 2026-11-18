@@ -14,7 +14,12 @@
 #include "core/voice/VoiceController.h"
 #include "core/voice/VadEngine.h"
 #include "core/voice/TurnDetector.h"
+#include "core/voice/SpeechTextNormalizer.h"
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <memory>
 #include "core/voice/CharlaTuning.h"
+#include "core/voice/CharlaMultitask.h"
 #include "core/voice/VoiceCursorCommand.h"
 #include "core/voice/VoiceAssistant.h"
 #include "core/profiles/ProfileTypes.h"
@@ -66,9 +71,17 @@ private slots:
     void assistantApprovalQuestion();
     void charlaTuningRecommendations();
     void charlaModelPick();
+    void charlaMultitaskPolicy();
+    void charlaTuningKeepsMultitaskSlots();
+    void announceWaitsForTheUserToFinish();
     void ttsSentenceSplit();
     void ttsStreamingSentences();
     void ttsSanitizeForSpeech();
+    void speechNormalizerAgentReplies();
+    void speechNormalizerNumbersEs();
+    void speechNormalizerOtherLanguages();
+    void ttsSplitKeepsUrlsAndDecimals();
+    void ttsReceivesNormalizedText();
     void latencyPercentiles();
     void voiceInLaunchProfile();
     void sttServerCatalog();
@@ -866,6 +879,105 @@ void TestVoice::turnDetectorSilence()
     QCOMPARE(requiredSilenceMs(QStringLiteral("listo."), 0), 0);
 }
 
+void TestVoice::charlaMultitaskPolicy()
+{
+    using namespace CharlaMultitask;
+    // Un slot queda para la voz/agente principal.
+    QCOMPARE(backgroundCapacity(1, 0), 0);
+    QCOMPARE(backgroundCapacity(4, 0), 3);
+    QCOMPARE(backgroundCapacity(4, 3), 0);
+    QCOMPARE(backgroundCapacity(4, 9), 0);
+
+    QCOMPARE(startCue(1, "es"), QStringLiteral("Dale, lo hago en paralelo."));
+    QVERIFY(startCue(2, "es").contains(QStringLiteral("van 2 tareas")));
+    QCOMPARE(startCue(1, "en"), QStringLiteral("Sure, I'll do that in parallel."));
+
+    QCOMPARE(shortLabel(QStringLiteral("Che, buscame hoteles baratos en Madrid para el finde?")),
+             QStringLiteral("buscame hoteles baratos en Madrid para…"));
+    QCOMPARE(shortLabel(QStringLiteral("Mirá el clima.")), QStringLiteral("mirá el clima"));
+
+    // Resultado → 1-2 frases habladas, sin markdown ni notas entre corchetes.
+    const QString done = completionAnnouncement(
+        QStringLiteral("mirá el clima de mañana"),
+        QStringLiteral("**Mañana** llueve a la tarde. Llevá paraguas. Máxima de 24 grados.\n[corte: límite]"),
+        true, "es");
+    QCOMPARE(done, QStringLiteral("Listo lo de mirá el clima de mañana: Mañana llueve a la tarde. Llevá paraguas."));
+    QCOMPARE(completionAnnouncement(QStringLiteral("abrí el mail"), QString(), false, "es"),
+             QStringLiteral("No pude terminar lo de abrí el mail."));
+    QVERIFY(completionAnnouncement(QStringLiteral("x"), QString(400, QLatin1Char('a')), true, "es").size() < 260);
+
+    QVERIFY(isStatusQuery(QStringLiteral("¿Cómo van las tareas?")));
+    QVERIFY(isStatusQuery(QStringLiteral("che, qué estás haciendo")));
+    QVERIFY(!isStatusQuery(QStringLiteral("buscá cómo van las tareas de la casa en internet")));
+    QCOMPARE(statusReport({}, "es"), QStringLiteral("No tengo tareas en segundo plano."));
+    QCOMPARE(statusReport({QStringLiteral("mirá el clima")}, "es"), QStringLiteral("Estoy con una tarea: mirá el clima."));
+    QVERIFY(statusReport({QStringLiteral("a"), QStringLiteral("b")}, "es").startsWith(QStringLiteral("Estoy con 2 tareas")));
+
+    const QString sys = backgroundSystemPrompt(QStringLiteral("/tmp/t1"), QDate(2026, 11, 5), "es");
+    QVERIFY(sys.contains(QStringLiteral("NO uses las tools desktop_*")));
+    QVERIFY(sys.contains(QStringLiteral("/tmp/t1")));
+    QVERIFY(sys.contains(QStringLiteral("noviembre")));
+}
+
+// El tope de contexto de Charla es por slot: 4×32k sigue siendo multitarea, pero
+// 4 slots de 4k (no entra el agente de voz) bajan a 1.
+void TestVoice::charlaTuningKeepsMultitaskSlots()
+{
+    const QStringList multi{"--ctx-size", "131072", "--batch-size", "2048", "--ubatch-size", "512",
+                            "--cache-reuse", "512", "--predict", "1024", "--parallel", "4"};
+    QVERIFY(CharlaTuning::recommend(multi, 24.0).isEmpty());
+    const QStringList huge{"--ctx-size", "524288", "--batch-size", "2048", "--ubatch-size", "512",
+                           "--cache-reuse", "512", "--predict", "1024", "--parallel", "4"};
+    const QStringList tuned = CharlaTuning::apply(huge, CharlaTuning::recommend(huge, 24.0));
+    QCOMPARE(CharlaTuning::argValue(tuned, "--ctx-size"), QStringLiteral("131072"));
+    QCOMPARE(CharlaTuning::argValue(tuned, "--parallel"), QStringLiteral("4"));
+}
+
+// Un aviso de tarea terminada no pisa al usuario: escuchando con voz en curso,
+// announce() se niega (se reintenta después); en silencio, habla.
+void TestVoice::announceWaitsForTheUserToFinish()
+{
+    VoiceController idle;
+    QVERIFY(!idle.announce(QStringLiteral("Listo lo del clima.")));   // Charla apagada
+
+    VoiceConfig cfg;
+    cfg.ttsMode = QStringLiteral("http");
+    cfg.ttsBaseUrl = QStringLiteral("http://127.0.0.1:1");           // nadie escucha: no importa
+    cfg.ttsFallbackMode = QStringLiteral("none");
+    cfg.autoListen = false;
+    cfg.bargeIn = false;
+    VoiceController vc;
+    vc.setConfig(cfg, QString(), QString());
+    vc.setSyntheticInput(true);
+    vc.start();
+    QCOMPARE(vc.state(), VoiceController::Listening);
+    QVERIFY(!vc.userIsSpeaking());
+
+    // 1 s de ruido de fondo (el VAD adaptativo calibra su piso) y después 1,5 s
+    // de voz fuerte.
+    QByteArray audio;
+    for (int i = 0; i < 16000; ++i) {
+        const int16_t v = (i % 7) * 40 - 120;
+        audio.append(reinterpret_cast<const char *>(&v), 2);
+    }
+    for (int i = 0; i < 24000; ++i) {
+        const int16_t v = (i / 20) % 2 ? 12000 : -12000;
+        audio.append(reinterpret_cast<const char *>(&v), 2);
+    }
+    vc.queueSyntheticAudio(audio);
+    QTRY_VERIFY_WITH_TIMEOUT(vc.userIsSpeaking(), 3000);
+    QVERIFY(!vc.announce(QStringLiteral("Listo lo del clima.")));
+    vc.stop();
+
+    VoiceController quiet;
+    quiet.setConfig(cfg, QString(), QString());
+    quiet.setSyntheticInput(true);
+    quiet.start();
+    QVERIFY(quiet.announce(QStringLiteral("Listo lo del clima.")));
+    QCOMPARE(quiet.state(), VoiceController::Speaking);
+    quiet.stop();
+}
+
 void TestVoice::ttsSentenceSplit()
 {
     // Texto corto (< minLen): un solo chunk.
@@ -955,6 +1067,178 @@ void TestVoice::ttsSanitizeForSpeech()
     // Texto limpio pasa intacto (modo chat sin thinking).
     QCOMPARE(VoiceController::sanitizeForSpeech(QStringLiteral("Listo, ya está.")),
              QStringLiteral("Listo, ya está."));
+}
+
+// Respuestas reales del agente → lo que tiene que oír el usuario. Corpus del
+// A/B Piper → Parakeet (docs/charla-tts-normalizacion-20261105.md): sin esto
+// Piper decía "asterisco asterisco", "barra", deletreaba URLs y leía "$" como
+// "dólar"; WER 26,8% → 7,3%.
+void TestVoice::speechNormalizerAgentReplies()
+{
+    using SpeechTextNormalizer::normalize;
+    const QList<QPair<QString, QString>> cases = {
+        {QStringLiteral("Mañana en Buenos Aires: 24 °C de máxima y 60% de humedad."),
+         QStringLiteral("Mañana en Buenos Aires: veinticuatro grados de máxima y sesenta por ciento de humedad.")},
+        {QStringLiteral("El viento va a estar en 15 km/h."),
+         QStringLiteral("El viento va a estar en quince kilómetros por hora.")},
+        {QStringLiteral("Listo, el resultado es 12 × 37 = 444."),
+         QStringLiteral("Listo, el resultado es doce por treinta y siete es igual a cuatrocientos cuarenta y cuatro.")},
+        {QStringLiteral("Lo saqué de https://www.smn.gob.ar/pronostico."),
+         QStringLiteral("Lo saqué de smn punto gob punto ar.")},
+        {QStringLiteral("El dólar cerró a $1.245,50."),
+         QStringLiteral("El dólar cerró a mil doscientos cuarenta y cinco coma cincuenta pesos.")},
+        {QStringLiteral("Tenés 3,5 GB libres de 24 GB."),
+         QStringLiteral("Tenés tres coma cinco gigas libres de veinticuatro gigas.")},
+        {QStringLiteral("La reunión es a las 10:30."), QStringLiteral("La reunión es a las diez y treinta.")},
+        {QStringLiteral("Abrí **la calculadora** y ya está."), QStringLiteral("Abrí la calculadora y ya está.")},
+        {QStringLiteral("El archivo `config.json` tiene 2 errores."),
+         QStringLiteral("El archivo config punto json tiene dos errores.")},
+        {QStringLiteral("- Primero cerré el navegador."), QStringLiteral("Primero cerré el navegador.")},
+        {QStringLiteral("## Resumen: todo funcionó."), QStringLiteral("Resumen: todo funcionó.")},
+        {QStringLiteral("El turno es el 05/11/2026."),
+         QStringLiteral("El turno es el cinco de noviembre de dos mil veintiséis.")},
+        {QStringLiteral("Encontré 3 resultados → el primero es el mejor."),
+         QStringLiteral("Encontré tres resultados, el primero es el mejor.")},
+        {QStringLiteral("La GPU está a 71 °C y usa 18,2 GB."),
+         QStringLiteral("La GPU está a setenta y un grados y usa dieciocho coma dos gigas.")},
+        {QStringLiteral("Tarda unos 250 ms por respuesta."),
+         QStringLiteral("Tarda unos doscientos cincuenta milisegundos por respuesta.")},
+        {QStringLiteral("Busqué en [la página del SMN](https://smn.gob.ar)."),
+         QStringLiteral("Busqué en la página del SMN.")},
+        {QStringLiteral("Te mandé el mail a soporte@empresa.com."),
+         QStringLiteral("Te mandé el mail a soporte arroba empresa punto com.")},
+        {QStringLiteral("El precio es USD 1.200."), QStringLiteral("El precio es mil doscientos dólares.")},
+        {QStringLiteral("Son 3 + 4 = 7 tareas."), QStringLiteral("Son tres más cuatro es igual a siete tareas.")},
+        {QStringLiteral("| Ciudad | Máx |\n|---|---|\n| Rosario | 26 |"),
+         QStringLiteral("Ciudad, Máx\nRosario, veintiséis")},
+        {QStringLiteral("Listo ✅ ya lo abrí 🚀"), QStringLiteral("Listo ya lo abrí")},
+    };
+    for (const auto &c : cases)
+        QCOMPARE(normalize(c.first), c.second);
+    // Texto ya hablable pasa intacto.
+    QCOMPARE(normalize(QStringLiteral("Dale, lo busco.")), QStringLiteral("Dale, lo busco."));
+    QVERIFY(normalize(QStringLiteral("**")).isEmpty());
+}
+
+void TestVoice::speechNormalizerNumbersEs()
+{
+    using SpeechTextNormalizer::numberToWordsEs;
+    QCOMPARE(numberToWordsEs(0), QStringLiteral("cero"));
+    QCOMPARE(numberToWordsEs(21), QStringLiteral("veintiuno"));
+    QCOMPARE(numberToWordsEs(21, false, true), QStringLiteral("veintiún"));
+    QCOMPARE(numberToWordsEs(21, true, true), QStringLiteral("veintiuna"));
+    QCOMPARE(numberToWordsEs(100), QStringLiteral("cien"));
+    QCOMPARE(numberToWordsEs(101), QStringLiteral("ciento uno"));
+    QCOMPARE(numberToWordsEs(500, true), QStringLiteral("quinientas"));
+    QCOMPARE(numberToWordsEs(1000), QStringLiteral("mil"));
+    QCOMPARE(numberToWordsEs(21000, false, true), QStringLiteral("veintiún mil"));
+    QCOMPARE(numberToWordsEs(1000000), QStringLiteral("un millón"));
+    QCOMPARE(numberToWordsEs(2500000), QStringLiteral("dos millones quinientos mil"));
+    QCOMPARE(numberToWordsEs(3000000000LL), QStringLiteral("tres mil millones"));
+
+    using SpeechTextNormalizer::normalize;
+    // Género y apócope según el sustantivo que sigue.
+    QCOMPARE(normalize(QStringLiteral("Abrí 1 ventana y 1 archivo.")),
+             QStringLiteral("Abrí una ventana y un archivo."));
+    QCOMPARE(normalize(QStringLiteral("Quedan 200 personas.")), QStringLiteral("Quedan doscientas personas."));
+    QCOMPARE(normalize(QStringLiteral("Cuesta $1.")), QStringLiteral("Cuesta un peso."));
+    // Decimales en coma o punto; "3.500" en español son miles.
+    QCOMPARE(normalize(QStringLiteral("Pi es 3,14.")), QStringLiteral("Pi es tres coma catorce."));
+    QCOMPARE(normalize(QStringLiteral("Pesa 3.500 kg.")), QStringLiteral("Pesa tres mil quinientos kilos."));
+    QCOMPARE(normalize(QStringLiteral("Hoy es 2026-11-05.")),
+             QStringLiteral("Hoy es cinco de noviembre de dos mil veintiséis."));
+    QCOMPARE(normalize(QStringLiteral("Entre 10-20 minutos.")), QStringLiteral("Entre diez a veinte minutos."));
+    QCOMPARE(normalize(QStringLiteral("Son las 9:00 hs.")), QStringLiteral("Son las nueve."));
+    // Un número imposible de leer de corrido va dígito a dígito.
+    QCOMPARE(normalize(QStringLiteral("Código 0042.")), QStringLiteral("Código cero cero cuatro dos."));
+}
+
+void TestVoice::speechNormalizerOtherLanguages()
+{
+    using SpeechTextNormalizer::normalize;
+    // Inglés: sólo estructura (markdown, URLs); los números quedan para el motor.
+    QCOMPARE(normalize(QStringLiteral("**Done**, see https://example.com/a for 3 items."), QStringLiteral("en")),
+             QStringLiteral("Done, see example dot com for 3 items."));
+    QCOMPARE(VoiceController::speechLanguage(VoiceConfig()), QStringLiteral("es"));
+    VoiceConfig c;
+    c.sttLanguage = QStringLiteral("auto");
+    c.ttsManagedVoice = QStringLiteral("en_US-lessac-medium");
+    QCOMPARE(VoiceController::speechLanguage(c), QStringLiteral("en"));
+}
+
+void TestVoice::ttsSplitKeepsUrlsAndDecimals()
+{
+    // El punto de una URL o de "$1.245,50" no corta la oración: antes el TTS
+    // recibía "El dólar cerró a $1." y después "245,50." por separado.
+    QCOMPARE(VoiceController::splitSentences(
+                 QStringLiteral("El dólar cerró a $1.245,50 según smn.gob.ar hoy. Algo más?"), 10),
+             (QStringList{QStringLiteral("El dólar cerró a $1.245,50 según smn.gob.ar hoy."),
+                          QStringLiteral("Algo más?")}));
+    // Streaming: un punto al final del texto recibido puede ser un decimal en
+    // vuelo; se espera al próximo delta.
+    int consumed = -1;
+    QVERIFY(VoiceController::splitCompleteSentences(QStringLiteral("El dólar cerró a $1."), 12, &consumed).isEmpty());
+    QCOMPARE(consumed, 0);
+    const QStringList s = VoiceController::splitCompleteSentences(
+        QStringLiteral("El dólar cerró a $1.245,50. Y el"), 12, &consumed);
+    QCOMPARE(s, QStringList{QStringLiteral("El dólar cerró a $1.245,50.")});
+    // Bloques de código fuera; uno abierto corta desde el fence.
+    QCOMPARE(VoiceController::sanitizeForSpeech(
+                 QStringLiteral("Te dejo el comando.\n```bash\nls -la\n```\nListo.")),
+             QStringLiteral("Te dejo el comando.\n\nListo."));
+    QCOMPARE(VoiceController::sanitizeForSpeech(QStringLiteral("Mirá esto:\n```py\nprint(")),
+             QStringLiteral("Mirá esto:"));
+}
+
+// Integración: lo que llega al endpoint TTS es el texto ya normalizado.
+void TestVoice::ttsReceivesNormalizedText()
+{
+    QTcpServer server;
+    QVERIFY(server.listen(QHostAddress::LocalHost));
+    QByteArray body;
+    QObject::connect(&server, &QTcpServer::newConnection, &server, [&]() {
+        QTcpSocket *sock = server.nextPendingConnection();
+        auto buf = std::make_shared<QByteArray>();
+        QObject::connect(sock, &QTcpSocket::readyRead, sock, [sock, buf, &body]() {
+            *buf += sock->readAll();
+            const int hdrEnd = buf->indexOf("\r\n\r\n");
+            if (hdrEnd < 0) return;
+            const QRegularExpression lenRe(QStringLiteral("content-length:\\s*(\\d+)"),
+                                           QRegularExpression::CaseInsensitiveOption);
+            const int len = lenRe.match(QString::fromLatin1(buf->left(hdrEnd))).captured(1).toInt();
+            if (buf->size() < hdrEnd + 4 + len) return;
+            body = buf->mid(hdrEnd + 4, len);
+            const QByteArray wav = AudioCodec::pcm16ToWav(QByteArray(320, '\0'), 16000);
+            sock->write("HTTP/1.1 200 OK\r\nContent-Type: audio/wav\r\nContent-Length: "
+                        + QByteArray::number(wav.size()) + "\r\nConnection: close\r\n\r\n" + wav);
+            sock->disconnectFromHost();
+        });
+    });
+
+    VoiceConfig cfg;
+    cfg.ttsMode = QStringLiteral("http");
+    cfg.ttsBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort());
+    cfg.ttsFallbackMode = QStringLiteral("none");
+    cfg.autoListen = false;
+    cfg.bargeIn = false;
+    VoiceController vc;
+    vc.setConfig(cfg, QString(), QString());
+    vc.setSyntheticInput(true);
+    vc.start();
+    vc.speak(QStringLiteral("Abrí **la calculadora**: 12 × 37 = 444"));
+    QTRY_VERIFY_WITH_TIMEOUT(!body.isEmpty(), 5000);
+    const QString input = QJsonDocument::fromJson(body).object().value(QStringLiteral("input")).toString();
+    QCOMPARE(input, QStringLiteral("Abrí la calculadora: doce por treinta y siete es igual a cuatrocientos cuarenta y cuatro"));
+    vc.stop();
+
+    // Una respuesta impronunciable no deja a Charla colgada en Speaking.
+    VoiceController idle;
+    idle.setConfig(cfg, QString(), QString());
+    idle.setSyntheticInput(true);
+    idle.start();
+    idle.speak(QStringLiteral("🚀 ✅"));
+    QCOMPARE(idle.state(), VoiceController::Idle);   // autoListen=false
+    idle.stop();
 }
 
 void TestVoice::voiceInLaunchProfile()

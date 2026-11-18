@@ -1,0 +1,13 @@
+== qa_background_calc (modo segundo plano) ==
+  PASS lanza 'calculator' (alias de calc) 
+  PASS devuelve la ventana de la Calculadora, no un diálogo (id=600004 "Calculadora")
+  PASS encuentra los botones por UI Automation (30 controles con id)
+  PASS invoke 3 
+  PASS invoke × 
+  PASS invoke 3 
+  PASS invoke = 
+  PASS el visor dice 9 ("9")
+  PASS el puntero no se movió (640,450)
+  tiempo de la tarea (controles + clics + visor): 1852 ms
+OK: modo segundo plano verificado contra la Calculadora real.
+rc=0

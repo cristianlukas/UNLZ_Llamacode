@@ -1603,6 +1603,9 @@ void ProfileManager::loadSystemProfiles()
         rt.mlock = ro.value("mlock").toBool(false);
         rt.contBatching = true;
         rt.cacheType = ro.value("kv").toString(QStringLiteral("q8_0"));
+        // Sin esto el agente veía 1 slot aunque el perfil declarara más (Charla
+        // multitarea y los sub-agentes reparten trabajo según este número).
+        rt.parallelSlots = qMax(1, ro.value("parallelSlots").toInt(1));
         if (cloudBackend)
             rt.ctx = backendConfig.value(QStringLiteral("ctx")).toInt(rt.ctx);
         if (!cloudBackend)

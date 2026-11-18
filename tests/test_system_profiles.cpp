@@ -52,6 +52,7 @@ class SystemProfilesTests : public QObject
     Q_OBJECT
 private slots:
     void bundle_charlaJarvisProfileIsVoiceReady();
+    void bundle_charlaJarvisMultitaskProfileKeepsItsSlots();
     void bundle_charlaJarvisDeepseekProfileHasVisionAndVoice();
     void initTestCase();
 
@@ -2211,6 +2212,29 @@ void SystemProfilesTests::bundle_charlaJarvisProfileIsVoiceReady()
 
     // Los perfiles de sistema sin bloque "voice" siguen con el default.
     QVERIFY(!pm.getLaunchVoice(QStringLiteral("sys-qwen38-27b-udq4-131k")).value("enabled").toBool());
+}
+
+// Charla multitarea: el mismo 27B con 4 slots de 32k (voz + 3 agentes de fondo)
+// y sin MTP (con slots ganaba poco y ocupaba 2,8 GB que necesita la visión). El
+// ajuste de Charla NO tiene que bajarlo a 1 slot ni a 32k totales.
+void SystemProfilesTests::bundle_charlaJarvisMultitaskProfileKeepsItsSlots()
+{
+    ProfileManager pm;
+    const QString id = QStringLiteral("sys-charla-jarvis-qwen38-27b-multi");
+    const QVariantMap lp = pm.getLaunchProfile(id);
+    QVERIFY(!lp.isEmpty());
+    QCOMPARE(lp.value("agentProfileId").toString(), QStringLiteral("agent-jarvis"));
+    QVERIFY(pm.getLaunchVoice(id).value("enabled").toBool());
+    const QVariantMap rt = pm.getRuntimePreset(lp.value("runtimePresetId").toString());
+    QCOMPARE(rt.value("ctx").toInt(), 131072);
+    QCOMPARE(rt.value("parallelSlots").toInt(), 4);
+    // El builder emite --parallel desde el runtime; repetirlo en extraArgs lo duplicaría.
+    const QStringList extra = lp.value("extraArgs").toStringList();
+    QVERIFY(!extra.contains(QStringLiteral("--parallel")));
+    QVERIFY(!extra.contains(QStringLiteral("draft-mtp")));
+    const QStringList effective = QStringList{"--ctx-size", "131072", "--batch-size", "2048",
+                                              "--ubatch-size", "512", "--parallel", "4"} + extra;
+    QVERIFY(CharlaTuning::recommend(effective, 24.0).isEmpty());
 }
 
 // El modelo más capaz con visión que convive con Charla en 2x RTX 3090: DeepSeek

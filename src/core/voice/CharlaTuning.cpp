@@ -32,9 +32,16 @@ QList<Change> recommend(const QStringList &args, double vramGb)
     // ── Contexto ── Charla no necesita 262k: el KV gigante come VRAM y hace
     // checkpoints/gestión de cache pesados. 32k sobra para una conversación
     // hablada (el historial del agente además se poda de imágenes viejas).
+    // Con --parallel N (sin KV unificado) el tope es por slot: Charla multitarea
+    // usa los slots extra para agentes en segundo plano, cada uno con 32k.
+    QString parallel = argValue(args, QStringLiteral("--parallel"));
+    if (parallel.isEmpty()) parallel = argValue(args, QStringLiteral("-np"));
+    const bool unified = args.contains(QStringLiteral("--kv-unified")) || args.contains(QStringLiteral("-kvu"));
+    const int slotCount = parallel.toInt();
+    const int ctxSlots = (slotCount > 1 && !unified) ? slotCount : 1;
     const QString ctx = argValue(args, QStringLiteral("--ctx-size"));
-    if (!ctx.isEmpty() && ctx.toInt() > 65536)
-        out.append({QStringLiteral("--ctx-size"), ctx, QStringLiteral("32768"),
+    if (!ctx.isEmpty() && ctx.toInt() / ctxSlots > 65536)
+        out.append({QStringLiteral("--ctx-size"), ctx, QString::number(32768 * ctxSlots),
                     QStringLiteral("KV cache liviano; la charla no usa contexto gigante")});
 
     // ── Reuso de prefijo ── Sin esto, un cambio a mitad del historial re-procesa
@@ -58,7 +65,7 @@ QList<Change> recommend(const QStringList &args, double vramGb)
     // saludo viejo en vez de la tarea). llama.cpp ajusta a la VRAM con -fit.
     const int minCtx = vramGb >= 8.0 ? 16384 : 8192;
     const int ctxNow = ctx.toInt();
-    const bool ctxAlreadyRecommended = ctxNow > 65536;   // arriba ya se bajó a 32k
+    const bool ctxAlreadyRecommended = ctxNow / ctxSlots > 65536;   // arriba ya se bajó a 32k por slot
     if (!ctxAlreadyRecommended && ctxNow > 0 && ctxNow < minCtx)
         out.append({QStringLiteral("--ctx-size"), ctx, QString::number(minCtx),
                     QStringLiteral("el agente de voz no entra en %1 tokens (compacta y pierde la consigna)")
@@ -67,14 +74,10 @@ QList<Change> recommend(const QStringList &args, double vramGb)
     // ── Slots paralelos explícitos ── Con --parallel N y KV NO unificado cada
     // slot recibe ctx/N. (Sin --parallel, llama.cpp usa auto + kv unificado: los
     // slots comparten el pool y no achican el contexto de una conversación.)
-    QString parallel = argValue(args, QStringLiteral("--parallel"));
-    if (parallel.isEmpty()) parallel = argValue(args, QStringLiteral("-np"));
-    const bool unified = args.contains(QStringLiteral("--kv-unified")) || args.contains(QStringLiteral("-kvu"));
-    const int slotCount = parallel.toInt();
-    const int effectiveCtx = ctxAlreadyRecommended ? 32768 : qMax(ctxNow, minCtx);
+    const int effectiveCtx = ctxAlreadyRecommended ? 32768 * ctxSlots : qMax(ctxNow, minCtx);
     if (!parallel.isEmpty() && slotCount > 1 && !unified && effectiveCtx / slotCount < minCtx)
         out.append({QStringLiteral("--parallel"), parallel, QStringLiteral("1"),
-                    QStringLiteral("cada slot recibe %1 tokens; Charla es de un solo usuario")
+                    QStringLiteral("cada slot recibe %1 tokens: no entra el agente de voz")
                         .arg(effectiveCtx / slotCount)});
 
     return out;

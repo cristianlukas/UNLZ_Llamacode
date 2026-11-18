@@ -49,6 +49,13 @@ public:
     // recibe tools de lectura; allowShell agrega la excepción necesaria para
     // ejecutar tests, siempre dentro del cwd confinado.
     void setReadOnly(bool on) { m_readOnly = on; }
+    // Tareas en segundo plano de Ingi Charla: sin desktop_* (el mouse y el
+    // teclado son del agente principal; dos agentes tecleando a la vez se pisan)
+    // y con su propio system prompt en vez del de sub-agente de coding.
+    void setDesktopBlocked(bool on) { m_desktopBlocked = on; }
+    void setSystemPromptOverride(const QString &prompt) { m_systemOverride = prompt; }
+    // Tools que ve el modelo, ya filtradas por las políticas de esta rama.
+    static QJsonArray filteredToolSchemas(bool readOnly, bool readOnlyShell, bool desktopBlocked);
     void setReadOnlyShell(bool allow) { m_readOnlyShell = allow; }
 
     // System prompt del sub-agente. Pura y estática → unit-testeable. honey=true
@@ -88,6 +95,8 @@ private:
     bool    m_hitlDestructive = true;   // guardrail: rechazar destructivas (headless)
     bool    m_readOnly = false;
     bool    m_readOnlyShell = false;
+    bool    m_desktopBlocked = false;
+    QString m_systemOverride;
 
     QNetworkAccessManager *m_nam = nullptr;
     QNetworkReply *m_reply = nullptr;

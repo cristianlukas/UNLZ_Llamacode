@@ -936,6 +936,10 @@ public:
     bool charlaAwaitingApprovalForTest() const { return !m_charlaPendingApproval.isEmpty(); }
     void setAgentStartingForTest(bool on) { m_agentStarting = on; }
     QStringList charlaQueuedTurnsForTest() const { return m_charlaQueuedTurns; }
+    void setCharlaParallelSlotsForTest(int count) { m_charlaSlotsOverrideForTest = count; }
+    void setCharlaBackgroundServerForTest(const QString &url) { m_charlaBgServerForTest = url; }
+    int charlaBackgroundCountForTest() const { return m_charlaBackground.size(); }
+    QStringList charlaAnnouncementsForTest() const { return m_charlaAnnouncements; }
     // Regresión "Iniciando agente" trabado tras swap/restart de server: arma el
     // estado previo (pending + starting) y dispara el ready-branch. Con un agente
     // ya corriendo debe bajar el flag sin relanzar.
@@ -2241,6 +2245,21 @@ private:
     // lo dicho mientras trabaja se encola acá o, si es "pará", lo frena.
     bool m_charlaAgentTurnActive = false;
     QStringList m_charlaQueuedTurns;
+    // Multitarea: pedidos que arrancan en otro slot del server mientras el agente
+    // principal trabaja (CharlaMultitask). Sus resultados se anuncian por voz.
+    struct CharlaBackgroundTask { QPointer<SubAgentRunner> runner; QString request; };
+    QHash<QString, CharlaBackgroundTask> m_charlaBackground;
+    QStringList m_charlaAnnouncements;   // avisos esperando un hueco para hablarse
+    QTimer m_charlaAnnounceTimer;
+    int m_charlaSlotsOverrideForTest = 0;
+    QString m_charlaBgServerForTest;
+    bool m_charlaBgWarmed = false;       // slots de fondo ya precalentados
+    int charlaParallelSlots() const;
+    bool startCharlaBackgroundTask(const QString &text);
+    void onCharlaBackgroundFinished(const QString &id, const QString &result, bool ok);
+    void pumpCharlaAnnouncements();
+    void cancelCharlaBackgroundTasks();
+    void warmCharlaBackgroundSlots();
     bool m_charlaCancelled = false;      // el turno se cortó por voz: no hablar su cola
     QString m_charlaLastPrompt;          // última frase de sistema hablada (aviso/pregunta)
     void charlaSpeakCue(const QString &text);

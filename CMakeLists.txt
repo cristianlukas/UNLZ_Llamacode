@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.128 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.130 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -162,6 +162,8 @@ set(CORE_SOURCES
     src/core/voice/VoiceAssistant.cpp
     src/core/voice/VadEngine.cpp
     src/core/voice/TurnDetector.cpp
+    src/core/voice/SpeechTextNormalizer.cpp
+    src/core/voice/CharlaMultitask.cpp
     src/core/voice/VoiceController.cpp
     src/core/voice/VoiceServerManager.cpp
     src/core/voice/VoiceLatencyTracker.cpp
@@ -187,6 +189,7 @@ set(CORE_SOURCES
     src/core/tasks/EngineeringWorkflowCatalog.cpp
     src/core/automation/DesktopAutomationBackend.cpp
     src/core/automation/LinuxDesktopBackend.cpp
+    src/core/automation/AgentDesktopCli.cpp
     src/core/automation/DesktopComputerUse.cpp
     src/core/automation/DesktopRecoveryPolicy.cpp
     src/core/automation/VisualMatcher.cpp
@@ -292,6 +295,8 @@ set(HEADERS
     src/core/voice/VoiceAssistant.h
     src/core/voice/VadEngine.h
     src/core/voice/TurnDetector.h
+    src/core/voice/SpeechTextNormalizer.h
+    src/core/voice/CharlaMultitask.h
     src/core/voice/VoiceController.h
     src/core/voice/VoiceServerManager.h
     src/core/voice/VoiceLatencyTracker.h
@@ -314,6 +319,7 @@ set(HEADERS
     src/core/tasks/EngineeringWorkflowCatalog.h
     src/core/automation/DesktopAutomationBackend.h
     src/core/automation/LinuxDesktopBackend.h
+    src/core/automation/AgentDesktopCli.h
     src/core/automation/DesktopComputerUse.h
     src/core/automation/DesktopRecoveryPolicy.h
     src/core/automation/VisualMatcher.h

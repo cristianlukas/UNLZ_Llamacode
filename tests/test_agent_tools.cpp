@@ -7,6 +7,7 @@
 //   - run_shell async (echo trivial).
 
 #include <QtTest>
+#include <algorithm>
 #include <QElapsedTimer>
 #include "core/automation/DesktopAutomationBackend.h"
 #include "core/automation/DesktopComputerUse.h"
@@ -149,6 +150,7 @@ class AgentToolsTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void subAgentDesktopBlockedHidesDesktopTools();
     void init();
     void cleanup();
 
@@ -1863,6 +1865,26 @@ void AgentToolsTests::webSearch_localOnlyRejectsRedirects()
         QStringLiteral("redirect bloqueado en modo local-only")));
     QCOMPARE(redirectServer.requests.size(), 1);
     QVERIFY(redirectTarget.requests.isEmpty());
+}
+
+// Tareas en segundo plano de Charla: el mouse y el teclado son del agente
+// principal, así que el agente de fondo ni siquiera ve las tools desktop_*.
+void AgentToolsTests::subAgentDesktopBlockedHidesDesktopTools()
+{
+    auto names = [](const QJsonArray &tools) {
+        QStringList out;
+        for (const QJsonValue &v : tools)
+            out << v.toObject().value("function").toObject().value("name").toString();
+        return out;
+    };
+    const QStringList all = names(SubAgentRunner::filteredToolSchemas(false, false, false));
+    const QStringList bg = names(SubAgentRunner::filteredToolSchemas(false, false, true));
+    QVERIFY(std::any_of(all.cbegin(), all.cend(), [](const QString &n) { return n.startsWith("desktop_"); }));
+    QVERIFY(std::none_of(bg.cbegin(), bg.cend(), [](const QString &n) { return n.startsWith("desktop_"); }));
+    QVERIFY(bg.contains(QStringLiteral("web_search")));
+    QVERIFY(bg.contains(QStringLiteral("web_fetch")));
+    QCOMPARE(all.size() - bg.size(),
+             int(std::count_if(all.cbegin(), all.cend(), [](const QString &n) { return n.startsWith("desktop_"); })));
 }
 
 QTEST_MAIN(AgentToolsTests)

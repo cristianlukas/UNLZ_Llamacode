@@ -63,6 +63,7 @@
 #include "core/voice/VoiceAgentPolicy.h"
 #include "core/voice/VoiceAssistant.h"
 #include "core/voice/VoiceCursorCommand.h"
+#include "core/voice/CharlaMultitask.h"
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/agent/HarnessDirectiveStore.h"
 #include "core/agent/AgentToolRunner.h"
@@ -26952,12 +26953,12 @@ void AppController::ensureVoice()
         // el momento ideal para precalentar el prefijo estable. Al pasar a
         // Listening no repetimos el warmup: el usuario ya está hablando.
         if (m_voice->state() == VoiceController::Ready) {
-            if (m_agentBackend && m_agentBackend->running()) m_agentBackend->prefillWarmup();
+            if (m_agentBackend && m_agentBackend->running()) { m_agentBackend->prefillWarmup(); warmCharlaBackgroundSlots(); }
             else if (m_chatBackend) m_chatBackend->prefillWarmup();
             return;
         }
         if (m_voice->state() != VoiceController::Listening || m_voice->pushToTalkMode()) return;
-        if (m_agentBackend && m_agentBackend->running()) m_agentBackend->prefillWarmup();
+        if (m_agentBackend && m_agentBackend->running()) { m_agentBackend->prefillWarmup(); warmCharlaBackgroundSlots(); }
         else if (m_chatBackend) m_chatBackend->prefillWarmup();
     });
     connect(m_voice, &VoiceController::errorChanged, this, &AppController::voiceStateChanged);
@@ -27423,6 +27424,16 @@ bool AppController::dispatchCharlaTranscript(const QString &text)
     // Comando de cursor por voz (opt-in): se resuelve local y NO va al LLM.
     if (tryVoiceCursorCommand(text)) return false;
 
+    // "¿Cómo van las tareas?" con agentes en segundo plano: se contesta local.
+    if (!m_charlaBackground.isEmpty() && CharlaMultitask::isStatusQuery(text)) {
+        QStringList running;
+        for (const CharlaBackgroundTask &t : std::as_const(m_charlaBackground)) running << t.request;
+        const QString report = CharlaMultitask::statusReport(running, m_language);
+        m_charlaLastPrompt = report;
+        if (m_voice) m_voice->speak(report);
+        return true;
+    }
+
     // Modo JARVIS con el agente todavía arrancando: no degradar el turno a chat
     // sin herramientas. Se guarda y se manda apenas el agente queda listo.
     if (charlaAgentMode() && m_agentStarting && !(m_agentBackend && m_agentBackend->running())) {
@@ -27466,6 +27477,9 @@ bool AppController::dispatchCharlaTranscript(const QString &text)
                 if (m_voice) m_voice->speak(done);
                 return true;
             }
+            // Con slots libres en el server el pedido no espera: arranca ya en
+            // otro agente y su resultado se anuncia al terminar.
+            if (startCharlaBackgroundTask(text)) return true;
             m_charlaQueuedTurns << text;
             qInfo().noquote() << QStringLiteral("[charla] pedido en cola (agente ocupado, %1 en cola)")
                                      .arg(m_charlaQueuedTurns.size());
@@ -27511,6 +27525,116 @@ QString AppController::charlaAgentProfileId() const
 void AppController::setCharlaAgentProfileId(const QString &id)
 {
     writeSetting(QStringLiteral("charla/agentProfileId"), id.trimmed());
+}
+
+int AppController::charlaParallelSlots() const
+{
+    if (m_charlaSlotsOverrideForTest > 0) return m_charlaSlotsOverrideForTest;
+    auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
+    return lb ? qMax(1, lb->context().parallelSlots) : 1;
+}
+
+bool AppController::startCharlaBackgroundTask(const QString &text)
+{
+    if (CharlaMultitask::backgroundCapacity(charlaParallelSlots(), m_charlaBackground.size()) <= 0)
+        return false;
+    auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
+    const AgentContext ctx = lb ? lb->context() : AgentContext{};
+    const QString id = QStringLiteral("charla-%1").arg(QDateTime::currentMSecsSinceEpoch());
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                        + QStringLiteral("/charla-tareas/") + id;
+    QDir().mkpath(dir);
+    const QString base = !m_charlaBgServerForTest.isEmpty() ? m_charlaBgServerForTest
+                       : ctx.serverBaseUrl.isEmpty() ? serverBaseUrl() : ctx.serverBaseUrl;
+    auto *sub = new SubAgentRunner(id, base,
+                                   ctx.modelId, dir, text, m_agentTemperature, false, this);
+    sub->setSystemPromptOverride(CharlaMultitask::backgroundSystemPrompt(dir, QDate::currentDate(), m_language));
+    sub->setDesktopBlocked(true);
+    sub->setHitlDestructive(true);           // sin nadie que apruebe: nada destructivo
+    sub->setReasoningPolicy(QStringLiteral("none"), 0);   // voz: sin <think>
+    sub->setMaxOutputTokens(4096);
+    connect(sub, &SubAgentRunner::finished, this, &AppController::onCharlaBackgroundFinished);
+    m_charlaBackground.insert(id, CharlaBackgroundTask{sub, text});
+    qInfo().noquote() << QStringLiteral("[charla] pedido en paralelo (%1 de %2 slots de fondo): %3")
+                             .arg(m_charlaBackground.size()).arg(charlaParallelSlots() - 1).arg(text.left(80));
+    charlaSpeakCue(CharlaMultitask::startCue(m_charlaBackground.size(), m_language));
+    sub->start();
+    return true;
+}
+
+void AppController::onCharlaBackgroundFinished(const QString &id, const QString &result, bool ok)
+{
+    const CharlaBackgroundTask task = m_charlaBackground.take(id);
+    if (task.runner) task.runner->deleteLater();
+    if (!m_charlaActive) return;
+    qInfo().noquote() << QStringLiteral("[charla] tarea en paralelo %1 (%2)")
+                             .arg(ok ? QStringLiteral("lista") : QStringLiteral("falló"), task.request.left(60));
+    m_charlaAnnouncements << CharlaMultitask::completionAnnouncement(task.request, result, ok, m_language);
+    pumpCharlaAnnouncements();
+}
+
+void AppController::pumpCharlaAnnouncements()
+{
+    if (m_charlaAnnouncements.isEmpty() || !m_charlaActive || !m_voice) {
+        m_charlaAnnounceTimer.stop();
+        return;
+    }
+    if (m_voice->announce(m_charlaAnnouncements.first())) {
+        m_charlaLastPrompt = m_charlaAnnouncements.takeFirst();
+        if (m_charlaAnnouncements.isEmpty()) { m_charlaAnnounceTimer.stop(); return; }
+    }
+    // El usuario está hablando (o hay otro aviso en cola): reintentar en un rato.
+    if (!m_charlaAnnounceTimer.isActive()) {
+        m_charlaAnnounceTimer.setInterval(700);
+        disconnect(&m_charlaAnnounceTimer, nullptr, this, nullptr);
+        connect(&m_charlaAnnounceTimer, &QTimer::timeout, this, &AppController::pumpCharlaAnnouncements);
+        m_charlaAnnounceTimer.start();
+    }
+}
+
+void AppController::cancelCharlaBackgroundTasks()
+{
+    const auto tasks = m_charlaBackground;
+    m_charlaBackground.clear();
+    for (const CharlaBackgroundTask &t : tasks)
+        if (t.runner) { t.runner->disconnect(this); t.runner->cancel(); t.runner->deleteLater(); }
+    m_charlaAnnouncements.clear();
+    m_charlaAnnounceTimer.stop();
+}
+
+// Medido: sin esto el primer pedido en paralelo esperaba ~20 s el prefill de los
+// prompts de agente (y con él la voz). Se manda el system prompt + tools de los
+// agentes de fondo a cada slot libre, a la vez, con max_tokens 1.
+void AppController::warmCharlaBackgroundSlots()
+{
+    const int slotCount = charlaParallelSlots();
+    // Una vez por arranque del agente, y nunca con tareas ocupando slotCount.
+    if (slotCount <= 1 || m_charlaBgWarmed || !m_charlaBackground.isEmpty()) return;
+    auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
+    if (!lb) return;
+    m_charlaBgWarmed = true;
+    const AgentContext ctx = lb->context();
+    const QString base = ctx.serverBaseUrl.isEmpty() ? serverBaseUrl() : ctx.serverBaseUrl;
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                        + QStringLiteral("/charla-tareas/warmup");
+    const QJsonArray messages{
+        QJsonObject{{QStringLiteral("role"), QStringLiteral("system")},
+                    {QStringLiteral("content"), CharlaMultitask::backgroundSystemPrompt(dir, QDate::currentDate(), m_language)}},
+        QJsonObject{{QStringLiteral("role"), QStringLiteral("user")}, {QStringLiteral("content"), QStringLiteral("ok")}}};
+    QJsonObject payload = SubAgentRunner::buildCompletionPayload(
+        messages, SubAgentRunner::filteredToolSchemas(false, false, true), ctx.modelId,
+        m_agentTemperature, QStringLiteral("none"), 0, 1);
+    payload[QStringLiteral("stream")] = false;
+    payload[QStringLiteral("max_tokens")] = 1;
+    payload[QStringLiteral("cache_prompt")] = true;
+    const QByteArray body = QJsonDocument(payload).toJson(QJsonDocument::Compact);
+    for (int i = 0; i < slotCount - 1; ++i) {
+        QNetworkRequest req(QUrl(base + QStringLiteral("/v1/chat/completions")));
+        req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+        QNetworkReply *reply = m_nam->post(req, body);
+        connect(reply, &QNetworkReply::finished, reply, &QObject::deleteLater);
+    }
+    qInfo().noquote() << QStringLiteral("[charla] precalentando %1 slot(s) para tareas en paralelo").arg(slotCount - 1);
 }
 
 void AppController::charlaSpeakCue(const QString &text)
@@ -27624,8 +27748,11 @@ void AppController::onCharlaAgentRunningChanged(bool running)
         if (m_charlaPendingTranscript.isEmpty() && m_voice
             && (m_voice->state() == VoiceController::Listening
                 || m_voice->state() == VoiceController::Ready)
-            && m_agentBackend && m_agentBackend->running())
+            && m_agentBackend && m_agentBackend->running()) {
             m_agentBackend->prefillWarmup();
+            m_charlaBgWarmed = false;          // agente (re)arrancado: slots fríos
+            warmCharlaBackgroundSlots();
+        }
         if (!m_charlaPendingTranscript.isEmpty()) {
             const QString text = m_charlaPendingTranscript;
             m_charlaPendingTranscript.clear();
@@ -28133,6 +28260,8 @@ void AppController::stopCharla()
     applyCharlaVoiceModeToAgent(false);
     m_charlaPendingTranscript.clear();
     m_charlaQueuedTurns.clear();
+    cancelCharlaBackgroundTasks();
+    m_charlaBgWarmed = false;
     m_charlaAgentTurnActive = false;
     m_charlaCancelled = false;
     if (!m_charlaPendingApproval.isEmpty()) {

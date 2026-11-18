@@ -1,0 +1,42 @@
+[
+ {
+  "trial": 0,
+  "clicks_ok": true,
+  "field": "9",
+  "has9": true,
+  "total_ms": 1708,
+  "median_cmd_ms": 69
+ },
+ {
+  "trial": 1,
+  "clicks_ok": true,
+  "field": "9",
+  "has9": true,
+  "total_ms": 1718,
+  "median_cmd_ms": 70
+ },
+ {
+  "trial": 2,
+  "clicks_ok": true,
+  "field": "9",
+  "has9": true,
+  "total_ms": 1758,
+  "median_cmd_ms": 71
+ },
+ {
+  "trial": 3,
+  "clicks_ok": true,
+  "field": "9",
+  "has9": true,
+  "total_ms": 1742,
+  "median_cmd_ms": 73
+ },
+ {
+  "trial": 4,
+  "clicks_ok": true,
+  "field": "9",
+  "has9": true,
+  "total_ms": 1716,
+  "median_cmd_ms": 70
+ }
+]

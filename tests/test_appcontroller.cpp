@@ -3,6 +3,9 @@
 // que toda feature con diálogo tenga un camino api/headless equivalente.
 
 #include <QtTest>
+#include <QElapsedTimer>
+#include <memory>
+#include <QTcpSocket>
 #include <QRegularExpression>
 #include "core/voice/VoiceController.h"
 #include <QStandardPaths>
@@ -299,6 +302,8 @@ private slots:
     void charlaJarvisApprovesByVoiceAndCuesSlowTools();
     void charlaJarvisQueuesTurnWhileAgentStarts();
     void charlaJarvisStopsOrQueuesWhileAgentWorks();
+    void charlaRunsRequestsInParallelWithFreeSlots();
+    void charlaParallelTaskAgainstRealServer();
     void charlaDoesNotSpeakProvisionalAnswers();
     void charlaWarmsUpAgentThatStartsWhileListening();
     void ocrStatusAlwaysExplainsItself();
@@ -2456,6 +2461,108 @@ void AppControllerTests::charlaJarvisStopsOrQueuesWhileAgentWorks()
         QCOMPARE(fake->cancels(), 0);
         app.setCharlaActiveForTest(false);
     }
+}
+
+// Charla multitarea: con slots libres en el server, un pedido dicho mientras el
+// agente trabaja arranca YA en otro agente (no queda "Anotado") y su resultado
+// se anuncia por voz al terminar. Con 1 slot sigue la cola de siempre.
+void AppControllerTests::charlaRunsRequestsInParallelWithFreeSlots()
+{
+    // Server stub: contesta cada /v1/chat/completions con un SSE de una frase.
+    QTcpServer server;
+    QVERIFY(server.listen(QHostAddress::LocalHost));
+    int requests = 0;
+    QObject::connect(&server, &QTcpServer::newConnection, &server, [&]() {
+        QTcpSocket *sock = server.nextPendingConnection();
+        auto buf = std::make_shared<QByteArray>();
+        QObject::connect(sock, &QTcpSocket::readyRead, sock, [sock, buf, &requests]() {
+            *buf += sock->readAll();
+            const int hdrEnd = buf->indexOf("\r\n\r\n");
+            if (hdrEnd < 0) return;
+            const QRegularExpression lenRe(QStringLiteral("content-length:\\s*(\\d+)"),
+                                           QRegularExpression::CaseInsensitiveOption);
+            const int len = lenRe.match(QString::fromLatin1(buf->left(hdrEnd))).captured(1).toInt();
+            if (buf->size() < hdrEnd + 4 + len) return;
+            ++requests;
+            const QByteArray sse =
+                "data: {\"choices\":[{\"delta\":{\"content\":\"Encontré tres hoteles en Madrid por menos de 80 euros. "
+                "El más barato está en Lavapiés.\"},\"finish_reason\":null}]}\n\n"
+                "data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n"
+                "data: [DONE]\n\n";
+            sock->write("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: "
+                        + QByteArray::number(sse.size()) + "\r\nConnection: close\r\n\r\n" + sse);
+            sock->disconnectFromHost();
+        });
+    });
+
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->setReplyDelayMs(60000);            // el agente principal sigue trabajando
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);
+    app.setCharlaActiveForTest(true);
+    app.setCharlaParallelSlotsForTest(4);
+    app.setCharlaBackgroundServerForTest(QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort()));
+
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("buscá vuelos a Madrid")));
+    QCOMPARE(fake->bodyRuns(), 1);
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("buscame hoteles baratos en Madrid")));
+    QCOMPARE(fake->bodyRuns(), 1);                          // no se mandó al principal
+    QVERIFY(app.charlaQueuedTurnsForTest().isEmpty());      // ni quedó en cola
+    QCOMPARE(app.charlaBackgroundCountForTest(), 1);
+    QVERIFY(app.charlaLastPromptForTest().contains(QStringLiteral("paralelo")));
+
+    // "¿Cómo van las tareas?" se contesta sin el LLM.
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("¿cómo van las tareas?")));
+    QCOMPARE(fake->bodyRuns(), 1);
+
+    // Termina el agente de fondo: el resultado queda para decirse (o ya se dijo).
+    QTRY_COMPARE_WITH_TIMEOUT(app.charlaBackgroundCountForTest(), 0, 10000);
+    QVERIFY(requests >= 1);
+    const QString said = app.charlaAnnouncementsForTest().isEmpty()
+        ? app.charlaLastPromptForTest() : app.charlaAnnouncementsForTest().first();
+    QVERIFY2(said.startsWith(QStringLiteral("Listo lo de buscame hoteles baratos en Madrid"))
+                 && said.contains(QStringLiteral("tres hoteles")), qPrintable(said));
+
+    // Llenos los slots de fondo (4 - 1 para la voz), lo siguiente vuelve a la cola.
+    app.setCharlaBackgroundServerForTest(QStringLiteral("http://127.0.0.1:1"));
+    app.setCharlaParallelSlotsForTest(1);
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("y poné música")));
+    QCOMPARE(app.charlaQueuedTurnsForTest(), QStringList{QStringLiteral("y poné música")});
+    app.setCharlaActiveForTest(false);
+}
+
+// E2E con el modelo real (como el de StudIA): LC_CHARLA_E2E_SERVER=http://127.0.0.1:PORT
+// de un llama-server con --parallel >= 2 (perfil sys-charla-jarvis-qwen38-27b-multi).
+// El agente principal sigue "trabajando" (fake) y el pedido nuevo lo resuelve un
+// agente de fondo contra el server real; su aviso tiene que traer el resultado.
+void AppControllerTests::charlaParallelTaskAgainstRealServer()
+{
+    const QString server = qEnvironmentVariable("LC_CHARLA_E2E_SERVER");
+    if (server.isEmpty()) QSKIP("LC_CHARLA_E2E_SERVER no definido (necesita un llama-server vivo)");
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->setReplyDelayMs(600000);
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);
+    app.setCharlaActiveForTest(true);
+    app.setCharlaParallelSlotsForTest(4);
+    app.setCharlaBackgroundServerForTest(server);
+
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("ordená mis fotos de las vacaciones")));
+    QElapsedTimer t;
+    t.start();
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("calculá cuánto es treinta y siete por doce")));
+    QCOMPARE(app.charlaBackgroundCountForTest(), 1);
+    QTRY_COMPARE_WITH_TIMEOUT(app.charlaBackgroundCountForTest(), 0, 180000);
+    const QString said = app.charlaAnnouncementsForTest().isEmpty()
+        ? app.charlaLastPromptForTest() : app.charlaAnnouncementsForTest().first();
+    qInfo().noquote() << "E2E charla en paralelo:" << t.elapsed() << "ms →" << said;
+    QVERIFY2(said.startsWith(QStringLiteral("Listo lo de")), qPrintable(said));
+    QVERIFY2(said.contains(QStringLiteral("444")) || said.contains(QStringLiteral("cuatrocientos cuarenta y cuatro")),
+             qPrintable(said));
+    QCOMPARE(fake->bodyRuns(), 1);
+    app.setCharlaActiveForTest(false);
 }
 
 void AppControllerTests::ocrStatusAlwaysExplainsItself()
