@@ -86,6 +86,15 @@ QtObject {
         check(main.indexOf("currentIndex === 17; asynchronous: true; source: \"pages/SettingsPage.qml\"") > 0,
               "Main.qml: Configuración pasa al índice 17")
 
+        const charla = read("CharlaPage.qml.txt")
+        check(charla.length > 10000, "se leyó CharlaPage")
+        check(charla.indexOf('objectName: "charlaGoogleWorkspaceCard"') > 0,
+              "Ingi-Charla muestra acceso a la configuración de Google")
+        check(charla.indexOf("onClicked: googleWorkspaceDialog.open()") > 0,
+              "el acceso de Ingi-Charla abre su diálogo de conexión")
+        check(charla.indexOf("GoogleWorkspaceSettingsSection") > 0,
+              "el diálogo comparte los scopes y acciones de Configuración → Correo")
+
         // Monitor: todo sale de App.monitor y el reporte se copia desde el header.
         const monitor = read("MonitorPage.qml.txt")
         check(monitor.indexOf("import LlamaCode 1.0") > 0, "Monitor: importa el módulo (Lc* desde qml/pages)")

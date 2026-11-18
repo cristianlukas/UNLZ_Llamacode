@@ -478,6 +478,35 @@ Item {
                                   + (parent.cap.requireSupervisor ? " · Se escalarán tareas complejas al supervisor." : "")
                         }
                     }
+                    Rectangle {
+                        objectName: "charlaGoogleWorkspaceCard"
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+                        implicitHeight: googleWorkspaceCardContent.implicitHeight + 18
+                        radius: 6; color: Theme.inputBg; border.color: Theme.borderColor
+                        ColumnLayout {
+                            id: googleWorkspaceCardContent
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 9 }
+                            spacing: 6
+                            Text {
+                                text: "Correo y calendario para Ingi"
+                                color: Theme.textPrimary; font.pixelSize: 13; font.bold: true
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: App.googleWorkspaceConnected
+                                      ? App.googleWorkspaceStatus
+                                      : "Google no está conectado. Configurá Gmail, Calendar y Tasks desde acá."
+                                color: App.googleWorkspaceConnected ? Theme.accent : Theme.textSecondary
+                                font.pixelSize: 12; wrapMode: Text.WordWrap
+                            }
+                            LcButton {
+                                text: App.googleWorkspaceConnected ? "Administrar conexión Google"
+                                                                  : "Conectar correo y calendario"
+                                secondary: App.googleWorkspaceConnected
+                                onClicked: googleWorkspaceDialog.open()
+                            }
+                        }
+                    }
                     Text { text: "Motor STT gestionado (la app descarga y lanza)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
                     GridLayout {
                         columns: 2; columnSpacing: 12; rowSpacing: 8
@@ -1190,6 +1219,37 @@ Item {
 
                     Item { height: 16; width: 1 }
                 }
+            }
+        }
+    }
+
+    LcDialog {
+        id: googleWorkspaceDialog
+        title: "Conectar correo y calendario"
+        standardButtons: Dialog.NoButton
+        width: Math.min(720, page.width - 48)
+        height: Math.min(740, page.height - 48)
+
+        contentItem: ScrollView {
+            id: googleWorkspaceScroll
+            clip: true
+            contentWidth: availableWidth
+            ColumnLayout {
+                width: googleWorkspaceScroll.availableWidth
+                spacing: 10
+                GoogleWorkspaceSettingsSection { Layout.fillWidth: true }
+            }
+        }
+
+        footer: Rectangle {
+            color: Theme.popupHeaderBg
+            height: 56
+            radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                LcButton { text: "Listo"; onClicked: googleWorkspaceDialog.close() }
             }
         }
     }

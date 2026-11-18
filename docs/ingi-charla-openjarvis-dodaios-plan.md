@@ -66,7 +66,7 @@ Fuera de la primera versión: un segundo agente supervisor, un segundo scheduler
 |---|---|
 | Voz y confirmación hablada | `src/core/voice/VoiceController.*`, `VoiceAssistant.*`, `SttEngine.*`, `TtsEngine.*` |
 | Tools y política | `src/core/agent/AgentToolRunner.*`, `LlamaAgentBackend.*`; lectura y creación de borradores/tareas/eventos con aprobación por acción, payload ligado al token y bloqueo en Modo privacidad |
-| Correo y cuentas | `src/AppController.*`, `qml/components/SettingsMailSection.qml`; Client ID, estado OAuth, lectura inicial, permisos incrementales Gmail/Tasks/Calendar y desconectar |
+| Correo y cuentas | `src/AppController.*`, `qml/components/GoogleWorkspaceSettingsSection.qml`, `SettingsMailSection.qml` y `CharlaPage.qml`; Client ID, navegador predeterminado, estado OAuth, lectura inicial, permisos incrementales Gmail/Tasks/Calendar y desconectar desde Configuración o Ingi-Charla |
 | Secretos | `src/core/SecretStore.*`; persistencia sólo con keyring/DPAPI, sesión efímera si no está disponible |
 | Aprobación visual | `qml/pages/AgentPage.qml` (tarjetas existentes); extender el preview para mostrar datos de Gmail/Calendar/Tasks completos |
 | Agenda local | `src/core/tasks/LocalReminderStore.*` + `LocalReminderScheduler`, `TaskScheduler.*`, `AutomationStore.*`; recordatorios individuales separados de automatizaciones |

@@ -1092,7 +1092,8 @@ de las pantallas y computer-use), el turno de voz va al agente, que opera la PC
 hace fallback a voz-a-voz simple sobre el backend de chat (sesiones e historial
 incluidos).
 
-- **Google Workspace**: desde Configuración → Correo podés conectar
+- **Google Workspace**: desde Configuración → Correo o desde la configuración
+  de Ingi-Charla podés conectar
   Gmail, Google Calendar y Google Tasks con OAuth de escritorio y PKCE. Ingresá
   un OAuth Client ID de tipo *Desktop app* creado en Google Cloud. Ingi puede
   buscar/leer correos, listar eventos, consultar disponibilidad sin leer detalles
