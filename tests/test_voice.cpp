@@ -1065,6 +1065,12 @@ void TestVoice::ttsSanitizeForSpeech()
     QCOMPARE(VoiceController::sanitizeForSpeech(
                  QStringLiteral("Abro el navegador.\n⏳ preparando `open_url`… (~12 tokens generados)")),
              QStringLiteral("Abro el navegador."));
+    // `</think>` huérfano (pasó con Maya tras compactar): el tag no se habla.
+    QCOMPARE(VoiceController::sanitizeForSpeech(
+                 QStringLiteral("Listo.</think>\n\nYa está abierto.")),
+             QStringLiteral("Listo.\n\nYa está abierto."));
+    QCOMPARE(VoiceController::sanitizeForSpeech(QStringLiteral("</THINK >Hola.")),
+             QStringLiteral("Hola."));
     // Texto limpio pasa intacto (modo chat sin thinking).
     QCOMPARE(VoiceController::sanitizeForSpeech(QStringLiteral("Listo, ya está.")),
              QStringLiteral("Listo, ya está."));

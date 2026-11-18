@@ -314,6 +314,7 @@ private slots:
     void charlaParallelTaskAgainstRealServer();
     void charlaDoesNotSpeakProvisionalAnswers();
     void charlaCpuVoiceReservesNoGpu();
+    void charlaProfileLaunchesWithVoicePlan();
     void charlaWarmsUpAgentThatStartsWhileListening();
     void ocrStatusAlwaysExplainsItself();
     void agentLevels_contextBudgetLadder();
@@ -4649,6 +4650,48 @@ void AppControllerTests::charlaCpuVoiceReservesNoGpu()
     const QVariantMap qwen = app.voiceGpuPlanForConfigForTest({
         {"sttManagedEngine", "whisper-small"}, {"sttDevice", "cpu"}, {"ttsMode", "qwen3"}});
     QVERIFY(qwen.value("mode").toString() != QString("cpu-only-voice"));
+}
+
+void AppControllerTests::charlaProfileLaunchesWithVoicePlan()
+{
+    // Un perfil de sistema hecho para Charla sale ya con el reparto de voz, así
+    // entrar a Charla no relanza el server (el primer turno pagaba ~6 s de prefill).
+    const QVariantMap safe{{"enabled", true}, {"modelFitKnown", true},
+                           {"modelPlacementSafe", true}};
+    AppController::CharlaLaunchPlanInputs in;
+    in.systemLaunch = true; in.voiceEnabled = true; in.activeLaunch = true;
+    in.localLaunch = true; in.gpuLayers = 999;
+    QVERIFY(AppController::charlaVoicePlanAppliesAtLaunch(in, safe));
+
+    // Sin plan seguro (no entra, no se sabe, o voz en CPU) no se toca el reparto.
+    QVariantMap unsafe = safe; unsafe["modelPlacementSafe"] = false;
+    QVERIFY(!AppController::charlaVoicePlanAppliesAtLaunch(in, unsafe));
+    QVariantMap unknown = safe; unknown["modelFitKnown"] = false;
+    QVERIFY(!AppController::charlaVoicePlanAppliesAtLaunch(in, unknown));
+    QVERIFY(!AppController::charlaVoicePlanAppliesAtLaunch(
+        in, QVariantMap{{"mode", "cpu-only-voice"}, {"enabled", false}}));
+
+    auto without = [&](auto mutate) {
+        AppController::CharlaLaunchPlanInputs c = in;
+        mutate(c);
+        return AppController::charlaVoicePlanAppliesAtLaunch(c, safe);
+    };
+    // Perfil de usuario: arranca con su reparto aunque tenga Charla configurada.
+    QVERIFY(!without([](auto &c) { c.systemLaunch = false; }));
+    QVERIFY(!without([](auto &c) { c.voiceEnabled = false; }));
+    QVERIFY(!without([](auto &c) { c.ttsAutoPending = true; }));
+    // Dentro de Charla (o relanzando para ella) decide startCharla.
+    QVERIFY(!without([](auto &c) { c.charlaBusy = true; }));
+    QVERIFY(!without([](auto &c) { c.activeLaunch = false; }));
+    QVERIFY(!without([](auto &c) { c.localLaunch = false; }));
+    QVERIFY(!without([](auto &c) { c.gpuPinned = true; }));
+    QVERIFY(!without([](auto &c) { c.gpuLayers = 0; }));
+
+    // Integración headless (sin GPU): ni el perfil de Charla ni uno normal cambian.
+    AppController app;
+    QVERIFY(!app.charlaVoicePlanAtLaunchForTest(QStringLiteral("sys-charla-jarvis-qwen38-27b")));
+    QVERIFY(!app.charlaVoicePlanAtLaunchForTest(QStringLiteral("sys-qwen38-27b-udq4-131k")));
+    QVERIFY(!app.charlaVoicePlanAtLaunchForTest(QString()));
 }
 
 QTEST_MAIN(AppControllerTests)

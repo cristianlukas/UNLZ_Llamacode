@@ -947,6 +947,22 @@ public:
     void onCharlaAgentRunningChanged(bool running);
     void setCharlaActiveForTest(bool on) { m_charlaActive = on; }
     bool charlaTuneAppliesToForTest(const QString &launchId) const { return charlaTuneAppliesTo(launchId); }
+    // Perfil de sistema hecho para Charla arrancado fuera de Charla: ¿sale ya
+    // con el reparto de voz? (así entrar a Charla no relanza el server).
+    struct CharlaLaunchPlanInputs {
+        bool systemLaunch = false;    // perfil de sistema (bloque "voice" del bundle)
+        bool voiceEnabled = false;    // el perfil trae Charla habilitada
+        bool ttsAutoPending = false;  // TTS "auto": el motor real se decide en Charla
+        bool charlaBusy = false;      // Charla activa o relanzando: decide startCharla
+        bool activeLaunch = false;    // es el perfil activo (voiceGpuPlan() lo usa)
+        bool localLaunch = false;     // llama-server local (no cloud/remoto)
+        bool gpuPinned = false;       // GPU fijada por el usuario o el perfil
+        int gpuLayers = -1;
+    };
+    static bool charlaVoicePlanAppliesAtLaunch(const CharlaLaunchPlanInputs &in,
+                                               const QVariantMap &plan);
+    bool charlaVoicePlanAtLaunchForTest(const QString &launchId) const
+    { return charlaVoicePlanAtLaunch(launchId); }
     void markCharlaTunedForTest(const QString &launchId) { m_charlaTuneLaunchId = launchId; }
     class VoiceController *voiceForTest() { ensureVoice(); return m_voice; }
     QString charlaLastPromptForTest() const { return m_charlaLastPrompt; }
@@ -1593,6 +1609,9 @@ public:
     // al controller vivo.
     Q_INVOKABLE QVariantMap voiceConfig(const QString &profileId) const;
     Q_INVOKABLE void setVoiceConfig(const QString &profileId, const QVariantMap &cfg);
+    // Perfiles de sistema: la voz editada se guarda aparte (ProfileManager).
+    Q_INVOKABLE bool voiceConfigCustomized(const QString &profileId) const;
+    Q_INVOKABLE void resetVoiceConfig(const QString &profileId);
     Q_INVOKABLE QVariantMap recommendedVoiceTts(const QString &profileId) const;
     // Plan automático de recursos para Charla: GPU más débil para voz/auxiliares
     // y reparto de la VRAM restante entre las GPU visibles por el LLM.
@@ -1904,6 +1923,7 @@ private:
     // ¿Los overrides de voz del tune se aplican a este launch? Toda la sesión de
     // Charla del perfil tuneado, no sólo el relanzamiento siguiente.
     bool charlaTuneAppliesTo(const QString &launchId) const;
+    bool charlaVoicePlanAtLaunch(const QString &launchId) const;
     QVariantMap voiceGpuPlanForLaunch(const QString &launchId,
                                       const VoiceConfig &config) const;
     QVariantMap voiceGpuPlanForConfig(const VoiceConfig &config) const;

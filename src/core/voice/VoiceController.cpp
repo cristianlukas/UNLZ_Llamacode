@@ -866,6 +866,11 @@ QString VoiceController::sanitizeForSpeech(const QString &s)
                                     QRegularExpression::CaseInsensitiveOption);
     const QRegularExpressionMatch open = openRe.match(out);
     if (open.hasMatch()) out.truncate(open.capturedStart());
+    // `</think>` huérfano (el template abrió el razonamiento en el prompt, o quedó
+    // de una compactación de contexto): el tag no se pronuncia. No se corta lo
+    // anterior porque los offsets del stream ya consumido dependen de ese prefijo.
+    out.remove(QRegularExpression(QStringLiteral("</think\\s*>"),
+                                  QRegularExpression::CaseInsensitiveOption));
     // Bloques de código: no se pueden escuchar. El cerrado se quita; uno abierto
     // (todavía streameando) corta igual que un <think> en vuelo.
     out.remove(QRegularExpression(QStringLiteral("```[\\s\\S]*?```")));

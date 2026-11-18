@@ -166,8 +166,15 @@ public:
     Q_INVOKABLE bool isSystemLaunch(const QString &id) const;
     Q_INVOKABLE QVariantMap getLaunchProfile(const QString &id) const;
     // Config de Charla (voz) por LaunchProfile. get devuelve defaults si no hay.
+    // Un perfil de sistema es de sólo lectura, pero su voz no: lo que el usuario
+    // cambia en Charla (motor, voz, Whisper en CPU...) se guarda aparte en
+    // system_voice.json y pisa el bloque "voice" del bundle. Antes se descartaba
+    // en silencio y la UI mostraba un valor que Charla no usaba.
     Q_INVOKABLE QVariantMap getLaunchVoice(const QString &id) const;
     Q_INVOKABLE bool setLaunchVoice(const QString &id, const QVariantMap &voiceCfg);
+    // Vuelve la voz de un perfil de sistema a la del bundle.
+    Q_INVOKABLE bool resetLaunchVoice(const QString &id);
+    Q_INVOKABLE bool launchVoiceCustomized(const QString &id) const;
     // Alias opcional (prioridad sobre name en la UI), favorito (estrella, arriba)
     // y marca persistente de candidato pendiente para benchmark.
     Q_INVOKABLE void setLaunchFavorite(const QString &id, bool favorite);
@@ -280,6 +287,8 @@ private:
     // persisten: se reconstruyen en cada arranque.
     void loadSystemProfiles();
     void save() const;
+    void loadSystemVoiceOverrides();
+    bool saveSystemVoiceOverrides() const;
     QString storagePath(const QString &entity) const;
     void setupWatcher();
     void onProfileFileChanged(const QString &path);
@@ -306,4 +315,6 @@ private:
     // Al guardar, un id que está en disco pero no en memoria ni acá lo agregó otra
     // instancia (Prod y Debug comparten perfiles): se conserva en vez de pisarlo.
     mutable QHash<QString, QSet<QString>> m_knownIds;
+    // Voz editada por el usuario sobre perfiles de sistema (id → VoiceConfig JSON).
+    QHash<QString, QJsonObject> m_systemVoice;
 };

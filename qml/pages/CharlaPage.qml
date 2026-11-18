@@ -106,6 +106,7 @@ Item {
     }
     function reload() {
         cfg = pid.length ? App.voiceConfig(pid) : ({})
+        voiceCustomized = pid.length ? App.voiceConfigCustomized(pid) : false
         pocketPythonPath = App.voicePocketPythonPath()
         pocketStatus = App.voicePocketStatus(pid)
         // Voz por defecto si el perfil guardó vacío (el runtime usa la default del
@@ -143,7 +144,13 @@ Item {
     }
     // Persiste y REASIGNA cfg (copia) para que QML reevalúe los bindings `visible`
     // que dependen de cfg (mutar un campo no notifica el cambio del var property).
-    function save() { if (pid.length) App.setVoiceConfig(pid, cfg); cfg = Object.assign({}, cfg) }
+    function save() {
+        if (pid.length) App.setVoiceConfig(pid, cfg)
+        cfg = Object.assign({}, cfg)
+        voiceCustomized = pid.length ? App.voiceConfigCustomized(pid) : false
+    }
+    // Perfil de sistema con la voz cambiada por el usuario (se guarda aparte).
+    property bool voiceCustomized: pid.length ? App.voiceConfigCustomized(pid) : false
     function argsJson(args) { return JSON.stringify(args || []) }
     function parseArgs(text, fallback) {
         try {
@@ -505,6 +512,23 @@ Item {
                                 secondary: App.googleWorkspaceConnected
                                 onClicked: googleWorkspaceDialog.open()
                             }
+                        }
+                    }
+                    RowLayout {
+                        objectName: "voiceCustomizedRow"
+                        visible: page.voiceCustomized
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+                        spacing: 10
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Cambiaste la voz de este perfil de sistema; tus cambios se guardan aparte."
+                            color: Theme.textSecondary; font.pixelSize: 12; wrapMode: Text.WordWrap
+                        }
+                        LcButton {
+                            objectName: "resetVoiceConfigButton"
+                            text: "Restaurar la del perfil"
+                            secondary: true
+                            onClicked: { App.resetVoiceConfig(page.pid); page.reload() }
                         }
                     }
                     Text { text: "Motor STT gestionado (la app descarga y lanza)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }

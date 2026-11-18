@@ -2,6 +2,7 @@
 #include "PortablePaths.h"
 #include <QCoreApplication>
 #include <QLockFile>
+#include <QSaveFile>
 #include "SystemProfileVariants.h"
 #include "core/agent/HarnessDirectiveStore.h"
 #include "core/agent/PortableSkillStore.h"
@@ -707,17 +708,66 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
 QVariantMap ProfileManager::getLaunchVoice(const QString &id) const
 {
     const auto p = m_launches.findById(id);
+    if (p.system) {
+        const auto it = m_systemVoice.constFind(id);
+        if (it != m_systemVoice.cend())
+            return VoiceConfig::fromJson(it.value()).toJson().toVariantMap();
+    }
     return p.voice.toJson().toVariantMap();   // defaults si el perfil no existe
 }
 
 bool ProfileManager::setLaunchVoice(const QString &id, const QVariantMap &voiceCfg)
 {
     LaunchProfile p = m_launches.findById(id);
-    if (p.id.isEmpty() || p.system) return false;
-    p.voice = VoiceConfig::fromJson(QJsonObject::fromVariantMap(voiceCfg));
+    if (p.id.isEmpty()) return false;
+    const VoiceConfig cfg = VoiceConfig::fromJson(QJsonObject::fromVariantMap(voiceCfg));
+    if (p.system) {
+        const QJsonObject json = cfg.toJson();
+        // Igual al bundle: no hace falta override (y "resetear" queda implícito).
+        if (json == p.voice.toJson()) m_systemVoice.remove(id);
+        else m_systemVoice.insert(id, json);
+        return saveSystemVoiceOverrides();
+    }
+    p.voice = cfg;
     const bool ok = m_launches.update(p);
     if (ok) { save(); emit launchesChanged(); }
     return ok;
+}
+
+bool ProfileManager::resetLaunchVoice(const QString &id)
+{
+    if (!m_systemVoice.remove(id)) return false;
+    return saveSystemVoiceOverrides();
+}
+
+bool ProfileManager::launchVoiceCustomized(const QString &id) const
+{
+    return m_systemVoice.contains(id);
+}
+
+void ProfileManager::loadSystemVoiceOverrides()
+{
+    m_systemVoice.clear();
+    QFile f(storagePath(QStringLiteral("system_voice")));
+    if (!f.open(QIODevice::ReadOnly)) return;
+    const QJsonObject root = portableJson(
+        QJsonDocument::fromJson(f.readAll()).object(), true).toObject();
+    for (auto it = root.begin(); it != root.end(); ++it)
+        if (it.value().isObject()) m_systemVoice.insert(it.key(), it.value().toObject());
+}
+
+bool ProfileManager::saveSystemVoiceOverrides() const
+{
+    if (!m_persistAllowed) return false;
+    QJsonObject root;
+    for (auto it = m_systemVoice.cbegin(); it != m_systemVoice.cend(); ++it)
+        root.insert(it.key(), it.value());
+    const QString path = storagePath(QStringLiteral("system_voice"));
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QSaveFile f(path);
+    if (!f.open(QIODevice::WriteOnly)) return false;
+    f.write(QJsonDocument(portableJson(root, false).toObject()).toJson());
+    return f.commit();
 }
 
 void ProfileManager::setLaunchFavorite(const QString &id, bool favorite)
@@ -1934,6 +1984,7 @@ void ProfileManager::load()
     // failed to load, block all saves so a partial/empty in-memory state can
     // never wipe the user's profiles on disk.
     m_persistAllowed = !loadFailed;
+    loadSystemVoiceOverrides();
     if (loadFailed)
         qWarning() << "[ProfileManager] load incomplete — saving DISABLED to protect existing data";
     else if (agentProfilesDeduplicated)

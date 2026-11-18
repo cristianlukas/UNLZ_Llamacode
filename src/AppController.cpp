@@ -2922,6 +2922,16 @@ void AppController::startServerInternal(const QString &launchProfileId, bool rem
     m_serverIsRouter = false;   // modo normal: un modelo por server
     m_serverUsesVoiceGpuPlan = false;
     m_serverVoiceGpuPlanSignature.clear();
+    // Un perfil de sistema hecho para Charla sale ya con el reparto de voz: si no,
+    // entrar a Charla relanzaba el server sólo para mover el LLM de GPU y el
+    // primer turno pagaba de nuevo el prefill del system (~6 s con el 27B).
+    // Dentro de Charla (o en su relanzamiento) lo decide startCharla.
+    if (!m_charlaActive && !m_charlaStartAfterRelaunch) {
+        m_charlaGpuPlanActive = charlaVoicePlanAtLaunch(launchProfileId);
+        if (m_charlaGpuPlanActive)
+            appendServerEvent(QStringLiteral("lifecycle"), QStringLiteral(
+                "Perfil de Charla: arranca con el reparto de voz para no relanzar al entrar."));
+    }
     if (!m_charlaGpuRebalancePending)
         m_serverVoiceGpuPlan.clear();
 
@@ -27305,6 +27315,17 @@ void AppController::setVoiceConfig(const QString &profileId, const QVariantMap &
     if (m_voice && profileId == m_activeLaunchId) applyVoiceConfig();
 }
 
+bool AppController::voiceConfigCustomized(const QString &profileId) const
+{
+    return m_profiles.launchVoiceCustomized(profileId);
+}
+
+void AppController::resetVoiceConfig(const QString &profileId)
+{
+    if (m_profiles.resetLaunchVoice(profileId) && m_voice && profileId == m_activeLaunchId)
+        applyVoiceConfig();
+}
+
 void AppController::ensureVoice()
 {
     if (m_voice) return;
@@ -28553,6 +28574,50 @@ bool AppController::charlaAutoTune() const
 void AppController::setCharlaAutoTune(bool on)
 {
     writeSetting(QStringLiteral("charlaAutoTune"), on);
+}
+
+bool AppController::charlaVoicePlanAppliesAtLaunch(const CharlaLaunchPlanInputs &in,
+                                                   const QVariantMap &plan)
+{
+    // Sólo perfiles de sistema con Charla habilitada: un perfil normal arranca
+    // con su reparto de siempre aunque el usuario haya usado Charla con él.
+    if (!in.systemLaunch || !in.voiceEnabled || in.ttsAutoPending) return false;
+    if (in.charlaBusy || !in.activeLaunch || !in.localLaunch || in.gpuPinned) return false;
+    if (in.gpuLayers == 0) return false;
+    return plan.value(QStringLiteral("enabled")).toBool()
+        && plan.value(QStringLiteral("modelFitKnown")).toBool()
+        && plan.value(QStringLiteral("modelPlacementSafe")).toBool();
+}
+
+bool AppController::charlaVoicePlanAtLaunch(const QString &launchId) const
+{
+    if (launchId.isEmpty()) return false;
+    const LaunchProfile launch = m_profiles.resolveLaunch(launchId);
+    const BackendProfile backend = m_profiles.resolveBackend(launch.backendProfileId);
+    const VoiceConfig cfg = VoiceConfig::fromJson(
+        QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(launchId)));
+    CharlaLaunchPlanInputs in;
+    in.systemLaunch = launch.system;
+    in.voiceEnabled = cfg.enabled;
+    in.ttsAutoPending = cfg.ttsMode == QLatin1String("auto") && cfg.ttsAutoConfigure;
+    in.charlaBusy = m_charlaActive || m_charlaStartAfterRelaunch;
+    in.activeLaunch = launchId == m_activeLaunchId;
+    in.localLaunch = !backend.isCloud() && !isRemoteHost(backend.host);
+    in.gpuPinned = readSetting(QStringLiteral("gpu/processingIndex"), -1).toInt() >= 0
+        || !readSetting(QStringLiteral("gpu/vramIndices"), QString()).toString().trimmed().isEmpty()
+        || hasOption(launch.extraArgs, QStringLiteral("--tensor-split"), QStringLiteral("-ts"))
+        || hasOption(backend.baseArgs, QStringLiteral("--tensor-split"), QStringLiteral("-ts"))
+        || hasOption(launch.extraArgs, QStringLiteral("--main-gpu"), QStringLiteral("-mg"))
+        || hasOption(backend.baseArgs, QStringLiteral("--main-gpu"), QStringLiteral("-mg"))
+        || launch.envOverrides.contains(QStringLiteral("CUDA_VISIBLE_DEVICES"))
+        || backend.envOverrides.contains(QStringLiteral("CUDA_VISIBLE_DEVICES"));
+    in.gpuLayers = m_profiles.resolveRuntime(launch.runtimePresetId).gpuLayers;
+    // Cortar antes de planificar: el plan mira nvidia-smi y el catálogo.
+    if (!charlaVoicePlanAppliesAtLaunch(in, QVariantMap{
+            {QStringLiteral("enabled"), true}, {QStringLiteral("modelFitKnown"), true},
+            {QStringLiteral("modelPlacementSafe"), true}}))
+        return false;
+    return charlaVoicePlanAppliesAtLaunch(in, voiceGpuPlanForLaunch(launchId, cfg));
 }
 
 bool AppController::charlaTuneAppliesTo(const QString &launchId) const

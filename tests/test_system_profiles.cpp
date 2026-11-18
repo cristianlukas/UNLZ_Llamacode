@@ -54,6 +54,7 @@ private slots:
     void bundle_charlaJarvisProfileIsVoiceReady();
     void bundle_charlaJarvisMultitaskProfileKeepsItsSlots();
     void bundle_charlaJarvisDeepseekProfileHasVisionAndVoice();
+    void manager_systemProfileVoiceEditsPersist();
     void initTestCase();
 
     void manager_loadsSystemProfiles();
@@ -2236,6 +2237,50 @@ void SystemProfilesTests::bundle_charlaJarvisMultitaskProfileKeepsItsSlots()
                                               "--ubatch-size", "512", "--parallel", "4"} + extra;
     QVERIFY(CharlaTuning::recommend(effective, 24.0).isEmpty());
 }
+
+// Los perfiles de Charla son de sistema (sólo lectura). Lo que el usuario cambia
+// en la página de Charla (p. ej. "Whisper en CPU") antes se descartaba en
+// silencio: la UI mostraba el switch prendido y Charla arrancaba con el bundle.
+void SystemProfilesTests::manager_systemProfileVoiceEditsPersist()
+{
+    const QString id = QStringLiteral("sys-charla-jarvis-qwen38-27b");
+    {
+        ProfileManager pm;
+        QVERIFY(pm.isSystemLaunch(id));
+        QVERIFY(!pm.launchVoiceCustomized(id));
+        QVariantMap voice = pm.getLaunchVoice(id);
+        QCOMPARE(voice.value("sttDevice").toString(), QStringLiteral("gpu"));
+        voice["sttDevice"] = QStringLiteral("cpu");
+        QVERIFY(pm.setLaunchVoice(id, voice));
+        QCOMPARE(pm.getLaunchVoice(id).value("sttDevice").toString(), QStringLiteral("cpu"));
+        QVERIFY(pm.launchVoiceCustomized(id));
+        // El resto del bloque del bundle sigue igual.
+        QCOMPARE(pm.getLaunchVoice(id).value("ttsMode").toString(), QStringLiteral("piper"));
+        // El perfil sigue siendo de sistema y no se escribe en launches.json.
+        QVERIFY(pm.isSystemLaunch(id));
+    }
+    {
+        ProfileManager pm;   // otra instancia: se lee de system_voice.json
+        QCOMPARE(pm.getLaunchVoice(id).value("sttDevice").toString(), QStringLiteral("cpu"));
+        // Otro perfil de sistema no hereda el cambio.
+        QCOMPARE(pm.getLaunchVoice(QStringLiteral("sys-charla-jarvis-qwen38-27b-multi"))
+                     .value("sttDevice").toString(), QStringLiteral("gpu"));
+        // Volver al valor del bundle borra el override (no queda "personalizado").
+        QVariantMap voice = pm.getLaunchVoice(id);
+        voice["sttDevice"] = QStringLiteral("gpu");
+        QVERIFY(pm.setLaunchVoice(id, voice));
+        QVERIFY(!pm.launchVoiceCustomized(id));
+        voice["sttDevice"] = QStringLiteral("cpu");
+        QVERIFY(pm.setLaunchVoice(id, voice));
+        QVERIFY(pm.resetLaunchVoice(id));
+        QCOMPARE(pm.getLaunchVoice(id).value("sttDevice").toString(), QStringLiteral("gpu"));
+        QVERIFY(!pm.resetLaunchVoice(id));
+    }
+    ProfileManager again;
+    QVERIFY(!again.launchVoiceCustomized(id));
+    QVERIFY(!again.setLaunchVoice(QStringLiteral("no-existe"), {}));
+}
+
 
 // El modelo más capaz con visión que convive con Charla en 2x RTX 3090: DeepSeek
 // V4.1 Maya-XS administrado por la app (native-process, como ASTRA). Sin

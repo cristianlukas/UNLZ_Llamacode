@@ -223,5 +223,16 @@ Arreglos que salieron de estas pruebas (con tests):
   binario CPU de whisper.cpp (322 ms por frase). Para esta medición se compiló
   whisper.cpp con CUDA (`-DGGML_CUDA=ON`, arch 86) y se lo dejó en
   `voice/bin/whisper-server/`. La app ya lo usa si está ahí.
-- **Charla relanza el server al entrar** para aplicar el reparto multi-GPU; si se
-  arrancara directo con el reparto, el primer turno no pagaría ~6 s.
+- ~~**Charla relanza el server al entrar** para aplicar el reparto multi-GPU~~
+  (2026-11-18): un perfil de sistema con Charla habilitada (`sys-charla-*`) ya
+  arranca con el reparto de voz (`charlaVoicePlanAppliesAtLaunch`), así entrar a
+  Charla no relanza. Falta medirlo en vivo: el log debe decir "Perfil de Charla:
+  arranca con el reparto de voz" y, al entrar, no "relanzo".
+- **`<think>` después de compactar**: un `</think>` huérfano ya no se pronuncia
+  (`sanitizeForSpeech`); el razonamiento previo al tag, si llega sin `<think>`,
+  todavía se habla.
+- **Whisper en CPU** (2026-11-18, `sttDevice=cpu`): libera la GPU de voz cuando
+  el TTS también es de CPU. Con el 27B no conviene (entra en una placa y el STT
+  pasa de ~35 a ~320 ms); sirve para modelos que necesitan las dos 3090 enteras.
+  Los cambios hechos en Charla sobre un perfil de sistema se guardan en
+  `profiles/system_voice.json` (antes se descartaban sin aviso).

@@ -95,6 +95,10 @@ QtObject {
         check(charla.indexOf('objectName: "sttOnCpuSwitch"') > 0
               && charla.indexOf('page.cfg.sttDevice = checked ? "cpu" : "gpu"') > 0,
               "Charla: switch Whisper en CPU persiste sttDevice")
+        check(charla.indexOf('objectName: "resetVoiceConfigButton"') > 0
+              && charla.indexOf("App.resetVoiceConfig(page.pid)") > 0
+              && charla.indexOf("visible: page.voiceCustomized") > 0,
+              "Charla: voz editada en perfil de sistema se puede restaurar")
         check(charla.indexOf("GoogleWorkspaceSettingsSection") > 0,
               "el diálogo comparte los scopes y acciones de Configuración → Correo")
         const googleSettings = read("GoogleWorkspaceSettingsSection.qml")
