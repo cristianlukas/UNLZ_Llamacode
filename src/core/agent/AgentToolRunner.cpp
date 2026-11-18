@@ -4686,6 +4686,14 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             if (response.ok)
                 output = QStringLiteral("Tarea completada en Google Tasks (id: %1).")
                     .arg(response.data.value(QStringLiteral("id")).toString());
+        } else if (name == QLatin1String("google_tasks_reopen")) {
+            response = api.reopenTask(
+                m_googleAccessToken, m_googleGrantedScopes,
+                args.value(QStringLiteral("task_list_id")).toString(),
+                args.value(QStringLiteral("task_id")).toString());
+            if (response.ok)
+                output = QStringLiteral("Tarea reabierta en Google Tasks (id: %1).")
+                    .arg(response.data.value(QStringLiteral("id")).toString());
         } else if (name == QLatin1String("google_calendar_events")) {
             QString timeMin = args.value(QStringLiteral("time_min")).toString().trimmed();
             QString timeMax = args.value(QStringLiteral("time_max")).toString().trimmed();

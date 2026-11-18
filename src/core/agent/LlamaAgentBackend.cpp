@@ -5389,6 +5389,10 @@ void LlamaAgentBackend::processPendingCalls()
             detail = QStringLiteral("Se marcará como completada una tarea de Google Tasks.\nLista: %1\nTarea: %2")
                          .arg(args.value(QStringLiteral("task_list_id")).toString(),
                               args.value(QStringLiteral("task_id")).toString());
+        } else if (name == QLatin1String("google_tasks_reopen")) {
+            detail = QStringLiteral("Se reabrirá una tarea completada de Google Tasks.\nLista: %1\nTarea: %2")
+                         .arg(args.value(QStringLiteral("task_list_id")).toString(),
+                              args.value(QStringLiteral("task_id")).toString());
         } else {
             const QString description = args.value(QStringLiteral("description")).toString();
             detail = QStringLiteral("Se creará un evento sin invitados.\nCalendario: %1\nTítulo: %2\n"
@@ -5514,7 +5518,8 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
                 ? QStringLiteral("[aprobación invalidada: cambió el borrador o la cuenta Google antes de crearlo]")
                 : (name == QLatin1String("google_tasks_create")
                    || name == QLatin1String("google_tasks_update")
-                   || name == QLatin1String("google_tasks_complete"))
+                   || name == QLatin1String("google_tasks_complete")
+                   || name == QLatin1String("google_tasks_reopen"))
                 ? QStringLiteral("[aprobación invalidada: cambió la tarea o la cuenta Google antes de ejecutar la acción]")
                 : QStringLiteral("[aprobación invalidada: el payload MCP cambió antes de ejecutar]");
             AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
@@ -7461,7 +7466,8 @@ QString LlamaAgentBackend::toolKind(const QString &name)
     if (name == QLatin1String("google_gmail_create_draft")) return QStringLiteral("write");
     if (name == QLatin1String("google_tasks_create")) return QStringLiteral("write");
     if (name == QLatin1String("google_tasks_update")
-        || name == QLatin1String("google_tasks_complete")) return QStringLiteral("write");
+        || name == QLatin1String("google_tasks_complete")
+        || name == QLatin1String("google_tasks_reopen")) return QStringLiteral("write");
     if (name == QLatin1String("local_reminder_create")
         || name == QLatin1String("local_reminder_cancel"))
         return QStringLiteral("write");
@@ -8601,6 +8607,12 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("task_list_id"), strProp(QStringLiteral("ID devuelto por google_tasks_lists."))},
                {QStringLiteral("task_id"), strProp(QStringLiteral("ID devuelto por google_tasks_list."))}},
            QJsonArray{QStringLiteral("task_list_id"), QStringLiteral("task_id")}),
+        fn(QStringLiteral("google_tasks_reopen"),
+           QStringLiteral("Reabre una tarea completada de Google Tasks y la deja pendiente. Requiere aprobación humana por acción incluso en modos automáticos; no cambia otros campos. Usá IDs devueltos por google_tasks_list."),
+           QJsonObject{
+               {QStringLiteral("task_list_id"), strProp(QStringLiteral("ID devuelto por google_tasks_lists."))},
+               {QStringLiteral("task_id"), strProp(QStringLiteral("ID devuelto por google_tasks_list."))}},
+           QJsonArray{QStringLiteral("task_list_id"), QStringLiteral("task_id")}),
         fn(QStringLiteral("local_reminder_create"),
            QStringLiteral("Guarda un recordatorio local de una sola vez. La fecha debe incluir zona RFC3339. No contacta Google ni otro servicio. Se notifica mientras LlamaCode está abierto; si la app estaba cerrada al vencer, se entrega al volver a abrirla."),
            QJsonObject{
@@ -8710,6 +8722,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("google_tasks_create", "Tareas", "Crea una tarea Google; exige aprobación por acción.", 125),
         mk("google_tasks_update", "Tareas", "Actualiza campos concretos de una tarea; exige aprobación.", 145),
         mk("google_tasks_complete", "Tareas", "Marca una tarea como completada; exige aprobación.", 115),
+        mk("google_tasks_reopen", "Tareas", "Reabre una tarea completada; exige aprobación.", 115),
         mk("local_reminder_create", "Recordatorios", "Guarda un recordatorio local de una sola vez.", 115),
         mk("local_reminder_list", "Recordatorios", "Lista recordatorios locales pendientes.", 70),
         mk("local_reminder_cancel", "Recordatorios", "Cancela un recordatorio pendiente.", 65),

@@ -40,6 +40,8 @@ public:
                          const QJsonObject &fields) const;
     ApiResult completeTask(const QString &accessToken, const QStringList &grantedScopes,
                            const QString &taskListId, const QString &taskId) const;
+    ApiResult reopenTask(const QString &accessToken, const QStringList &grantedScopes,
+                         const QString &taskListId, const QString &taskId) const;
     ApiResult createCalendarEvent(const QString &accessToken,
                                   const QStringList &grantedScopes,
                                   const QString &calendarId, const QString &summary,

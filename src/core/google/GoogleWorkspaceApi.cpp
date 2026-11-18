@@ -352,6 +352,19 @@ ApiResult GoogleWorkspaceApi::completeTask(const QString &accessToken,
                          QJsonObject{{QStringLiteral("status"), QStringLiteral("completed")}});
 }
 
+ApiResult GoogleWorkspaceApi::reopenTask(const QString &accessToken,
+                                         const QStringList &grantedScopes,
+                                         const QString &taskListId,
+                                         const QString &taskId) const
+{
+    if (!safePathId(taskListId) || !safePathId(taskId))
+        return {false, 0, {}, QStringLiteral("La lista o la tarea son inválidas.")};
+    return patchMutation(Capability::TasksWrite, accessToken, grantedScopes,
+                         QStringLiteral("/tasks/v1/lists/") + taskListId
+                             + QStringLiteral("/tasks/") + taskId,
+                         QJsonObject{{QStringLiteral("status"), QStringLiteral("needsAction")}});
+}
+
 ApiResult GoogleWorkspaceApi::createCalendarEvent(const QString &accessToken,
                                                   const QStringList &grantedScopes,
                                                   const QString &calendarId,

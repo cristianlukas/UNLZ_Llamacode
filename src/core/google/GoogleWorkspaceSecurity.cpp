@@ -150,6 +150,7 @@ bool requiresExplicitApproval(const QString &toolName)
         || toolName == QLatin1String("google_tasks_create")
         || toolName == QLatin1String("google_tasks_update")
         || toolName == QLatin1String("google_tasks_complete")
+        || toolName == QLatin1String("google_tasks_reopen")
         || toolName == QLatin1String("google_calendar_create_event");
 }
 

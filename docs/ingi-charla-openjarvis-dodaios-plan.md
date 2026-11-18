@@ -1,8 +1,8 @@
 # Plan de mejora para Ingi-Charla: OpenJarvis, Dodaios y Google Workspace
 
 **Fecha:** 2026-11-18
-**Estado:** integración de origin/main y cambios locales completada; lectura de Workspace, borradores Gmail, creación aprobada de tareas/eventos personales y recordatorios locales implementados; quedan gates de cuenta de ensayo, Windows y E2E de voz
-**Tarea:** `Q-20261118-INGI-CHARLA-SAFE-WRITES`
+**Estado:** integración de origin/main y cambios locales completada; lectura de Workspace, borradores Gmail, ciclo seguro de tareas, eventos personales y recordatorios locales implementados; quedan gates de cuenta de ensayo, Windows y E2E de voz
+**Tarea:** `Q-20261118-INGI-TASK-REOPEN`
 
 ## Objetivo
 
@@ -10,9 +10,9 @@ Mejorar Ingi-Charla como interfaz de voz del agente de LlamaCode y sumar acceso 
 
 ## Avance de implementación
 
-La primera entrega conecta OAuth de escritorio con PKCE/state y callback loopback, refresh de tokens, scopes read-only para Gmail/Calendar/Tasks, cliente REST con límites y tools del agente. La segunda suma consulta de disponibilidad por separado con el scope calendar.events.freebusy, sin leer títulos ni detalles de eventos; cancela requests cuando se detiene o redirige el turno, y reintenta una sola vez respuestas 429/5xx con demora acotada. Si Google pide esperar más de 1 s en `Retry-After`, no acorta esa espera: devuelve el error para un reintento posterior. Desconectar limpia credenciales locales de inmediato y solicita revocación remota. Settings permite configurar el Client ID, conectar y desconectar; el refresh token se persiste sólo con keyring del SO o Credential Store/DPAPI, y queda en memoria durante la sesión cuando esos backends no están disponibles. Las tools respetan Modo privacidad y marcan los datos remotos como no confiables.
+La primera entrega conecta OAuth de escritorio con PKCE/state y callback loopback, refresh de tokens, scopes read-only para Gmail/Calendar/Tasks, cliente REST con límites y tools del agente. La segunda suma consulta de disponibilidad por separado con el scope calendar.events.freebusy, sin leer títulos ni detalles de eventos; cancela requests cuando se detiene o redirige el turno, y reintenta una sola vez respuestas 429/5xx con demora acotada. Si Google pide esperar más de 1 s en `Retry-After`, no acorta esa espera: devuelve el error para un reintento posterior. Desconectar limpia credenciales locales de inmediato y solicita revocación remota. Settings permite configurar el Client ID, conectar y desconectar; el refresh token se persiste sólo con keyring del SO o Credential Store/DPAPI, y queda en memoria durante la sesión cuando esos backends no están disponibles. Las tools respetan Modo privacidad y marcan los datos remotos como no confiables. Las escrituras Gmail, Calendar y Tasks requieren aprobación ligada a la cuenta y al payload, y los mutadores POST/PATCH no se reintentan automáticamente.
 
-La versión integrada de origin/main más los cambios locales pasó el gate serial Ubuntu Release completo (105/105) después de incluir free/busy, cancelación, retry/backoff y revocación. Todavía no se validó el consentimiento real, una cuenta Google de ensayo, la ruta de voz completa ni el rendimiento acústico en la PC del usuario. Las escrituras y recordatorios siguen pendientes.
+La versión integrada de origin/main más los cambios locales pasó el gate serial Ubuntu Release completo (106/106) y el build Debug. Se implementaron los mutadores seguros y los recordatorios locales, incluido PATCH para editar, completar y reabrir tareas; las pruebas cubren fallos ambiguos sin retry. Todavía no se validó el consentimiento real, una cuenta Google de ensayo, la ruta de voz completa ni el rendimiento acústico en la PC del usuario; `tests.bat Debug` requiere un host Windows.
 
 ## Evidencia revisada y decisión
 
@@ -42,7 +42,7 @@ Las APIs de Google fijan límites que se reflejan en producto: hay que pedir sco
 ## Alcance funcional propuesto
 
 1. **Lectura inicial:** buscar y resumir correos; listar eventos y disponibilidad; consultar listas y tareas de Google Tasks.
-2. **Escritura gradual:** crear borradores, crear o actualizar eventos y crear, actualizar o completar tareas. Envíos, invitaciones, cambios externos y borrados siempre pasan por confirmación explícita.
+2. **Escritura gradual:** crear borradores, crear o actualizar eventos y crear, actualizar, completar o reabrir tareas. Envíos, invitaciones, cambios externos y borrados siempre pasan por confirmación explícita.
 3. **Recordatorios locales:** registrar hora y zona horaria en LlamaCode. La primera versión debe declarar si notifica sólo mientras la app está abierta; el `TaskScheduler` actual vive dentro de la app. Avisos con la app cerrada requieren un alcance separado de ejecución en segundo plano por plataforma.
 4. **Evaluación de voz:** medir calidad acústica y latencia con corpus controlado; no inferir calidad de voz desde benchmarks de texto ni activar un motor nuevo por afirmaciones del README de un proyecto externo.
 
@@ -55,7 +55,7 @@ Fuera de la primera versión: un segundo agente supervisor, un segundo scheduler
 - Política de secretos implementada: `SecretStore` sólo persiste el refresh token con keyring del SO o Credential Store/DPAPI. Sin backend seguro, queda en memoria hasta cerrar la app; nunca se escribe en configuración ni logs.
 - Scopes iniciales de lectura: Gmail lectura, Calendar eventos lectura, Calendar disponibilidad y Tasks lectura. Los scopes Gmail compose, Calendar events y Tasks escritura se piden mediante consentimiento incremental opcional y declaran en Settings sus permisos más amplios.
 - Seis tools de lectura Google y las tools de borradores, tareas y eventos reutilizan `AgentToolRunner` y el gate del agente. Cada escritura exige aprobación incluso en auto/super/task-auto y aunque exista una regla `allow`. El hash de aprobación ata cuenta/token y payload completo; la tarjeta muestra todos los valores y no ofrece “Siempre”.
-- Gmail usa `users.drafts.create`, texto plano y destinatarios validados; Tasks usa `tasks.insert`; Calendar usa `events.insert` sin asistentes. Los POST no usan la política de retry de lecturas. En timeout, cancelación, 5xx o respuesta 2xx ilegible, la tool informa resultado incierto y pide revisar Google antes de repetir.
+- Gmail usa `users.drafts.create`, texto plano y destinatarios validados; Tasks usa `tasks.insert`/`tasks.patch`; Calendar usa `events.insert` sin asistentes. Los POST/PATCH mutadores no usan la política de retry de lecturas. En timeout, cancelación, 5xx o respuesta 2xx ilegible, la tool informa resultado incierto y pide revisar Google antes de repetir.
 - El contenido del correo, título de evento y descripción de tareas son entrada no confiable. Las instrucciones incrustadas no pueden otorgar permisos ni autorizar escrituras. Si un perfil cloud procesa contenido sensible, advertir qué texto/audio sale del dispositivo y exigir opt-in explícito.
 - Registrar estado técnico y resultado, no cuerpos de mensajes, tokens ni audio. Una respuesta ambigua tras timeout deja el efecto como `uncertain`; consultar Google antes de reintentar para evitar duplicados.
 - Para fechas/horarios, guardar zona IANA explícita y probar `America/Argentina/Buenos_Aires`, cambios de día, recurrencia y reinicio. Google Tasks es una lista con vencimiento por día; la hora exacta pertenece al recordatorio local.
@@ -99,16 +99,16 @@ Implementado: PKCE S256, state, callback loopback, timeout del intento, refresh 
 Pendiente: build/pruebas Windows y validación con cuenta Google de ensayo.
 
 - Implementado y probado con mocks: PKCE/`state`, callback loopback, timeout, refresh, scopes concedidos, revocación y estado de conexión.
-- Implementado: cliente con timeout, límite de respuesta, paginación y errores sanitizados; cancela requests y backoff ante stop/steer; permite un retry como máximo sólo para lecturas idempotentes. Un `Retry-After` superior a 1 s suprime el retry automático para respetar la espera del servidor. El POST que crea un borrador no se reintenta; timeout, cancelación, 5xx o respuesta ilegible se informa como resultado incierto.
-- Implementado: `tasks.insert`, `tasks.patch` y `events.insert` usan endpoints fijos, validación de IDs/fechas y cero reintentos automáticos. Se valida scope Tasks readonly insuficiente, fecha inválida, PATCH de campos permitidos, completion y fallo 503 ambiguo. Calendar requiere RFC3339 con offset, zona IANA válida e intervalo creciente; la escritura no acepta asistentes.
+- Implementado: cliente con timeout, límite de respuesta, paginación y errores sanitizados; cancela requests y backoff ante stop/steer; permite un retry como máximo sólo para lecturas idempotentes. Un `Retry-After` superior a 1 s suprime el retry automático para respetar la espera del servidor. Los POST/PATCH mutadores no se reintentan; timeout, cancelación, 5xx o respuesta ilegible se informa como resultado incierto.
+- Implementado: `tasks.insert`, `tasks.patch` y `events.insert` usan endpoints fijos, validación de IDs/fechas y cero reintentos automáticos. Se valida scope Tasks readonly insuficiente, fecha inválida, PATCH de campos permitidos, completion/reopen y fallo 503 ambiguo sin segundo request. Calendar requiere RFC3339 con offset, zona IANA válida e intervalo creciente; la escritura no acepta asistentes.
 - Implementado: persistencia segura condicionada a keyring/DPAPI; sin backend seguro no hay persistencia del refresh token.
-- Implementadas pruebas simuladas de Gmail, Calendar y Tasks, incluido free/busy y las tres rutas de escritura. Los fixtures validan MIME, scopes, rechazo de inyección, fechas/zonas, ausencia de asistentes, no retry de escrituras y aviso de estado incierto. No se usó cuenta personal ni se ejecutó OAuth real.
+- Implementadas pruebas simuladas de Gmail, Calendar y Tasks, incluido free/busy y las cuatro rutas de escritura. Los fixtures validan MIME, scopes, rechazo de inyección, fechas/zonas, ausencia de asistentes, no retry de escrituras y aviso de estado incierto. No se usó cuenta personal ni se ejecutó OAuth real.
 
 **Gate:** scopes efectivos se validan al iniciar cada operación; el token nunca aparece en config/log/recibo; desconectar cuenta elimina su secreto y detiene refreshes pendientes.
 
 ### Fase 3 — lectura por voz (integración inicial)
 
-Implementado: Settings ofrece conexión/desconexión OAuth y consentimientos incrementales separados para Gmail compose, tareas y eventos. El agente expone seis tools de lectura y cinco tools mutadoras en `AgentToolRunner`, todas con aprobación explícita y bloqueo en Modo privacidad. La consulta free/busy devuelve sólo intervalos ocupados y no interpreta respuestas incompletas como disponibilidad. El contenido remoto se etiqueta como no confiable, y fixtures de prompt injection verifican que texto hostil no autoriza otras tools.
+Implementado: Settings ofrece conexión/desconexión OAuth y consentimientos incrementales separados para Gmail compose, tareas y eventos. El agente expone seis tools de lectura y seis tools mutadoras en `AgentToolRunner`, todas con aprobación explícita y bloqueo en Modo privacidad. La consulta free/busy devuelve sólo intervalos ocupados y no interpreta respuestas incompletas como disponibilidad. El contenido remoto se etiqueta como no confiable, y fixtures de prompt injection verifican que texto hostil no autoriza otras tools.
 
 Pendiente: selector de cuenta cuando se admitan varias, identidad/correo de la cuenta origen en Settings, recorrido E2E hablado y repetición del fixture con una cuenta de ensayo.
 
@@ -122,9 +122,9 @@ Pendiente: selector de cuenta cuando se admitan varias, identidad/correo de la c
 ### Fase 4 — escrituras y recordatorios (iteración implementada)
 
 - Implementado: `google_gmail_create_draft` crea borradores y no dispone de ruta para enviar. El scope `gmail.compose` y el motivo de la aprobación se explican antes de habilitarlo.
-- Implementado: `google_tasks_create` usa `tasks.insert`; `google_tasks_update` permite sólo título, notas y fecha; `google_tasks_complete` cambia a estado completado. Todos usan `tasks.patch` cuando corresponde y requieren aprobación por acción. La UI advierte que el scope también permite mover y borrar tareas; LlamaCode no publica esas tools.
+- Implementado: `google_tasks_create` usa `tasks.insert`; `google_tasks_update` permite sólo título, notas y fecha; `google_tasks_complete` y `google_tasks_reopen` cambian sólo el estado de la tarea. Las mutaciones PATCH requieren aprobación por acción y nunca se reintentan automáticamente. La UI advierte que el scope también permite mover y borrar tareas; LlamaCode no publica esas tools.
 - Implementado: `google_calendar_create_event` usa `events.insert`, exige fecha RFC3339 y zona IANA, y no admite asistentes para evitar invitaciones a terceros. La UI advierte que el scope es más amplio; las notificaciones personales siguen los ajustes del calendario. No hay tools Calendar de edición o borrado.
-- Pendiente: validar estos flujos con una cuenta Google de ensayo, incluidas notificaciones personales; luego decidir si vale agregar actualización/completado de tareas o eventos con invitados. Cada capability nueva debe conservar endpoint fijo, aprobación explícita y prueba de no retry.
+- Pendiente: validar estos flujos con una cuenta Google de ensayo, incluidas notificaciones personales. La edición, completion y reapertura de tareas están implementadas; cualquier expansión futura a invitados, borrado o edición de eventos requiere una capability separada con endpoint fijo, aprobación explícita y prueba de no retry.
 - Antes de cada operación mutadora, presentar tarjeta con valores completos y reproducir una confirmación breve. Si el transcript no es claro, mantener la acción pendiente o cancelarla; no ejecutar por aproximación.
 - Implementado: crear/listar/cancelar recordatorios locales con ID estable, deduplicación por llamada y recuperación al reiniciar. No se reutilizó el scheduler de automatizaciones, que ejecuta agentes y cron en procesos separados.
 
@@ -169,4 +169,4 @@ Implementado en la iteración actual: store local con escritura atómica, lock e
 
 ## Restricciones de ejecución
 
-Gate Linux Release: 105/105 targets aprobados en la corrida serial final de esta iteración. Una corrida paralela previa tuvo una falla transitoria de puerto ocupado en `test_system_profiles`, que pasó aislado y en suite serial. No se inició OAuth real, no se usó una cuenta personal, no se hicieron benchmarks nuevos ni pruebas acústicas; el gate con cuenta Google de ensayo y la validación Windows siguen pendientes.
+Gate Linux Release: 106/106 targets aprobados en la corrida serial final; build Debug aprobado en `/tmp/llamacode-ingicharla-debug-build/LlamaCode`. Una corrida paralela previa tuvo una falla transitoria de puerto ocupado en `test_system_profiles`, que pasó aislado y en suite serial. No se inició OAuth real, no se usó una cuenta personal, no se hicieron benchmarks nuevos ni pruebas acústicas; el gate con cuenta Google de ensayo, E2E de voz y `tests.bat Debug` en Windows siguen pendientes.

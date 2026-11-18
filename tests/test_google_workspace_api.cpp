@@ -109,7 +109,7 @@ private slots:
     void gmailDraftIsValidatedEncodedAndCreatedOnce();
     void gmailDraftDoesNotRetryAmbiguousFailures();
     void googleTaskCreateValidatesPayloadAndDoesNotRetry();
-    void googleTaskUpdateAndCompleteUsePatchWithoutRetry();
+    void googleTaskPatchesUseNoRetryAndCanReopen();
     void calendarEventCreateValidatesTimeZoneAndDoesNotInviteOrRetry();
     void calendarAndTasksBuildReadOnlyRequests();
     void freeBusyUsesLeastPrivilegeAndPostsBoundedRequest();
@@ -385,7 +385,7 @@ void GoogleWorkspaceApiTests::calendarEventCreateValidatesTimeZoneAndDoesNotInvi
     QCOMPARE(ambiguousServer.requestCount(), 1);
 }
 
-void GoogleWorkspaceApiTests::googleTaskUpdateAndCompleteUsePatchWithoutRetry()
+void GoogleWorkspaceApiTests::googleTaskPatchesUseNoRetryAndCanReopen()
 {
     ApiEndpointStub updateServer;
     QVERIFY(updateServer.listen(QHostAddress::LocalHost, 0));
@@ -444,6 +444,36 @@ void GoogleWorkspaceApiTests::googleTaskUpdateAndCompleteUsePatchWithoutRetry()
     const qsizetype completeBodyStart = completeRequest.indexOf(QByteArrayLiteral("\r\n\r\n")) + 4;
     const QJsonObject completeBody = QJsonDocument::fromJson(completeRequest.mid(completeBodyStart)).object();
     QCOMPARE(completeBody.value(QStringLiteral("status")).toString(), QStringLiteral("completed"));
+
+    ApiEndpointStub successfulReopenServer;
+    QVERIFY(successfulReopenServer.listen(QHostAddress::LocalHost, 0));
+    successfulReopenServer.setResponse(200, QByteArrayLiteral("{\"id\":\"task-3\",\"status\":\"needsAction\"}"));
+    GoogleWorkspaceApi successfulReopenApi;
+    QVERIFY(successfulReopenApi.setApiBaseForTests(baseFor(successfulReopenServer)));
+    const ApiResult successfulReopen = successfulReopenApi.reopenTask(
+        QStringLiteral("tasks-token"), scopesFor(Capability::TasksWrite),
+        QStringLiteral("list-1"), QStringLiteral("task-3"));
+    QVERIFY2(successfulReopen.ok, qPrintable(successfulReopen.error));
+    QCOMPARE(successfulReopenServer.requestCount(), 1);
+
+    ApiEndpointStub reopenServer;
+    QVERIFY(reopenServer.listen(QHostAddress::LocalHost, 0));
+    reopenServer.setResponseSequence({{503, QByteArrayLiteral("{\"error\":\"temporary\"}")},
+                                      {200, QByteArrayLiteral("{\"id\":\"task-3\",\"status\":\"needsAction\"}")}});
+    GoogleWorkspaceApi reopenApi;
+    QVERIFY(reopenApi.setApiBaseForTests(baseFor(reopenServer)));
+    const ApiResult reopened = reopenApi.reopenTask(
+        QStringLiteral("tasks-token"), scopesFor(Capability::TasksWrite),
+        QStringLiteral("list-1"), QStringLiteral("task-3"));
+    QVERIFY(!reopened.ok);
+    QVERIFY(reopened.error.contains(QStringLiteral("Revisá la lista de tareas")));
+    QCOMPARE(reopenServer.requestCount(), 1);
+    const QByteArray reopenRequest = reopenServer.lastRequest();
+    QVERIFY(reopenRequest.startsWith(
+        QByteArrayLiteral("PATCH /tasks/v1/lists/list-1/tasks/task-3 ")));
+    const qsizetype reopenBodyStart = reopenRequest.indexOf(QByteArrayLiteral("\r\n\r\n")) + 4;
+    const QJsonObject reopenBody = QJsonDocument::fromJson(reopenRequest.mid(reopenBodyStart)).object();
+    QCOMPARE(reopenBody.value(QStringLiteral("status")).toString(), QStringLiteral("needsAction"));
 }
 
 void GoogleWorkspaceApiTests::calendarAndTasksBuildReadOnlyRequests()

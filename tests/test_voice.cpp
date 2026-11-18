@@ -1680,6 +1680,10 @@ void TestVoice::assistantApprovalQuestion()
         {{QStringLiteral("tool"), QStringLiteral("google_tasks_complete")}},
         QStringLiteral("es"));
     QVERIFY(completeQuestion.contains(QStringLiteral("marcar una tarea de Google Tasks como completada")));
+    const QString reopenQuestion = approvalQuestion(
+        {{QStringLiteral("tool"), QStringLiteral("google_tasks_reopen")}},
+        QStringLiteral("es"));
+    QVERIFY(reopenQuestion.contains(QStringLiteral("reabrir una tarea completada de Google Tasks")));
     const QString eventQuestion = approvalQuestion(
         {{QStringLiteral("tool"), QStringLiteral("google_calendar_create_event")}},
         QStringLiteral("es"));

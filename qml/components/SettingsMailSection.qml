@@ -130,7 +130,7 @@ ColumnLayout {
             }
             Text {
                 visible: App.googleWorkspaceConnected && !App.googleWorkspaceTaskCreateEnabled
-                text: "El permiso adicional de Google Tasks puede ver, editar, organizar y borrar tareas de tus listas. LlamaCode sólo ofrece crear tareas, editar campos puntuales y marcarlas completadas; no publica tools de borrado ni reordenamiento. Cada acción requiere aprobación."
+                text: "El permiso adicional de Google Tasks puede ver, editar, organizar y borrar tareas de tus listas. LlamaCode sólo ofrece crear tareas, editar campos puntuales, completarlas y reabrirlas; no publica tools de borrado ni reordenamiento. Cada acción requiere aprobación."
                 color: Theme.textMuted
                 font.pixelSize: 11
                 Layout.fillWidth: true

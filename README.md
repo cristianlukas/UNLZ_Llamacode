@@ -1100,17 +1100,17 @@ incluidos).
   opción adicional, Gmail compose permite gestionar borradores y enviar correo;
   LlamaCode sólo expone crear borradores, nunca enviarlos. Cada borrador muestra
   destinatarios, asunto y cuerpo exactos y pide aprobación incluso en modos
-  automáticos. Si la conexión falla después del POST, Ingi indica que hay que
+  automáticos. Si la conexión falla después de una escritura, Ingi indica que hay que
   revisar Borradores antes de repetirlo. Se pueden habilitar aparte la creación de
   tareas y eventos personales: las tarjetas muestran el payload exacto y requieren
   aprobación por acción incluso en modos automáticos. Google Tasks permite crear,
-  editar campos puntuales y marcar tareas completadas; no borrar ni reordenar. Usa una fecha
+  editar campos puntuales, completar tareas y reabrirlas; no borrar ni reordenar. Usa una fecha
   `YYYY-MM-DD` que sólo representa el día programado, no un plazo límite, y no
   conserva hora; para hora exacta, usá un recordatorio local.
   Los eventos no admiten invitados, así LlamaCode no envía invitaciones. Los scopes
   de escritura son más amplios que las tools publicadas y la pantalla de ajustes
   lo explica antes del consentimiento. Si una escritura no devuelve confirmación,
-  revisá Google antes de repetirla: la app no reintenta POST mutadores. El contenido de los servicios se marca
+  revisá Google antes de repetirla: la app no reintenta POST/PATCH mutadores. El contenido de los servicios se marca
   como externo y no confiable, y Modo privacidad bloquea estas tools. El refresh token sólo se
   conserva entre reinicios con keyring del sistema o DPAPI en Windows; sin ese
   backend, la conexión dura hasta cerrar LlamaCode. Esta primera integración tiene

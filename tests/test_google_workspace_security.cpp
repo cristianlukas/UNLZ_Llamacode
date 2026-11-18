@@ -154,6 +154,7 @@ void GoogleWorkspaceSecurityTests::googleDraftToolAlwaysNeedsExplicitApproval()
     QVERIFY(requiresExplicitApproval(QStringLiteral("google_tasks_create")));
     QVERIFY(requiresExplicitApproval(QStringLiteral("google_tasks_update")));
     QVERIFY(requiresExplicitApproval(QStringLiteral("google_tasks_complete")));
+    QVERIFY(requiresExplicitApproval(QStringLiteral("google_tasks_reopen")));
     QVERIFY(requiresExplicitApproval(QStringLiteral("google_calendar_create_event")));
     QVERIFY(!requiresExplicitApproval(QStringLiteral("google_gmail_search")));
     QVERIFY(!requiresExplicitApproval(QStringLiteral("google_tasks_list")));

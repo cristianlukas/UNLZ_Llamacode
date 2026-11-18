@@ -124,7 +124,8 @@ void AgentWireTests::googleWorkspaceReadToolsAreCataloged()
         QStringLiteral("google_calendar_create_event"),
         QStringLiteral("google_tasks_lists"),
         QStringLiteral("google_tasks_list"), QStringLiteral("google_tasks_create"),
-        QStringLiteral("google_tasks_update"), QStringLiteral("google_tasks_complete")};
+        QStringLiteral("google_tasks_update"), QStringLiteral("google_tasks_complete"),
+        QStringLiteral("google_tasks_reopen")};
     QSet<QString> schemaNames;
     for (const QJsonValue &value : LlamaAgentBackend::toolSchemas())
         schemaNames.insert(value.toObject().value(QStringLiteral("function")).toObject()
@@ -154,7 +155,8 @@ void AgentWireTests::googleWorkspaceReadToolsAreCataloged()
         const QJsonObject fn = value.toObject().value(QStringLiteral("function")).toObject();
         const QString name = fn.value(QStringLiteral("name")).toString();
         if (name != QLatin1String("google_tasks_update")
-            && name != QLatin1String("google_tasks_complete")) continue;
+            && name != QLatin1String("google_tasks_complete")
+            && name != QLatin1String("google_tasks_reopen")) continue;
         const QJsonArray required = fn.value(QStringLiteral("parameters")).toObject()
                                         .value(QStringLiteral("required")).toArray();
         QVERIFY(required.contains(QStringLiteral("task_list_id")));
@@ -163,7 +165,7 @@ void AgentWireTests::googleWorkspaceReadToolsAreCataloged()
                     .contains(QStringLiteral("aprobación humana")));
         taskWriteRequired.insert(name);
     }
-    QCOMPARE(taskWriteRequired.size(), 2);
+    QCOMPARE(taskWriteRequired.size(), 3);
     bool foundEventCreate = false;
     for (const QJsonValue &value : LlamaAgentBackend::toolSchemas()) {
         const QJsonObject fn = value.toObject().value(QStringLiteral("function")).toObject();

@@ -160,6 +160,9 @@ QString VoiceAssistant::approvalQuestion(const QVariantMap &call, const QString 
     else if (tool == QLatin1String("google_tasks_complete"))
         action = en ? QStringLiteral("mark a Google task as complete")
                     : QStringLiteral("marcar una tarea de Google Tasks como completada");
+    else if (tool == QLatin1String("google_tasks_reopen"))
+        action = en ? QStringLiteral("reopen a completed Google task")
+                    : QStringLiteral("reabrir una tarea completada de Google Tasks");
     else if (tool == QLatin1String("google_calendar_create_event"))
         action = en ? QStringLiteral("create a Calendar event without guests")
                     : QStringLiteral("crear un evento de Calendar sin invitados");
