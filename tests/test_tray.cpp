@@ -16,6 +16,7 @@ class TrayTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void initTestCase();
     void menuTextStartsNearLeftEdge_data();
     void menuTextStartsNearLeftEdge();
     void teachActionsOnlyWhileRecording();
@@ -44,6 +45,22 @@ int textLeftGap(QMenu *menu, QAction *action)
     return -1;
 }
 } // namespace
+
+void TrayTests::initTestCase()
+{
+    // El app fija estos nombres en main.cpp. Sin ellos, en Windows un QSettings()
+    // por defecto no puede escribir en el registro (AccessError): el filtro leía
+    // minimizeToTray=false y closeHidesToTrayUntilQuit fallaba sólo en el CI de
+    // Windows (en Linux cae a "Unknown Organization" y anda).
+    QCoreApplication::setOrganizationName(QStringLiteral("LlamaCodeTests"));
+    QCoreApplication::setApplicationName(QStringLiteral("test_tray"));
+    QStandardPaths::setTestModeEnabled(true);
+    QSettings probe;
+    probe.setValue(QStringLiteral("probe"), 1);
+    probe.sync();
+    QCOMPARE(probe.status(), QSettings::NoError);
+    probe.remove(QStringLiteral("probe"));
+}
 
 void TrayTests::menuTextStartsNearLeftEdge_data()
 {
