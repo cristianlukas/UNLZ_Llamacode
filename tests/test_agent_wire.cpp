@@ -163,6 +163,13 @@ void AgentWireTests::googleWorkspaceReadToolsAreCataloged()
         QVERIFY(required.contains(QStringLiteral("task_id")));
         QVERIFY(fn.value(QStringLiteral("description")).toString()
                     .contains(QStringLiteral("aprobación humana")));
+        if (name == QLatin1String("google_tasks_update")) {
+            const QJsonObject dueDate = fn.value(QStringLiteral("parameters")).toObject()
+                                           .value(QStringLiteral("properties")).toObject()
+                                           .value(QStringLiteral("due_date")).toObject();
+            QVERIFY(dueDate.value(QStringLiteral("description")).toString()
+                        .contains(QStringLiteral("cadena vacía")));
+        }
         taskWriteRequired.insert(name);
     }
     QCOMPARE(taskWriteRequired.size(), 3);

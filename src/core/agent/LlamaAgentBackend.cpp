@@ -5380,7 +5380,9 @@ void LlamaAgentBackend::processPendingCalls()
             if (args.contains(QStringLiteral("notes")))
                 fields.append(QStringLiteral("Notas: %1").arg(args.value(QStringLiteral("notes")).toString()));
             if (args.contains(QStringLiteral("due_date")))
-                fields.append(QStringLiteral("Fecha programada: %1").arg(args.value(QStringLiteral("due_date")).toString()));
+                fields.append(args.value(QStringLiteral("due_date")).toString().trimmed().isEmpty()
+                                  ? QStringLiteral("Fecha programada: se quitará")
+                                  : QStringLiteral("Fecha programada: %1").arg(args.value(QStringLiteral("due_date")).toString()));
             detail = QStringLiteral("Se actualizará una tarea en Google Tasks.\nLista: %1\nTarea: %2\n%3")
                          .arg(args.value(QStringLiteral("task_list_id")).toString(),
                               args.value(QStringLiteral("task_id")).toString(),
@@ -8593,13 +8595,13 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("due_date"), strProp(QStringLiteral("Fecha programada opcional YYYY-MM-DD; no representa un plazo límite ni admite hora."))}},
            QJsonArray{QStringLiteral("task_list_id"), QStringLiteral("title")}),
         fn(QStringLiteral("google_tasks_update"),
-           QStringLiteral("Actualiza uno o más campos de una tarea Google Tasks. Requiere aprobación humana por acción en cualquier modo. Usá IDs devueltos por google_tasks_list y enviá al menos uno entre title, notes o due_date; notes vacío limpia las notas. due_date usa YYYY-MM-DD y sólo conserva el día."),
+           QStringLiteral("Actualiza uno o más campos de una tarea Google Tasks. Requiere aprobación humana por acción en cualquier modo. Usá IDs devueltos por google_tasks_list y enviá al menos uno entre title, notes o due_date; notes vacío limpia las notas y due_date vacío quita la fecha programada. due_date informado usa YYYY-MM-DD y sólo conserva el día."),
            QJsonObject{
                {QStringLiteral("task_list_id"), strProp(QStringLiteral("ID devuelto por google_tasks_lists."))},
                {QStringLiteral("task_id"), strProp(QStringLiteral("ID devuelto por google_tasks_list."))},
                {QStringLiteral("title"), strProp(QStringLiteral("Nuevo título opcional; máximo 1024 caracteres."))},
                {QStringLiteral("notes"), strProp(QStringLiteral("Nuevas notas opcionales; vacío las limpia; máximo 8192 caracteres."))},
-               {QStringLiteral("due_date"), strProp(QStringLiteral("Nueva fecha programada opcional YYYY-MM-DD."))}},
+               {QStringLiteral("due_date"), strProp(QStringLiteral("Nueva fecha programada opcional YYYY-MM-DD; cadena vacía para quitarla."))}},
            QJsonArray{QStringLiteral("task_list_id"), QStringLiteral("task_id")}),
         fn(QStringLiteral("google_tasks_complete"),
            QStringLiteral("Marca una tarea como completada en Google Tasks. Requiere aprobación humana por acción incluso en modos automáticos; no borra la tarea. Usá IDs devueltos por google_tasks_list."),

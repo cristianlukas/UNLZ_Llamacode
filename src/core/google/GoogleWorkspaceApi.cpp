@@ -329,10 +329,15 @@ ApiResult GoogleWorkspaceApi::updateTask(const QString &accessToken,
     }
     if (fields.contains(QStringLiteral("due_date"))) {
         const QString dueDate = fields.value(QStringLiteral("due_date")).toString().trimmed();
-        const QDate date = QDate::fromString(dueDate, Qt::ISODate);
-        if (dueDate.size() != 10 || !date.isValid() || date.toString(Qt::ISODate) != dueDate)
-            return {false, 0, {}, QStringLiteral("La fecha programada debe usar YYYY-MM-DD.")};
-        payload.insert(QStringLiteral("due"), dueDate + QStringLiteral("T00:00:00.000Z"));
+        if (dueDate.isEmpty()) {
+            // Google Tasks uses PATCH null to remove the optional scheduled day.
+            payload.insert(QStringLiteral("due"), QJsonValue(QJsonValue::Null));
+        } else {
+            const QDate date = QDate::fromString(dueDate, Qt::ISODate);
+            if (dueDate.size() != 10 || !date.isValid() || date.toString(Qt::ISODate) != dueDate)
+                return {false, 0, {}, QStringLiteral("La fecha programada debe usar YYYY-MM-DD.")};
+            payload.insert(QStringLiteral("due"), dueDate + QStringLiteral("T00:00:00.000Z"));
+        }
     }
     return patchMutation(Capability::TasksWrite, accessToken, grantedScopes,
                          QStringLiteral("/tasks/v1/lists/") + taskListId

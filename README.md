@@ -1104,7 +1104,7 @@ incluidos).
   revisar Borradores antes de repetirlo. Se pueden habilitar aparte la creación de
   tareas y eventos personales: las tarjetas muestran el payload exacto y requieren
   aprobación por acción incluso en modos automáticos. Google Tasks permite crear,
-  editar campos puntuales, completar tareas y reabrirlas; no borrar ni reordenar. Usa una fecha
+  editar campos puntuales, quitar la fecha programada, completar tareas y reabrirlas; no borrar ni reordenar. Usa una fecha
   `YYYY-MM-DD` que sólo representa el día programado, no un plazo límite, y no
   conserva hora; para hora exacta, usá un recordatorio local.
   Los eventos no admiten invitados, así LlamaCode no envía invitaciones. Los scopes

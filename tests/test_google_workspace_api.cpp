@@ -411,6 +411,18 @@ void GoogleWorkspaceApiTests::googleTaskPatchesUseNoRetryAndCanReopen()
     QCOMPARE(updateBody.value(QStringLiteral("notes")).toString(), QString());
     QCOMPARE(updateBody.value(QStringLiteral("due")).toString(), QStringLiteral("2026-11-24T00:00:00.000Z"));
 
+    const ApiResult clearedDue = updateApi.updateTask(
+        QStringLiteral("tasks-token"), scopesFor(Capability::TasksWrite),
+        QStringLiteral("list-1"), QStringLiteral("task-1"),
+        QJsonObject{{QStringLiteral("due_date"), QString()}});
+    QVERIFY2(clearedDue.ok, qPrintable(clearedDue.error));
+    QCOMPARE(updateServer.requestCount(), 2);
+    const QByteArray clearDueRequest = updateServer.lastRequest();
+    const qsizetype clearDueBodyStart = clearDueRequest.indexOf(QByteArrayLiteral("\r\n\r\n")) + 4;
+    const QJsonObject clearDueBody = QJsonDocument::fromJson(clearDueRequest.mid(clearDueBodyStart)).object();
+    QVERIFY(clearDueBody.contains(QStringLiteral("due")));
+    QVERIFY(clearDueBody.value(QStringLiteral("due")).isNull());
+
     const ApiResult invalidEmpty = updateApi.updateTask(
         QStringLiteral("token"), scopesFor(Capability::TasksWrite),
         QStringLiteral("list-1"), QStringLiteral("task-1"), {});
@@ -424,7 +436,7 @@ void GoogleWorkspaceApiTests::googleTaskPatchesUseNoRetryAndCanReopen()
         QStringLiteral("token"), scopesFor(Capability::TasksRead),
         QStringLiteral("list-1"), QStringLiteral("task-1"));
     QVERIFY(!wrongScope.ok);
-    QCOMPARE(updateServer.requestCount(), 1);
+    QCOMPARE(updateServer.requestCount(), 2);
 
     ApiEndpointStub completeServer;
     QVERIFY(completeServer.listen(QHostAddress::LocalHost, 0));
