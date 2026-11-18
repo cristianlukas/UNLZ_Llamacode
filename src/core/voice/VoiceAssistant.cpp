@@ -151,6 +151,19 @@ QString VoiceAssistant::approvalQuestion(const QVariantMap &call, const QString 
                     : QStringLiteral("ejecutar el comando %1").arg(detail);
     else if (tool == QLatin1String("email_send"))
         action = en ? QStringLiteral("send an email") : QStringLiteral("enviar un correo");
+    else if (tool == QLatin1String("google_gmail_create_draft"))
+        action = en ? QStringLiteral("create a Gmail draft") : QStringLiteral("crear un borrador en Gmail");
+    else if (tool == QLatin1String("google_tasks_create"))
+        action = en ? QStringLiteral("create a Google task") : QStringLiteral("crear una tarea en Google Tasks");
+    else if (tool == QLatin1String("google_calendar_create_event"))
+        action = en ? QStringLiteral("create a Calendar event without guests")
+                    : QStringLiteral("crear un evento de Calendar sin invitados");
+    else if (tool == QLatin1String("local_reminder_create"))
+        action = en ? QStringLiteral("create a local reminder")
+                    : QStringLiteral("crear un recordatorio local");
+    else if (tool == QLatin1String("local_reminder_cancel"))
+        action = en ? QStringLiteral("cancel a local reminder")
+                    : QStringLiteral("cancelar un recordatorio local");
     else if (tool == QLatin1String("write_file") || tool == QLatin1String("edit_file"))
         action = en ? QStringLiteral("modify the file %1").arg(QFileInfo(detail).fileName())
                     : QStringLiteral("modificar el archivo %1").arg(QFileInfo(detail).fileName());

@@ -1,8 +1,8 @@
 # Plan de mejora para Ingi-Charla: OpenJarvis, Dodaios y Google Workspace
 
 **Fecha:** 2026-11-18
-**Estado:** integración de origin/main y cambios locales completada; free/busy, cancelación, retry acotado, revocación OAuth y fixtures de prompt injection implementados; gate final en curso
-**Tarea:** `Q-20261117-INGI-CHARLA-PLAN`
+**Estado:** integración de origin/main y cambios locales completada; lectura de Workspace, borradores Gmail, creación aprobada de tareas/eventos personales y recordatorios locales implementados; quedan gates de cuenta de ensayo, Windows y E2E de voz
+**Tarea:** `Q-20261118-INGI-CHARLA-SAFE-WRITES`
 
 ## Objetivo
 
@@ -37,7 +37,7 @@ La evidencia local más útil antes de proponer defaults nuevos está en [compar
 
 Estos ensayos usan corpus/proxies y un hardware concreto. No cubren todavía micrófono→LLM→parlante en vivo, MOS, ruido doméstico ni cancelación acústica completa. La siguiente comparación debe reutilizar corpus y config congelados, sumar holdout rioplatense con nombres/fechas/negaciones y registrar p50/p95, carga fría/caliente y recursos.
 
-Las APIs de Google fijan dos límites que deben reflejarse en producto: hay que pedir scopes estrechos; y `Google Tasks.due` conserva la fecha, pero descarta la hora. Gmail `gmail.compose` permite administrar borradores y enviar, por lo que OAuth por sí solo no separa esas dos acciones; el gate de LlamaCode debe hacerlo. Fuentes: [scopes de Gmail](https://developers.google.com/workspace/gmail/api/auth/scopes), [scopes de Calendar](https://developers.google.com/workspace/calendar/api/auth), [OAuth para apps de escritorio](https://developers.google.com/identity/protocols/oauth2/native-app), [recurso Task](https://developers.google.com/workspace/tasks/reference/rest/v1/tasks).
+Las APIs de Google fijan límites que se reflejan en producto: hay que pedir scopes acotados; `Google Tasks.due` conserva la fecha, pero descarta la hora y describe el día programado, no un plazo límite; y `calendar.events` y `tasks` permiten cambios más amplios que los expuestos por Ingi. Gmail `gmail.compose` permite administrar borradores y enviar, por lo que OAuth por sí solo no separa esas dos acciones; el gate exige aprobar cada borrador y la app no publica una tool de envío. `drafts.create`, `tasks.insert` y `events.insert` usan POST sin reintentos automáticos. Eventos de Ingi no incluyen invitados. Fuentes: [scopes de Gmail](https://developers.google.com/workspace/gmail/api/auth/scopes), [crear borradores](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.drafts/create), [guía de borradores](https://developers.google.com/workspace/gmail/api/guides/drafts), [scopes de Calendar](https://developers.google.com/workspace/calendar/api/auth), [crear eventos](https://developers.google.com/workspace/calendar/api/v3/reference/events/insert), [scope de Tasks](https://developers.google.com/workspace/tasks/auth), [crear tareas](https://developers.google.com/workspace/tasks/reference/rest/v1/tasks/insert), [recurso Task](https://developers.google.com/workspace/tasks/reference/rest/v1/tasks), [OAuth para apps de escritorio](https://developers.google.com/identity/protocols/oauth2/native-app), [autorización incremental](https://developers.google.com/identity/protocols/oauth2/web-server).
 
 ## Alcance funcional propuesto
 
@@ -50,11 +50,12 @@ Fuera de la primera versión: un segundo agente supervisor, un segundo scheduler
 
 ## Arquitectura y límites de seguridad
 
-- Implementado: `src/core/google/` contiene OAuth de escritorio PKCE y el cliente REST de lectura; usa Qt Network y no añade runtime aparte.
+- Implementado: `src/core/google/` contiene OAuth de escritorio PKCE y el cliente REST; usa Qt Network y no añade runtime aparte.
 - Implementado: navegador del sistema, `state`, callback loopback IPv4 en puerto efímero, timeout, refresh, validación de scopes y revocación remota asíncrona al desconectar. La limpieza local es inmediata aunque falle la llamada a Google; el estado informa cuando Google no confirma.
 - Política de secretos implementada: `SecretStore` sólo persiste el refresh token con keyring del SO o Credential Store/DPAPI. Sin backend seguro, queda en memoria hasta cerrar la app; nunca se escribe en configuración ni logs.
-- Scopes de lectura: Gmail lectura, Calendar eventos lectura, Calendar disponibilidad y Tasks lectura. El endpoint free/busy usa calendar.events.freebusy; no se solicitan scopes mutadores.
-- Cinco tools de lectura Google reutilizan `AgentToolRunner` y el gate del agente. Envío, borradores y cambios de Calendar/Tasks siguen fuera de esta entrega; cada escritura futura necesita capability, preview y aprobación ligada al payload exacto.
+- Scopes iniciales de lectura: Gmail lectura, Calendar eventos lectura, Calendar disponibilidad y Tasks lectura. Los scopes Gmail compose, Calendar events y Tasks escritura se piden mediante consentimiento incremental opcional y declaran en Settings sus permisos más amplios.
+- Seis tools de lectura Google y las tools de creación de borradores, tareas y eventos reutilizan `AgentToolRunner` y el gate del agente. Cada escritura exige aprobación incluso en auto/super/task-auto y aunque exista una regla `allow`. El hash de aprobación ata cuenta/token y payload completo; la tarjeta muestra todos los valores y no ofrece “Siempre”.
+- Gmail usa `users.drafts.create`, texto plano y destinatarios validados; Tasks usa `tasks.insert`; Calendar usa `events.insert` sin asistentes. Los POST no usan la política de retry de lecturas. En timeout, cancelación, 5xx o respuesta 2xx ilegible, la tool informa resultado incierto y pide revisar Google antes de repetir.
 - El contenido del correo, título de evento y descripción de tareas son entrada no confiable. Las instrucciones incrustadas no pueden otorgar permisos ni autorizar escrituras. Si un perfil cloud procesa contenido sensible, advertir qué texto/audio sale del dispositivo y exigir opt-in explícito.
 - Registrar estado técnico y resultado, no cuerpos de mensajes, tokens ni audio. Una respuesta ambigua tras timeout deja el efecto como `uncertain`; consultar Google antes de reintentar para evitar duplicados.
 - Para fechas/horarios, guardar zona IANA explícita y probar `America/Argentina/Buenos_Aires`, cambios de día, recurrencia y reinicio. Google Tasks es una lista con vencimiento por día; la hora exacta pertenece al recordatorio local.
@@ -64,11 +65,11 @@ Fuera de la primera versión: un segundo agente supervisor, un segundo scheduler
 | Área | Código actual / candidato |
 |---|---|
 | Voz y confirmación hablada | `src/core/voice/VoiceController.*`, `VoiceAssistant.*`, `SttEngine.*`, `TtsEngine.*` |
-| Tools y política | `src/core/agent/AgentToolRunner.*`, `LlamaAgentBackend.*`; seis tools Google de lectura conectadas, clasificadas como read y bloqueadas en Modo privacidad |
-| Correo y cuentas | `src/AppController.*`, `qml/components/SettingsMailSection.qml`; Client ID, estado OAuth, conectar/desconectar y scopes read-only |
+| Tools y política | `src/core/agent/AgentToolRunner.*`, `LlamaAgentBackend.*`; lectura y creación de borradores/tareas/eventos con aprobación por acción, payload ligado al token y bloqueo en Modo privacidad |
+| Correo y cuentas | `src/AppController.*`, `qml/components/SettingsMailSection.qml`; Client ID, estado OAuth, lectura inicial, permisos incrementales Gmail/Tasks/Calendar y desconectar |
 | Secretos | `src/core/SecretStore.*`; persistencia sólo con keyring/DPAPI, sesión efímera si no está disponible |
 | Aprobación visual | `qml/pages/AgentPage.qml` (tarjetas existentes); extender el preview para mostrar datos de Gmail/Calendar/Tasks completos |
-| Agenda local | `src/core/tasks/TaskScheduler.*`, `AutomationStore.*`, `src/core/agents/TriggerManager.*`; confirmar si alcanzan para recordatorios individuales |
+| Agenda local | `src/core/tasks/LocalReminderStore.*` + `LocalReminderScheduler`, `TaskScheduler.*`, `AutomationStore.*`; recordatorios individuales separados de automatizaciones |
 | Pruebas | OAuth/API mock y fail-closed del agente en `tests/test_google_workspace_*.cpp`, `test_agent_tools.cpp`, `test_agent_wire.cpp` y `test_appcontroller.cpp`; falta E2E hablado y cuenta de ensayo |
 | Build/dependencias | `CMakeLists.txt` registra los módulos Google; Qt Network está disponible y Qt NetworkAuth no se necesita |
 
@@ -91,40 +92,45 @@ Fuera de la primera versión: un segundo agente supervisor, un segundo scheduler
 
 **Gate:** repetir los resultados con la misma configuración; cero ejecución de órdenes en ejemplos negativos/ambiguos; aceptar cambios de latencia sólo contra una línea base preregistrada. Objetivo provisional: p95 caliente de respuesta no regresa más de 10% sin aprobación explícita de la regresión.
 
-### Fase 2 — OAuth y clientes API (lectura implementada)
+### Fase 2 — OAuth y clientes API (lectura + escrituras acotadas implementadas)
 
 Implementado: PKCE S256, state, callback loopback, timeout del intento, refresh y cliente REST read-only para Gmail/Calendar/Tasks, incluido el endpoint Calendar free/busy. También se implementaron cancelación del request, un retry como máximo para 429/5xx, y revocación remota asíncrona al desconectar. El cliente sólo reintenta después de 250–1000 ms; si `Retry-After` excede 1 s, devuelve el error sin hacer un retry temprano. El guardado del refresh token depende de keyring/DPAPI. Las pruebas cubren callbacks inválidos, scopes, paginación, errores HTTP, cancelación, retry y endpoints simulados.
 
-Pendiente: build/pruebas Windows y validación con cuenta Google de ensayo. No habilitar scopes de escritura todavía.
+Pendiente: build/pruebas Windows y validación con cuenta Google de ensayo.
 
 - Implementado y probado con mocks: PKCE/`state`, callback loopback, timeout, refresh, scopes concedidos, revocación y estado de conexión.
-- Implementado: cliente con timeout, límite de respuesta, paginación y errores sanitizados; cancela requests y backoff ante stop/steer; permite un retry como máximo sólo para 429/5xx dado que las llamadas actuales son de lectura. Un `Retry-After` superior a 1 s suprime el retry automático para respetar la espera del servidor.
+- Implementado: cliente con timeout, límite de respuesta, paginación y errores sanitizados; cancela requests y backoff ante stop/steer; permite un retry como máximo sólo para lecturas idempotentes. Un `Retry-After` superior a 1 s suprime el retry automático para respetar la espera del servidor. El POST que crea un borrador no se reintenta; timeout, cancelación, 5xx o respuesta ilegible se informa como resultado incierto.
+- Implementado: `tasks.insert` y `events.insert` usan endpoints fijos, validación de IDs/fechas y cero reintentos automáticos. Se valida Tasks con scope Tasks readonly insuficiente, fecha de tarea inválida y fallo 503 ambiguo. Calendar requiere RFC3339 con offset, zona IANA válida e intervalo creciente; la escritura no acepta asistentes.
 - Implementado: persistencia segura condicionada a keyring/DPAPI; sin backend seguro no hay persistencia del refresh token.
-- Implementadas pruebas simuladas de Gmail, Calendar y Tasks; se está ampliando el gate para incluir POST free/busy y sus límites. No se usó cuenta personal ni se ejecutó OAuth real.
+- Implementadas pruebas simuladas de Gmail, Calendar y Tasks, incluido free/busy y las tres rutas de escritura. Los fixtures validan MIME, scopes, rechazo de inyección, fechas/zonas, ausencia de asistentes, no retry de escrituras y aviso de estado incierto. No se usó cuenta personal ni se ejecutó OAuth real.
 
 **Gate:** scopes efectivos se validan al iniciar cada operación; el token nunca aparece en config/log/recibo; desconectar cuenta elimina su secreto y detiene refreshes pendientes.
 
 ### Fase 3 — lectura por voz (integración inicial)
 
-Implementado: Settings ofrece conexión/desconexión OAuth; el agente expone seis tools de lectura Google, las ejecuta en AgentToolRunner y bloquea su uso en Modo privacidad. La consulta free/busy devuelve sólo intervalos ocupados y no interpreta respuestas incompletas como disponibilidad. Las tools etiquetan el contenido remoto como no confiable, y hay fixtures de prompt injection para verificar que el texto hostil llega como dato y no autoriza otras tools.
+Implementado: Settings ofrece conexión/desconexión OAuth y consentimientos incrementales separados para Gmail compose, tareas y eventos. El agente expone seis tools de lectura y tres de creación en `AgentToolRunner`, y bloquea todas en Modo privacidad. La consulta free/busy devuelve sólo intervalos ocupados y no interpreta respuestas incompletas como disponibilidad. El contenido remoto se etiqueta como no confiable, y fixtures de prompt injection verifican que texto hostil no autoriza otras tools.
 
 Pendiente: selector de cuenta cuando se admitan varias, identidad/correo de la cuenta origen en Settings, recorrido E2E hablado y repetición del fixture con una cuenta de ensayo.
 
-- La búsqueda y lectura de Gmail, eventos, disponibilidad y Tasks están conectadas; validar en la siguiente corrida la nueva llamada POST de free/busy.
+- La búsqueda y lectura de Gmail, eventos, disponibilidad y Tasks están conectadas. El borrador se crea sólo mediante `users.drafts.create`, con un MIME de texto plano, sin attachments ni envío.
 - Verificar con cuenta de ensayo la cancelación del request de API y transición Thinking/Ready al detener una lectura desde voz.
-- Mostrar cuenta origen y fecha de los resultados; Settings ya ofrece Client ID, scopes read-only, conexión y desconexión.
+- Cada aprobación muestra el payload completo y se liga al token/cuenta mediante SHA-256. Settings solicita cada scope de escritura sólo desde su botón específico; explica que Gmail compose permite enviar, Tasks permite editar/borrar todas las tareas y Calendar permite editar/borrar eventos.
 - Ampliar fixture actual de correo a descripciones de evento/tarea y repetir el flujo de extremo a extremo con cuenta descartable.
 
 **Gate:** las consultas de lectura funcionan con mocks y cuenta de ensayo; la app identifica claramente contenido remoto, errores de autorización y datos que no pudo leer.
 
-### Fase 4 — escrituras y recordatorios
+### Fase 4 — escrituras y recordatorios (iteración implementada)
 
-- Incorporar primero `gmail_draft`, `calendar_create/update` y `tasks_create/update/complete`. Definir validaciones y dry-run para cada tool.
+- Implementado: `google_gmail_create_draft` crea borradores y no dispone de ruta para enviar. El scope `gmail.compose` y el motivo de la aprobación se explican antes de habilitarlo.
+- Implementado: `google_tasks_create` usa `tasks.insert`, requiere aprobación en cualquier modo y valida lista, título y fecha de día; la UI advierte que el scope también permite editar y borrar otras tareas. No hay tools Tasks de edición, completado o borrado.
+- Implementado: `google_calendar_create_event` usa `events.insert`, exige fecha RFC3339 y zona IANA, y no admite asistentes para evitar invitaciones a terceros. La UI advierte que el scope es más amplio; las notificaciones personales siguen los ajustes del calendario. No hay tools Calendar de edición o borrado.
+- Pendiente: validar estos flujos con una cuenta Google de ensayo, incluidas notificaciones personales; luego decidir si vale agregar actualización/completado de tareas o eventos con invitados. Cada capability nueva debe conservar endpoint fijo, aprobación explícita y prueba de no retry.
 - Antes de cada operación mutadora, presentar tarjeta con valores completos y reproducir una confirmación breve. Si el transcript no es claro, mantener la acción pendiente o cancelarla; no ejecutar por aproximación.
-- Enviar correo sólo desde una aprobación que revele destinatarios, asunto y cuerpo; cambios de agenda deben mostrar fecha, hora, zona horaria, asistentes y efecto de notificación. Borrado permanente queda fuera del primer rollout.
-- Crear recordatorios locales con ID estable, deduplicación y recuperación al reiniciar. Reutilizar `TaskScheduler`/`TriggerManager` si cubren el contrato; si no, sumar un store acotado. No afirmar entrega con app cerrada hasta implementar y probar un ejecutor de fondo para cada plataforma.
+- Implementado: crear/listar/cancelar recordatorios locales con ID estable, deduplicación por llamada y recuperación al reiniciar. No se reutilizó el scheduler de automatizaciones, que ejecuta agentes y cron en procesos separados.
 
-**Gate:** cero side effects en denegación, ambigüedad, acción vencida o argumentos alterados; cero duplicados en retries; toda escritura queda confirmada por lectura de vuelta o estado explícito `uncertain`.
+Implementado en la iteración actual: store local con escritura atómica, lock entre procesos, límite de 500 filas, deduplicación por llamada, cancelación y entrega de una sola vez. Fecha/hora requiere offset RFC3339, con horizonte de cinco años. `LocalReminderScheduler` revisa cada 5 s sólo en el proceso desktop; escribe un evento local persistente y usa el tray del sistema cuando está visible. Si el equipo estaba apagado o LlamaCode cerrado, la alerta no se muestra en la hora planeada; la app entrega el pendiente cuando vuelve a abrir. La prueba simula el scheduler y un reinicio, sin esperar al reloj real.
+
+**Gate:** cero side effects en denegación, ambigüedad, acción vencida o argumentos alterados; cero duplicados por retry automático; toda escritura queda confirmada por lectura de vuelta o estado explícito `uncertain`.
 
 ### Fase 5 — E2E, revisión y rollout
 

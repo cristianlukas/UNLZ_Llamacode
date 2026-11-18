@@ -106,6 +106,10 @@ private slots:
     void initTestCase();
     void scopesAreCheckedBeforeNetworkRequest();
     void gmailSearchUsesSafeRequestAndPagination();
+    void gmailDraftIsValidatedEncodedAndCreatedOnce();
+    void gmailDraftDoesNotRetryAmbiguousFailures();
+    void googleTaskCreateValidatesPayloadAndDoesNotRetry();
+    void calendarEventCreateValidatesTimeZoneAndDoesNotInviteOrRetry();
     void calendarAndTasksBuildReadOnlyRequests();
     void freeBusyUsesLeastPrivilegeAndPostsBoundedRequest();
     void apiRequestCanBeCancelled();
@@ -168,6 +172,216 @@ void GoogleWorkspaceApiTests::gmailSearchUsesSafeRequestAndPagination()
     QCOMPARE(query.queryItemValue(QStringLiteral("q")),
              QStringLiteral("from:ada@example.com newer_than:7d"));
     QCOMPARE(query.queryItemValue(QStringLiteral("pageToken")), QStringLiteral("p/1=="));
+}
+
+void GoogleWorkspaceApiTests::gmailDraftIsValidatedEncodedAndCreatedOnce()
+{
+    ApiEndpointStub server;
+    QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+    server.setResponse(200, QByteArrayLiteral("{\"id\":\"draft-1\",\"message\":{\"id\":\"message-1\"}}"));
+    GoogleWorkspaceApi api;
+    QVERIFY(api.setApiBaseForTests(baseFor(server)));
+
+    const QString subject = QStringLiteral("Plan de Ingi: café");
+    const QString body = QStringLiteral("Hola,\n\nTe comparto el borrador.\nSaludos.");
+    const ApiResult result = api.createGmailDraft(
+        QStringLiteral("compose-token"), scopesFor(Capability::GmailDraft),
+        {QStringLiteral("ana@example.com")}, {QStringLiteral("leo@example.org")}, subject, body);
+    QVERIFY2(result.ok, qPrintable(result.error));
+    QCOMPARE(result.data.value(QStringLiteral("id")).toString(), QStringLiteral("draft-1"));
+    QCOMPARE(server.requestCount(), 1);
+    const QByteArray request = server.lastRequest();
+    QVERIFY(request.startsWith(QByteArrayLiteral("POST /gmail/v1/users/me/drafts ")));
+    QVERIFY(request.toLower().contains(QByteArrayLiteral("authorization: bearer compose-token")));
+    const qsizetype bodyStart = request.indexOf(QByteArrayLiteral("\r\n\r\n")) + 4;
+    const QJsonObject requestBody = QJsonDocument::fromJson(request.mid(bodyStart)).object();
+    const QString raw = requestBody.value(QStringLiteral("message")).toObject()
+                            .value(QStringLiteral("raw")).toString();
+    QVERIFY(!raw.isEmpty());
+    const QByteArray mime = QByteArray::fromBase64(raw.toLatin1(), QByteArray::Base64UrlEncoding);
+    QVERIFY(mime.contains(QByteArrayLiteral("To: ana@example.com\r\n")));
+    QVERIFY(mime.contains(QByteArrayLiteral("Cc: leo@example.org\r\n")));
+    QVERIFY(mime.contains(QByteArrayLiteral("Subject: =?UTF-8?B?")));
+    QVERIFY(mime.contains(QByteArrayLiteral("Content-Type: text/plain; charset=UTF-8\r\n")));
+    const qsizetype mimeBodyStart = mime.indexOf(QByteArrayLiteral("\r\n\r\n")) + 4;
+    QByteArray encodedBody = mime.mid(mimeBodyStart);
+    encodedBody.replace(QByteArrayLiteral("\r\n"), QByteArray());
+    QCOMPARE(QByteArray::fromBase64(encodedBody), body.toUtf8());
+
+    ApiEndpointStub deniedServer;
+    QVERIFY(deniedServer.listen(QHostAddress::LocalHost, 0));
+    GoogleWorkspaceApi deniedApi;
+    QVERIFY(deniedApi.setApiBaseForTests(baseFor(deniedServer)));
+    const ApiResult denied = deniedApi.createGmailDraft(
+        QStringLiteral("token"), scopesFor(Capability::GmailRead),
+        {QStringLiteral("ana@example.com")}, {}, QStringLiteral("Hola"), QStringLiteral("Texto"));
+    QVERIFY(!denied.ok);
+    QCOMPARE(deniedServer.requestCount(), 0);
+
+    const ApiResult headerInjection = api.createGmailDraft(
+        QStringLiteral("token"), scopesFor(Capability::GmailDraft),
+        {QStringLiteral("ana@example.com\r\nBcc: attacker@example.net")}, {},
+        QStringLiteral("Hola"), QStringLiteral("Texto"));
+    QVERIFY(!headerInjection.ok);
+    const ApiResult subjectInjection = api.createGmailDraft(
+        QStringLiteral("token"), scopesFor(Capability::GmailDraft),
+        {QStringLiteral("ana@example.com")}, {}, QStringLiteral("Hola\r\nBcc: attacker@example.net"),
+        QStringLiteral("Texto"));
+    QVERIFY(!subjectInjection.ok);
+    QCOMPARE(server.requestCount(), 1);
+}
+
+void GoogleWorkspaceApiTests::gmailDraftDoesNotRetryAmbiguousFailures()
+{
+    ApiEndpointStub server;
+    QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+    server.setResponseSequence({{503, QByteArrayLiteral("{\"error\":\"temporary\"}")},
+                                {200, QByteArrayLiteral("{\"id\":\"draft-2\"}")}});
+    GoogleWorkspaceApi api;
+    QVERIFY(api.setApiBaseForTests(baseFor(server)));
+    const ApiResult result = api.createGmailDraft(
+        QStringLiteral("token"), scopesFor(Capability::GmailDraft),
+        {QStringLiteral("ana@example.com")}, {}, QStringLiteral("Reunión"), QStringLiteral("Confirmo."));
+    QVERIFY(!result.ok);
+    QCOMPARE(result.httpStatus, 503);
+    QVERIFY(result.error.contains(QStringLiteral("Borradores")));
+    QCOMPARE(server.requestCount(), 1);
+
+    ApiEndpointStub cancelledServer;
+    QVERIFY(cancelledServer.listen(QHostAddress::LocalHost, 0));
+    cancelledServer.setResponse(200, QByteArrayLiteral("{\"id\":\"draft-3\"}"));
+    cancelledServer.setResponseDelay(500);
+    GoogleWorkspaceApi cancelledApi;
+    QVERIFY(cancelledApi.setApiBaseForTests(baseFor(cancelledServer)));
+    std::atomic_bool cancelled{false};
+    cancelledApi.setCancellationFlag(&cancelled);
+    QTimer::singleShot(80, [&cancelled]() {
+        cancelled.store(true, std::memory_order_relaxed);
+    });
+    const ApiResult cancelledResult = cancelledApi.createGmailDraft(
+        QStringLiteral("token"), scopesFor(Capability::GmailDraft),
+        {QStringLiteral("ana@example.com")}, {}, QStringLiteral("Reunión"), QStringLiteral("Confirmo."));
+    QVERIFY(!cancelledResult.ok);
+    QVERIFY(cancelledResult.error.contains(QStringLiteral("Borradores")));
+    QCOMPARE(cancelledServer.requestCount(), 1);
+}
+
+void GoogleWorkspaceApiTests::googleTaskCreateValidatesPayloadAndDoesNotRetry()
+{
+    ApiEndpointStub server;
+    QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+    server.setResponse(200, QByteArrayLiteral("{\"id\":\"task-1\",\"title\":\"Enviar informe\"}"));
+    GoogleWorkspaceApi api;
+    QVERIFY(api.setApiBaseForTests(baseFor(server)));
+    const ApiResult created = api.createTask(
+        QStringLiteral("tasks-token"), scopesFor(Capability::TasksWrite),
+        QStringLiteral("list-1"), QStringLiteral("  Enviar informe  "),
+        QStringLiteral("Revisar versión final"), QStringLiteral("2026-11-20"));
+    QVERIFY2(created.ok, qPrintable(created.error));
+    QCOMPARE(created.data.value(QStringLiteral("id")).toString(), QStringLiteral("task-1"));
+    QCOMPARE(server.requestCount(), 1);
+    const QByteArray request = server.lastRequest();
+    QVERIFY(request.startsWith(QByteArrayLiteral("POST /tasks/v1/lists/list-1/tasks ")));
+    QVERIFY(request.toLower().contains(QByteArrayLiteral("authorization: bearer tasks-token")));
+    const qsizetype bodyStart = request.indexOf(QByteArrayLiteral("\r\n\r\n")) + 4;
+    const QJsonObject payload = QJsonDocument::fromJson(request.mid(bodyStart)).object();
+    QCOMPARE(payload.value(QStringLiteral("title")).toString(), QStringLiteral("Enviar informe"));
+    QCOMPARE(payload.value(QStringLiteral("notes")).toString(), QStringLiteral("Revisar versión final"));
+    QCOMPARE(payload.value(QStringLiteral("due")).toString(), QStringLiteral("2026-11-20T00:00:00.000Z"));
+
+    const ApiResult deniedScope = api.createTask(
+        QStringLiteral("token"), scopesFor(Capability::TasksRead), QStringLiteral("list-1"),
+        QStringLiteral("Tarea"), {}, {});
+    QVERIFY(!deniedScope.ok);
+    const ApiResult invalidId = api.createTask(
+        QStringLiteral("token"), scopesFor(Capability::TasksWrite), QStringLiteral("../list"),
+        QStringLiteral("Tarea"), {}, {});
+    QVERIFY(!invalidId.ok);
+    const ApiResult invalidDate = api.createTask(
+        QStringLiteral("token"), scopesFor(Capability::TasksWrite), QStringLiteral("list-1"),
+        QStringLiteral("Tarea"), {}, QStringLiteral("2026-02-30"));
+    QVERIFY(!invalidDate.ok);
+    QCOMPARE(server.requestCount(), 1);
+
+    ApiEndpointStub ambiguousServer;
+    QVERIFY(ambiguousServer.listen(QHostAddress::LocalHost, 0));
+    ambiguousServer.setResponseSequence({{503, QByteArrayLiteral("{\"error\":\"temporary\"}")},
+                                         {200, QByteArrayLiteral("{\"id\":\"task-2\"}")}});
+    GoogleWorkspaceApi ambiguousApi;
+    QVERIFY(ambiguousApi.setApiBaseForTests(baseFor(ambiguousServer)));
+    const ApiResult uncertain = ambiguousApi.createTask(
+        QStringLiteral("token"), scopesFor(Capability::TasksWrite), QStringLiteral("list-1"),
+        QStringLiteral("Tarea"), {}, {});
+    QVERIFY(!uncertain.ok);
+    QVERIFY(uncertain.error.contains(QStringLiteral("Revisá la lista de tareas")));
+    QCOMPARE(ambiguousServer.requestCount(), 1);
+}
+
+void GoogleWorkspaceApiTests::calendarEventCreateValidatesTimeZoneAndDoesNotInviteOrRetry()
+{
+    ApiEndpointStub server;
+    QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+    server.setResponse(200, QByteArrayLiteral("{\"id\":\"event-1\",\"summary\":\"Plan\"}"));
+    GoogleWorkspaceApi api;
+    QVERIFY(api.setApiBaseForTests(baseFor(server)));
+    const ApiResult created = api.createCalendarEvent(
+        QStringLiteral("calendar-token"), scopesFor(Capability::CalendarEventWrite),
+        QStringLiteral("primary"), QStringLiteral(" Plan "), QStringLiteral("Revisar roadmap"),
+        QStringLiteral("2026-11-20T10:00:00-03:00"),
+        QStringLiteral("2026-11-20T10:30:00-03:00"),
+        QStringLiteral("America/Argentina/Buenos_Aires"));
+    QVERIFY2(created.ok, qPrintable(created.error));
+    QCOMPARE(server.requestCount(), 1);
+    const QByteArray request = server.lastRequest();
+    QVERIFY(request.startsWith(
+        QByteArrayLiteral("POST /calendar/v3/calendars/primary/events ")));
+    const qsizetype bodyStart = request.indexOf(QByteArrayLiteral("\r\n\r\n")) + 4;
+    const QJsonObject payload = QJsonDocument::fromJson(request.mid(bodyStart)).object();
+    QCOMPARE(payload.value(QStringLiteral("summary")).toString(), QStringLiteral("Plan"));
+    QCOMPARE(payload.value(QStringLiteral("start")).toObject()
+                 .value(QStringLiteral("timeZone")).toString(),
+             QStringLiteral("America/Argentina/Buenos_Aires"));
+    QCOMPARE(payload.value(QStringLiteral("end")).toObject()
+                 .value(QStringLiteral("dateTime")).toString(),
+             QStringLiteral("2026-11-20T10:30:00-03:00"));
+    QVERIFY(!payload.contains(QStringLiteral("attendees")));
+
+    const ApiResult invalidRange = api.createCalendarEvent(
+        QStringLiteral("token"), scopesFor(Capability::CalendarEventWrite),
+        QStringLiteral("primary"), QStringLiteral("Plan"), {},
+        QStringLiteral("2026-11-20T11:00:00-03:00"),
+        QStringLiteral("2026-11-20T10:00:00-03:00"),
+        QStringLiteral("America/Argentina/Buenos_Aires"));
+    QVERIFY(!invalidRange.ok);
+    const ApiResult invalidZone = api.createCalendarEvent(
+        QStringLiteral("token"), scopesFor(Capability::CalendarEventWrite),
+        QStringLiteral("primary"), QStringLiteral("Plan"), {},
+        QStringLiteral("2026-11-20T10:00:00-03:00"),
+        QStringLiteral("2026-11-20T11:00:00-03:00"), QStringLiteral("Not/AZone"));
+    QVERIFY(!invalidZone.ok);
+    const ApiResult conflictingZone = api.createCalendarEvent(
+        QStringLiteral("token"), scopesFor(Capability::CalendarEventWrite),
+        QStringLiteral("primary"), QStringLiteral("Plan"), {},
+        QStringLiteral("2026-11-20T10:00:00-03:00"),
+        QStringLiteral("2026-11-20T11:00:00-03:00"), QStringLiteral("Europe/London"));
+    QVERIFY(!conflictingZone.ok);
+    QCOMPARE(server.requestCount(), 1);
+
+    ApiEndpointStub ambiguousServer;
+    QVERIFY(ambiguousServer.listen(QHostAddress::LocalHost, 0));
+    ambiguousServer.setResponseSequence({{503, QByteArrayLiteral("{\"error\":\"temporary\"}")},
+                                         {200, QByteArrayLiteral("{\"id\":\"event-2\"}")}});
+    GoogleWorkspaceApi ambiguousApi;
+    QVERIFY(ambiguousApi.setApiBaseForTests(baseFor(ambiguousServer)));
+    const ApiResult uncertain = ambiguousApi.createCalendarEvent(
+        QStringLiteral("token"), scopesFor(Capability::CalendarEventWrite),
+        QStringLiteral("primary"), QStringLiteral("Plan"), {},
+        QStringLiteral("2026-11-20T10:00:00-03:00"),
+        QStringLiteral("2026-11-20T11:00:00-03:00"),
+        QStringLiteral("America/Argentina/Buenos_Aires"));
+    QVERIFY(!uncertain.ok);
+    QVERIFY(uncertain.error.contains(QStringLiteral("Revisá el calendario")));
+    QCOMPARE(ambiguousServer.requestCount(), 1);
 }
 
 void GoogleWorkspaceApiTests::calendarAndTasksBuildReadOnlyRequests()

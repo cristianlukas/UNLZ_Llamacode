@@ -24,6 +24,7 @@ class AgentWireTests : public QObject
 private slots:
     void initTestCase();
     void googleWorkspaceReadToolsAreCataloged();
+    void localReminderToolsAreCataloged();
     void computerUse_asksBeforeDesktopTurnThenRunsInBackground();
     void computerUse_superAgentAndPlainChatDoNotAsk();
     void computerUse_cancelDropsTheRequest();
@@ -118,9 +119,11 @@ void AgentWireTests::googleWorkspaceReadToolsAreCataloged()
     QVERIFY(systemPrompt.contains(QStringLiteral("no autorizan acciones")));
     const QStringList googleTools{
         QStringLiteral("google_gmail_search"), QStringLiteral("google_gmail_read"),
+        QStringLiteral("google_gmail_create_draft"),
         QStringLiteral("google_calendar_events"), QStringLiteral("google_calendar_freebusy"),
+        QStringLiteral("google_calendar_create_event"),
         QStringLiteral("google_tasks_lists"),
-        QStringLiteral("google_tasks_list")};
+        QStringLiteral("google_tasks_list"), QStringLiteral("google_tasks_create")};
     QSet<QString> schemaNames;
     for (const QJsonValue &value : LlamaAgentBackend::toolSchemas())
         schemaNames.insert(value.toObject().value(QStringLiteral("function")).toObject()
@@ -130,6 +133,36 @@ void AgentWireTests::googleWorkspaceReadToolsAreCataloged()
         if (name.startsWith(QLatin1String("google_")))
             QVERIFY2(!name.contains(QStringLiteral("_write")), qPrintable(name));
     }
+    bool foundTaskCreate = false;
+    for (const QJsonValue &value : LlamaAgentBackend::toolSchemas()) {
+        const QJsonObject fn = value.toObject().value(QStringLiteral("function")).toObject();
+        if (fn.value(QStringLiteral("name")).toString() != QLatin1String("google_tasks_create"))
+            continue;
+        foundTaskCreate = true;
+        const QJsonObject parameters = fn.value(QStringLiteral("parameters")).toObject();
+        const QJsonArray required = parameters.value(QStringLiteral("required")).toArray();
+        QVERIFY(required.contains(QStringLiteral("task_list_id")));
+        QVERIFY(required.contains(QStringLiteral("title")));
+        QVERIFY(!required.contains(QStringLiteral("due_date")));
+        QVERIFY(fn.value(QStringLiteral("description")).toString()
+                    .contains(QStringLiteral("aprobación humana")));
+    }
+    QVERIFY(foundTaskCreate);
+    bool foundEventCreate = false;
+    for (const QJsonValue &value : LlamaAgentBackend::toolSchemas()) {
+        const QJsonObject fn = value.toObject().value(QStringLiteral("function")).toObject();
+        if (fn.value(QStringLiteral("name")).toString() != QLatin1String("google_calendar_create_event"))
+            continue;
+        foundEventCreate = true;
+        const QJsonObject parameters = fn.value(QStringLiteral("parameters")).toObject();
+        const QJsonObject properties = parameters.value(QStringLiteral("properties")).toObject();
+        QVERIFY(!properties.contains(QStringLiteral("attendees")));
+        QVERIFY(parameters.value(QStringLiteral("required")).toArray()
+                    .contains(QStringLiteral("time_zone")));
+        QVERIFY(fn.value(QStringLiteral("description")).toString()
+                    .contains(QStringLiteral("sin invitados")));
+    }
+    QVERIFY(foundEventCreate);
     for (const QJsonValue &value : LlamaAgentBackend::toolSchemas()) {
         const QJsonObject fn = value.toObject().value(QStringLiteral("function")).toObject();
         if (fn.value(QStringLiteral("name")).toString() != QLatin1String("google_calendar_freebusy"))
@@ -143,6 +176,29 @@ void AgentWireTests::googleWorkspaceReadToolsAreCataloged()
         return;
     }
     QFAIL("google_calendar_freebusy schema not found");
+}
+
+void AgentWireTests::localReminderToolsAreCataloged()
+{
+    QSet<QString> schemaNames;
+    for (const QJsonValue &value : LlamaAgentBackend::toolSchemas())
+        schemaNames.insert(value.toObject().value(QStringLiteral("function")).toObject()
+                               .value(QStringLiteral("name")).toString());
+    for (const QString &name : {QStringLiteral("local_reminder_create"),
+                                QStringLiteral("local_reminder_list"),
+                                QStringLiteral("local_reminder_cancel")})
+        QVERIFY2(schemaNames.contains(name), qPrintable(name));
+    for (const QJsonValue &value : LlamaAgentBackend::toolSchemas()) {
+        const QJsonObject fn = value.toObject().value(QStringLiteral("function")).toObject();
+        if (fn.value(QStringLiteral("name")).toString() != QLatin1String("local_reminder_create"))
+            continue;
+        const QJsonObject parameters = fn.value(QStringLiteral("parameters")).toObject();
+        const QJsonObject properties = parameters.value(QStringLiteral("properties")).toObject();
+        QCOMPARE(properties.value(QStringLiteral("due_at")).toObject()
+                     .value(QStringLiteral("type")).toString(), QStringLiteral("string"));
+        QVERIFY(parameters.value(QStringLiteral("required")).toArray()
+                    .contains(QStringLiteral("due_at")));
+    }
 }
 
 void AgentWireTests::stablePhasePrefix_keepsSystemPromptInvariant()

@@ -19,6 +19,7 @@ private slots:
     void rejectsInvalidTokenAndEmptyText();
     void acceptsAndDeduplicatesMessages();
     void completesMessageAndCreatesNotification();
+    void notificationEventIdIsIdempotentAcrossRestart();
     void servesAuthenticatedHttpEndpoint();
 };
 
@@ -103,6 +104,36 @@ void AssistantRuntimeTests::completesMessageAndCreatesNotification()
     QCOMPARE(runtime.notifications().last().toMap().value(QStringLiteral("type")).toString(),
              QStringLiteral("assistant.reply"));
     QVERIFY(!runtime.completeMessage(QStringLiteral("missing"), QString(), true));
+}
+
+void AssistantRuntimeTests::notificationEventIdIsIdempotentAcrossRestart()
+{
+    const QString eventId = QStringLiteral("local-reminder-stable-id");
+    {
+        AssistantRuntime runtime;
+        runtime.clearNotifications();
+        QSignalSpy addedSpy(&runtime, &AssistantRuntime::notificationAdded);
+        bool alreadyPresent = true;
+        QVERIFY(runtime.addNotification({
+            {QStringLiteral("eventId"), eventId},
+            {QStringLiteral("type"), QStringLiteral("local.reminder")},
+            {QStringLiteral("text"), QStringLiteral("Revisar la entrega")}}, &alreadyPresent));
+        QVERIFY(!alreadyPresent);
+        QCOMPARE(addedSpy.size(), 1);
+        QVERIFY(runtime.addNotification({
+            {QStringLiteral("eventId"), eventId},
+            {QStringLiteral("type"), QStringLiteral("local.reminder")},
+            {QStringLiteral("text"), QStringLiteral("Revisar la entrega")}}, &alreadyPresent));
+        QVERIFY(alreadyPresent);
+        QCOMPARE(addedSpy.size(), 1);
+    }
+    AssistantRuntime restored;
+    bool alreadyPresent = false;
+    QVERIFY(restored.addNotification({
+        {QStringLiteral("eventId"), eventId},
+        {QStringLiteral("type"), QStringLiteral("local.reminder")}}, &alreadyPresent));
+    QVERIFY(alreadyPresent);
+    QCOMPARE(restored.notifications().size(), 1);
 }
 
 void AssistantRuntimeTests::servesAuthenticatedHttpEndpoint()

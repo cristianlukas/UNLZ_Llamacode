@@ -27,6 +27,7 @@ public:
     void setAvailableForTest(bool available) { m_availableForTest = available; }
 
     Q_INVOKABLE void setTeachState(const QString &state);
+    void showNotification(const QString &title, const QString &body);
     QMenu *menuForTest() const { return m_menu; }
     Q_INVOKABLE void setMenuTexts(const QString &open, const QString &pause,
                                   const QString &resume, const QString &finish,

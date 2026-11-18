@@ -2948,7 +2948,9 @@ Item {
                             Text {
                                 id: externalWarn
                                 anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 8 }
-                                text: "Escritura externa MCP: se ejecutará exactamente el payload mostrado. La huella y el recibo quedarán auditados."
+                                text: approvalCard.tool.tool === "google_gmail_create_draft"
+                                      ? "Se guardará este contenido en Borradores de Gmail; no se enviará. La aprobación vale sólo para esta cuenta y este contenido."
+                                      : "Escritura externa MCP: se ejecutará exactamente el payload mostrado. La huella y el recibo quedarán auditados."
                                 color: Theme.warnText; font { pixelSize: 11; bold: true }
                                 wrapMode: Text.WordWrap
                             }
@@ -3035,6 +3037,7 @@ Item {
                                 onClicked: App.approveAgentTool(approvalCard.toolId, false)
                             }
                             LcButton {
+                                visible: approvalCard.tool.tool !== "google_gmail_create_draft"
                                 text: "Siempre"; secondary: true
                                 onClicked: App.approveAgentTool(approvalCard.toolId, true)
                             }

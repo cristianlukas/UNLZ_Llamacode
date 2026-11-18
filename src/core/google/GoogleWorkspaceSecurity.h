@@ -40,6 +40,7 @@ QStringList scopesFor(const QList<Capability> &capabilities);
 QStringList knownScopes();
 bool grantsCapability(Capability capability, const QStringList &grantedScopes);
 bool requiresExplicitApproval(Capability capability);
+bool requiresExplicitApproval(const QString &toolName);
 QString capabilityName(Capability capability);
 
 // PKCE helpers are pure and usable in tests; authorization URLs always target

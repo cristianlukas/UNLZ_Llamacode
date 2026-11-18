@@ -83,6 +83,13 @@ void TrayController::setTeachState(const QString &state)
     rebuildMenu();
 }
 
+void TrayController::showNotification(const QString &title, const QString &body)
+{
+    if (!isAvailable() || !m_tray->isVisible()) return;
+    m_tray->showMessage(title.isEmpty() ? QStringLiteral("Ingi") : title,
+                        body, QSystemTrayIcon::Information, 10000);
+}
+
 void TrayController::setMenuTexts(const QString &open, const QString &pause,
                                   const QString &resume, const QString &finish,
                                   const QString &cancel, const QString &quit)

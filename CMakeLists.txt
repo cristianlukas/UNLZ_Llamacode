@@ -185,6 +185,7 @@ set(CORE_SOURCES
     src/core/tasks/CronSchedule.cpp
     src/core/tasks/TaskSchedule.cpp
     src/core/tasks/TaskScheduler.cpp
+    src/core/tasks/LocalReminderStore.cpp
     src/core/tasks/SchedulerDaemonRegistration.cpp
     src/core/tasks/WorkflowEngine.cpp
     src/core/tasks/WorkflowRunner.cpp
@@ -318,6 +319,7 @@ set(HEADERS
     src/core/tasks/CronSchedule.h
     src/core/tasks/TaskSchedule.h
     src/core/tasks/TaskScheduler.h
+    src/core/tasks/LocalReminderStore.h
     src/core/tasks/SchedulerDaemonRegistration.h
     src/core/tasks/WorkflowEngine.h
     src/core/tasks/WorkflowRunner.h
@@ -798,6 +800,7 @@ if (BUILD_TESTS)
     add_lc_test(test_google_workspace_security tests/test_google_workspace_security.cpp)
     add_lc_test(test_google_workspace_auth tests/test_google_workspace_auth.cpp)
     add_lc_test(test_google_workspace_api tests/test_google_workspace_api.cpp)
+    add_lc_test(test_local_reminders tests/test_local_reminders.cpp)
     add_lc_test(test_voice              tests/test_voice.cpp)
     add_lc_test(test_tasks              tests/test_tasks.cpp)
     add_lc_test(test_engineering_workflows tests/test_engineering_workflows.cpp)

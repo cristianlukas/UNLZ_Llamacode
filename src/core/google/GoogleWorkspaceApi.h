@@ -17,8 +17,8 @@ struct ApiResult {
     int retryAfterMs = 0;
 };
 
-// Read-only Gmail, Calendar and Tasks REST client. It accepts only API paths
-// assembled by this class and never logs bearer tokens or returned content.
+// Google Workspace REST client. Mutations have a separate no-retry path and
+// never log bearer tokens or returned content.
 class GoogleWorkspaceApi
 {
 public:
@@ -29,6 +29,17 @@ public:
                           int maxResults = 20) const;
     ApiResult readGmailMessage(const QString &accessToken, const QStringList &grantedScopes,
                                const QString &messageId) const;
+    ApiResult createGmailDraft(const QString &accessToken, const QStringList &grantedScopes,
+                               const QStringList &recipients, const QStringList &ccRecipients,
+                               const QString &subject, const QString &body) const;
+    ApiResult createTask(const QString &accessToken, const QStringList &grantedScopes,
+                         const QString &taskListId, const QString &title,
+                         const QString &notes, const QString &dueDate) const;
+    ApiResult createCalendarEvent(const QString &accessToken,
+                                  const QStringList &grantedScopes,
+                                  const QString &calendarId, const QString &summary,
+                                  const QString &description, const QString &startDateTime,
+                                  const QString &endDateTime, const QString &timeZone) const;
     ApiResult listCalendarEvents(const QString &accessToken, const QStringList &grantedScopes,
                                  const QString &calendarId, const QString &timeMin,
                                  const QString &timeMax, int maxResults = 25) const;
@@ -51,6 +62,9 @@ private:
     ApiResult post(Capability capability, const QString &accessToken,
                    const QStringList &grantedScopes, const QString &path,
                    const QJsonObject &body) const;
+    ApiResult postMutation(Capability capability, const QString &accessToken,
+                           const QStringList &grantedScopes, const QString &path,
+                           const QJsonObject &body) const;
     ApiResult send(Capability capability, const QString &accessToken,
                    const QStringList &grantedScopes, const QByteArray &method,
                    const QString &path, const QUrlQuery &query,
@@ -58,7 +72,7 @@ private:
     ApiResult sendOnce(Capability capability, const QString &accessToken,
                        const QStringList &grantedScopes, const QByteArray &method,
                        const QString &path, const QUrlQuery &query,
-                       const QByteArray &body) const;
+                       const QByteArray &body, bool externalMutation = false) const;
     QUrl m_apiBase;
     const std::atomic_bool *m_cancellationFlag = nullptr;
 };

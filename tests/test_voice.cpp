@@ -1666,6 +1666,20 @@ void TestVoice::assistantApprovalQuestion()
         QStringLiteral("en"));
     QVERIFY(en.contains(QStringLiteral("send an email")));
     QVERIFY(en.endsWith(QStringLiteral("Should I do it?")));
+    const QString taskQuestion = approvalQuestion(
+        {{QStringLiteral("tool"), QStringLiteral("google_tasks_create")},
+         {QStringLiteral("reason"), QStringLiteral("external_write")}},
+        QStringLiteral("es"));
+    QVERIFY(taskQuestion.contains(QStringLiteral("crear una tarea en Google Tasks")));
+    QVERIFY(taskQuestion.contains(QStringLiteral("Sale de esta PC")));
+    const QString eventQuestion = approvalQuestion(
+        {{QStringLiteral("tool"), QStringLiteral("google_calendar_create_event")}},
+        QStringLiteral("es"));
+    QVERIFY(eventQuestion.contains(QStringLiteral("crear un evento de Calendar sin invitados")));
+    const QString reminderQuestion = approvalQuestion(
+        {{QStringLiteral("tool"), QStringLiteral("local_reminder_create")}},
+        QStringLiteral("es"));
+    QVERIFY(reminderQuestion.contains(QStringLiteral("crear un recordatorio local")));
 }
 
 QTEST_MAIN(TestVoice)

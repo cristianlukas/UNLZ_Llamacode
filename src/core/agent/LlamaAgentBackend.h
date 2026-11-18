@@ -1001,7 +1001,7 @@ private:
     // Aprobación en curso (1 tool a la vez)
     QString m_awaitId;              // id del tool_call esperando respuesta ("" = ninguno)
     QJsonObject m_awaitCall;
-    QString m_awaitPayloadHash;     // aprobación ligada al payload MCP exacto
+    QString m_awaitPayloadHash;     // aprobación ligada al payload MCP/Google exacto
     QString m_correlationId;        // un ID por turno, propagado a tools/recibos
     QString m_workClaimId;          // claim expirable del objetivo actual en el proyecto
 

@@ -254,9 +254,22 @@ iniciadas por el usuario siguen siendo una función separada.
   habilitadas.
 - **Correo**: IMAP/POP3/SMTP conectan contra el proveedor configurado; enviar un
   mail es una acción externa irreversible.
-- **Google Workspace**: las tools de lectura acceden a Gmail, Calendar y Tasks
-  sólo cuando el usuario conecta una cuenta en Configuración. Se solicitan scopes
-  de lectura; el refresh token no se guarda en archivos plaintext.
+- **Google Workspace**: Gmail, Calendar y Tasks empiezan con scopes de lectura.
+  Si el usuario los habilita aparte, Ingi puede crear borradores Gmail tras una
+  aprobación por cada acción. El scope `gmail.compose` también permite técnicamente
+  enviar correo; LlamaCode no ofrece una herramienta de envío Google. Los datos del
+  borrador se envían a Google cuando se aprueba su creación. Opcionalmente, puede
+  crear tareas Google tras cada aprobación; el permiso de Tasks también permite
+  editar, organizar y borrar tareas, pero la app no expone esas operaciones. El
+  vencimiento de Tasks es una fecha programada y no conserva hora. También puede
+  crear eventos personales sin invitados tras aprobación; el permiso Calendar es
+  amplio y permite leer, editar y borrar eventos, mientras que LlamaCode sólo ofrece
+  creación sin asistentes. Puede haber recordatorios personales según los ajustes
+  de Calendar. El refresh token no se guarda en archivos plaintext.
+- **Recordatorios de Ingi**: se guardan en el perfil local y no envían datos a
+  servicios externos. Las notificaciones del sistema dependen de que LlamaCode
+  esté abierto y haya bandeja disponible; si la app estaba cerrada al vencer,
+  entrega el recordatorio pendiente cuando se vuelve a abrir.
 - **STT/TTS cloud**: el modo Charla puede usar endpoints locales o remotos. Si se
   configura un proveedor remoto, el audio/texto viaja a ese proveedor.
 - **STT local gestionado**: si al iniciar Charla falta el modelo de voz configurado,
@@ -1078,13 +1091,25 @@ de las pantallas y computer-use), el turno de voz va al agente, que opera la PC
 hace fallback a voz-a-voz simple sobre el backend de chat (sesiones e historial
 incluidos).
 
-- **Google Workspace (lectura)**: desde Configuración → Correo podés conectar
+- **Google Workspace**: desde Configuración → Correo podés conectar
   Gmail, Google Calendar y Google Tasks con OAuth de escritorio y PKCE. Ingresá
   un OAuth Client ID de tipo *Desktop app* creado en Google Cloud. Ingi puede
   buscar/leer correos, listar eventos, consultar disponibilidad sin leer detalles
-  de eventos y consultar listas/tareas; no puede enviar ni modificar datos. El
-  contenido de esos servicios se marca como externo y no confiable, y Modo
-  privacidad bloquea estas tools. El refresh token sólo se
+  de eventos y consultar listas/tareas. La lectura es el permiso inicial. Como
+  opción adicional, Gmail compose permite gestionar borradores y enviar correo;
+  LlamaCode sólo expone crear borradores, nunca enviarlos. Cada borrador muestra
+  destinatarios, asunto y cuerpo exactos y pide aprobación incluso en modos
+  automáticos. Si la conexión falla después del POST, Ingi indica que hay que
+  revisar Borradores antes de repetirlo. Se pueden habilitar aparte la creación de
+  tareas y eventos personales: las tarjetas muestran el payload exacto y requieren
+  aprobación por acción incluso en modos automáticos. Google Tasks usa una fecha
+  `YYYY-MM-DD` que sólo representa el día programado, no un plazo límite, y no
+  conserva hora; para hora exacta, usá un recordatorio local.
+  Los eventos no admiten invitados, así LlamaCode no envía invitaciones. Los scopes
+  de escritura son más amplios que las tools publicadas y la pantalla de ajustes
+  lo explica antes del consentimiento. Si una escritura no devuelve confirmación,
+  revisá Google antes de repetirla: la app no reintenta POST mutadores. El contenido de los servicios se marca
+  como externo y no confiable, y Modo privacidad bloquea estas tools. El refresh token sólo se
   conserva entre reinicios con keyring del sistema o DPAPI en Windows; sin ese
   backend, la conexión dura hasta cerrar LlamaCode. Esta primera integración tiene
   pruebas mock; todavía requiere validación con una cuenta Google de ensayo.
@@ -1093,6 +1118,11 @@ incluidos).
   acceso desde la seguridad de la cuenta Google. El estado y los gates siguientes
   están en
   [`docs/ingi-charla-openjarvis-dodaios-plan.md`](docs/ingi-charla-openjarvis-dodaios-plan.md).
+- **Recordatorios locales**: Ingi puede crear, listar y cancelar recordatorios
+  de una sola vez con fecha RFC3339 y zona explícita. No usa Calendar/Tasks ni
+  servicios externos. Se notifican mientras LlamaCode está abierto y, si vencen
+  con la app cerrada, al volver a abrirla; todavía no hay servicio residente que
+  notifique con LlamaCode cerrado.
 - **STT y TTS** van por endpoints **OpenAI-compat** (`/v1/audio/transcriptions`,
   `/v1/audio/speech`). Una sola ruta de código: **local** (whisper.cpp server,
   openedai-speech, piper-http en localhost, sin key) o **cloud** (URL remota +

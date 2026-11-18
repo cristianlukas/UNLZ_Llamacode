@@ -23,6 +23,7 @@
 #include "core/automation/DesktopComputerUse.h"
 #include "core/automation/DesktopRecoveryPolicy.h"
 #include "core/automation/AutomationArtifactStore.h"
+#include "core/tasks/LocalReminderStore.h"
 #include "core/mail/MailClient.h" // tools email_send/list/read
 #include "core/google/GoogleWorkspaceApi.h"
 
@@ -2069,6 +2070,58 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         { DesktopAutomationBackend::setPhysicalInputBlocked(on); }
         ~PhysicalInputScope() { DesktopAutomationBackend::setPhysicalInputBlocked(previous); }
     } physicalScope(background);
+    if (name.startsWith(QLatin1String("local_reminder_"))) {
+        if (name == QLatin1String("local_reminder_create")) {
+            const QString dueAt = args.value(QStringLiteral("due_at")).toString();
+            const QString title = args.value(QStringLiteral("title")).toString();
+            const QString note = args.value(QStringLiteral("note")).toString();
+            const QByteArray canonical = ToolExecutionSafety::canonicalJson(QJsonObject{
+                {QStringLiteral("correlationId"), m_correlationId},
+                {QStringLiteral("due_at"), dueAt},
+                {QStringLiteral("title"), title.trimmed()},
+                {QStringLiteral("note"), note.trimmed()}});
+            const QString idempotencyKey = QString::fromLatin1(QCryptographicHash::hash(
+                canonical, QCryptographicHash::Sha256).toHex());
+            QString error;
+            bool duplicate = false;
+            const QString id = LocalReminderStore::create(
+                dueAt, title, note, idempotencyKey, &duplicate, &error);
+            if (id.isEmpty()) return QStringLiteral("[local_reminder_create: %1]").arg(error);
+            if (ok) *ok = true;
+            return QStringLiteral("Recordatorio local %1 %2.")
+                .arg(id, duplicate ? QStringLiteral("ya existía") : QStringLiteral("guardado"));
+        }
+        if (name == QLatin1String("local_reminder_list")) {
+            QString error;
+            const QVariantList reminders = LocalReminderStore::all(&error);
+            if (!error.isEmpty()) return QStringLiteral("[local_reminder_list: %1]").arg(error);
+            QString output = QStringLiteral("Recordatorios locales:");
+            int shown = 0;
+            for (const QVariant &value : reminders) {
+                const QVariantMap reminder = value.toMap();
+                if (reminder.value(QStringLiteral("status")).toString() != QLatin1String("pending"))
+                    continue;
+                output += QStringLiteral("\n- %1 | %2 | %3 | id:%4")
+                    .arg(reminder.value(QStringLiteral("dueAt")).toString(),
+                         reminder.value(QStringLiteral("title")).toString(),
+                         reminder.value(QStringLiteral("note")).toString(),
+                         reminder.value(QStringLiteral("id")).toString());
+                if (++shown >= 50) break;
+            }
+            if (shown == 0) output += QStringLiteral("\n(sin pendientes)");
+            if (ok) *ok = true;
+            return output;
+        }
+        if (name == QLatin1String("local_reminder_cancel")) {
+            QString error;
+            if (!LocalReminderStore::cancel(
+                    args.value(QStringLiteral("reminder_id")).toString(), &error))
+                return QStringLiteral("[local_reminder_cancel: %1]").arg(error);
+            if (ok) *ok = true;
+            return QStringLiteral("Recordatorio local cancelado.");
+        }
+        return QStringLiteral("[tool local reminder desconocida: %1]").arg(name);
+    }
     if (DesktopComputerUse::isDesktopActionTool(name)) {
         QString guardError;
         if (!m_desktopProcessGuard.acquire(&guardError))
@@ -4587,6 +4640,32 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                          googleHeader(payload, QStringLiteral("Subject")),
                          googleHeader(payload, QStringLiteral("Date")), body);
             }
+        } else if (name == QLatin1String("google_gmail_create_draft")) {
+            QStringList recipients;
+            for (const QJsonValue &value : args.value(QStringLiteral("recipients")).toArray())
+                recipients.append(value.toString());
+            QStringList ccRecipients;
+            for (const QJsonValue &value : args.value(QStringLiteral("cc_recipients")).toArray())
+                ccRecipients.append(value.toString());
+            response = api.createGmailDraft(
+                m_googleAccessToken, m_googleGrantedScopes, recipients, ccRecipients,
+                args.value(QStringLiteral("subject")).toString(),
+                args.value(QStringLiteral("body")).toString());
+            if (response.ok) {
+                output = QStringLiteral("Borrador creado en Gmail (id: %1). No se envió.")
+                    .arg(response.data.value(QStringLiteral("id")).toString());
+            }
+        } else if (name == QLatin1String("google_tasks_create")) {
+            response = api.createTask(
+                m_googleAccessToken, m_googleGrantedScopes,
+                args.value(QStringLiteral("task_list_id")).toString(),
+                args.value(QStringLiteral("title")).toString(),
+                args.value(QStringLiteral("notes")).toString(),
+                args.value(QStringLiteral("due_date")).toString());
+            if (response.ok) {
+                output = QStringLiteral("Tarea creada en Google Tasks (id: %1).")
+                    .arg(response.data.value(QStringLiteral("id")).toString());
+            }
         } else if (name == QLatin1String("google_calendar_events")) {
             QString timeMin = args.value(QStringLiteral("time_min")).toString().trimmed();
             QString timeMax = args.value(QStringLiteral("time_max")).toString().trimmed();
@@ -4659,6 +4738,19 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                                  range.value(QStringLiteral("end")).toString());
                     }
                 }
+            }
+        } else if (name == QLatin1String("google_calendar_create_event")) {
+            response = api.createCalendarEvent(
+                m_googleAccessToken, m_googleGrantedScopes,
+                args.value(QStringLiteral("calendar_id")).toString(QStringLiteral("primary")),
+                args.value(QStringLiteral("summary")).toString(),
+                args.value(QStringLiteral("description")).toString(),
+                args.value(QStringLiteral("start_datetime")).toString(),
+                args.value(QStringLiteral("end_datetime")).toString(),
+                args.value(QStringLiteral("time_zone")).toString());
+            if (response.ok) {
+                output = QStringLiteral("Evento creado en Google Calendar sin invitados (id: %1).")
+                    .arg(response.data.value(QStringLiteral("id")).toString());
             }
         } else if (name == QLatin1String("google_tasks_lists")) {
             response = api.listTaskLists(

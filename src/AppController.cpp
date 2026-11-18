@@ -1645,6 +1645,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(m_googleWorkspaceAuth,
             &GoogleWorkspaceSecurity::GoogleWorkspaceAuth::tokensReady, this,
             [this](const GoogleWorkspaceSecurity::TokenSet &tokens) {
+        m_googleWorkspaceKeepCredentialsOnAuthFailure = false;
         m_googleAccessToken = tokens.accessToken;
         if (!tokens.refreshToken.isEmpty()) m_googleRefreshToken = tokens.refreshToken;
         if (!tokens.grantedScopes.isEmpty()) m_googleGrantedScopes = tokens.grantedScopes;
@@ -1657,9 +1658,31 @@ AppController::AppController(QObject *parent) : QObject(parent)
         const qint64 refreshInSeconds = qMax<qint64>(30, tokens.expiresInSeconds - 60);
         m_googleWorkspaceRefreshTimer->start(static_cast<int>(
             qMin<qint64>(refreshInSeconds * 1000, std::numeric_limits<int>::max())));
+        const bool canCreateDrafts = GoogleWorkspaceSecurity::grantsCapability(
+            GoogleWorkspaceSecurity::Capability::GmailDraft, m_googleGrantedScopes);
+        const bool canCreateTasks = GoogleWorkspaceSecurity::grantsCapability(
+            GoogleWorkspaceSecurity::Capability::TasksWrite, m_googleGrantedScopes);
+        const bool canCreateEvents = GoogleWorkspaceSecurity::grantsCapability(
+            GoogleWorkspaceSecurity::Capability::CalendarEventWrite, m_googleGrantedScopes);
+        const bool canReadWorkspace = GoogleWorkspaceSecurity::grantsCapability(
+                GoogleWorkspaceSecurity::Capability::GmailRead, m_googleGrantedScopes)
+            || GoogleWorkspaceSecurity::grantsCapability(
+                GoogleWorkspaceSecurity::Capability::CalendarEventsRead, m_googleGrantedScopes)
+            || GoogleWorkspaceSecurity::grantsCapability(
+                GoogleWorkspaceSecurity::Capability::CalendarFreeBusy, m_googleGrantedScopes)
+            || GoogleWorkspaceSecurity::grantsCapability(
+                GoogleWorkspaceSecurity::Capability::TasksRead, m_googleGrantedScopes);
+        QStringList enabledWriteScopes;
+        if (canCreateDrafts) enabledWriteScopes.append(QStringLiteral("Gmail compose"));
+        if (canCreateTasks) enabledWriteScopes.append(QStringLiteral("Google Tasks write"));
+        if (canCreateEvents) enabledWriteScopes.append(QStringLiteral("Calendar events write"));
+        const QString writeStatus = enabledWriteScopes.isEmpty()
+            ? QString() : QStringLiteral(" · %1").arg(enabledWriteScopes.join(QStringLiteral(" + ")));
         m_googleWorkspaceStatus = persisted
-            ? QStringLiteral("Conectado · permisos de lectura")
-            : QStringLiteral("Conectado hasta cerrar LlamaCode · token sólo en memoria");
+            ? QStringLiteral("Conectado%1").arg(writeStatus.isEmpty() && !canReadWorkspace
+                ? QStringLiteral(" · sin permisos de lectura") : writeStatus)
+            : QStringLiteral("Conectado hasta cerrar LlamaCode · token sólo en memoria%1")
+                .arg(writeStatus);
         if (auto *backend = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
             backend->setGoogleWorkspaceCredentials(m_googleAccessToken, m_googleGrantedScopes);
         emit googleWorkspaceChanged();
@@ -1667,6 +1690,15 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(m_googleWorkspaceAuth,
             &GoogleWorkspaceSecurity::GoogleWorkspaceAuth::operationFailed, this,
             [this](const QString &message) {
+        const bool keepReadConnection = m_googleWorkspaceKeepCredentialsOnAuthFailure;
+        m_googleWorkspaceKeepCredentialsOnAuthFailure = false;
+        if (keepReadConnection && !m_googleAccessToken.isEmpty()) {
+            m_googleWorkspaceStatus = QStringLiteral(
+                "No se agregó el permiso adicional; la conexión previa sigue activa. %1")
+                .arg(message);
+            emit googleWorkspaceChanged();
+            return;
+        }
         m_googleWorkspaceRefreshTimer->stop();
         m_googleAccessToken.clear();
         if (auto *backend = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
@@ -2131,6 +2163,40 @@ AppController::AppController(QObject *parent) : QObject(parent)
                          event.value(QStringLiteral("type"),
                                      QStringLiteral("notification")).toString());
     });
+
+    // Los recordatorios son locales y de una sola ejecución. Se entregan como
+    // evento persistente del asistente y como notificación de la bandeja cuando
+    // el entorno de escritorio ofrece ese canal.
+    m_localReminderScheduler = new LocalReminderScheduler(this);
+    connect(m_localReminderScheduler, &LocalReminderScheduler::reminderDue, this,
+            [this](const QVariantMap &reminder) {
+        const QString title = reminder.value(QStringLiteral("title")).toString();
+        const QString note = reminder.value(QStringLiteral("note")).toString();
+        const QString body = note.isEmpty() ? title : title + QStringLiteral("\n") + note;
+        const QString id = reminder.value(QStringLiteral("id")).toString();
+        bool alreadyPresent = false;
+        const bool persisted = m_assistantRuntime.addNotification({
+            {QStringLiteral("eventId"), QStringLiteral("local-reminder-%1").arg(id)},
+            {QStringLiteral("type"), QStringLiteral("local.reminder")},
+            {QStringLiteral("severity"), QStringLiteral("info")},
+            {QStringLiteral("reminderId"), id},
+            {QStringLiteral("title"), title},
+            {QStringLiteral("text"), body},
+            {QStringLiteral("dueAt"), reminder.value(QStringLiteral("dueAt"))}},
+            &alreadyPresent);
+        if (!persisted || !m_localReminderScheduler->acknowledge(id)) {
+            QTimer::singleShot(5000, m_localReminderScheduler,
+                               [scheduler = m_localReminderScheduler, id]() {
+                scheduler->retry(id);
+            });
+            return;
+        }
+        if (!alreadyPresent) emit localReminderNotificationRequested(title, body);
+    });
+    const QStringList applicationArguments = QCoreApplication::arguments();
+    const bool headlessProcess = applicationArguments.contains(QStringLiteral("--headless"))
+        || applicationArguments.contains(QStringLiteral("--agent-daemon"));
+    m_localReminderScheduler->setEnabled(!headlessProcess);
 
     // Scheduler de Automatizaciones (cron in-app). automationDue→runAutomation.
     // El toggle global persiste.
@@ -12422,6 +12488,7 @@ void AppController::setGoogleWorkspaceClientId(const QString &clientId)
 void AppController::connectGoogleWorkspace()
 {
     if (!m_googleWorkspaceAuth || m_googleWorkspaceAuth->busy()) return;
+    m_googleWorkspaceKeepCredentialsOnAuthFailure = false;
     if (m_googleWorkspaceClientId.isEmpty()) {
         m_googleWorkspaceStatus = QStringLiteral(
             "Ingresá el OAuth Client ID de tipo aplicación de escritorio.");
@@ -12440,8 +12507,57 @@ void AppController::connectGoogleWorkspace()
     }
 }
 
+void AppController::connectGoogleWorkspaceDrafts()
+{
+    if (!m_googleWorkspaceAuth || m_googleWorkspaceAuth->busy()
+        || m_googleAccessToken.isEmpty() || googleWorkspaceDraftsEnabled())
+        return;
+    m_googleWorkspaceKeepCredentialsOnAuthFailure = true;
+    const QList<GoogleWorkspaceSecurity::Capability> capabilities{
+        GoogleWorkspaceSecurity::Capability::GmailDraft};
+    if (!m_googleWorkspaceAuth->start(m_googleWorkspaceClientId, capabilities)) {
+        m_googleWorkspaceKeepCredentialsOnAuthFailure = false;
+        m_googleWorkspaceStatus = QStringLiteral(
+            "No pude iniciar la autorización adicional de Gmail. La conexión previa sigue activa.");
+        emit googleWorkspaceChanged();
+    }
+}
+
+void AppController::connectGoogleWorkspaceTaskCreate()
+{
+    if (!m_googleWorkspaceAuth || m_googleWorkspaceAuth->busy()
+        || m_googleAccessToken.isEmpty() || googleWorkspaceTaskCreateEnabled())
+        return;
+    m_googleWorkspaceKeepCredentialsOnAuthFailure = true;
+    const QList<GoogleWorkspaceSecurity::Capability> capabilities{
+        GoogleWorkspaceSecurity::Capability::TasksWrite};
+    if (!m_googleWorkspaceAuth->start(m_googleWorkspaceClientId, capabilities)) {
+        m_googleWorkspaceKeepCredentialsOnAuthFailure = false;
+        m_googleWorkspaceStatus = QStringLiteral(
+            "No pude iniciar la autorización adicional de Google Tasks. La conexión previa sigue activa.");
+        emit googleWorkspaceChanged();
+    }
+}
+
+void AppController::connectGoogleWorkspaceEventCreate()
+{
+    if (!m_googleWorkspaceAuth || m_googleWorkspaceAuth->busy()
+        || m_googleAccessToken.isEmpty() || googleWorkspaceEventCreateEnabled())
+        return;
+    m_googleWorkspaceKeepCredentialsOnAuthFailure = true;
+    const QList<GoogleWorkspaceSecurity::Capability> capabilities{
+        GoogleWorkspaceSecurity::Capability::CalendarEventWrite};
+    if (!m_googleWorkspaceAuth->start(m_googleWorkspaceClientId, capabilities)) {
+        m_googleWorkspaceKeepCredentialsOnAuthFailure = false;
+        m_googleWorkspaceStatus = QStringLiteral(
+            "No pude iniciar la autorización adicional de Calendar. La conexión previa sigue activa.");
+        emit googleWorkspaceChanged();
+    }
+}
+
 void AppController::disconnectGoogleWorkspace()
 {
+    m_googleWorkspaceKeepCredentialsOnAuthFailure = false;
     const QString tokenToRevoke = !m_googleRefreshToken.isEmpty()
         ? m_googleRefreshToken : m_googleAccessToken;
     if (m_googleWorkspaceAuth) m_googleWorkspaceAuth->cancel();

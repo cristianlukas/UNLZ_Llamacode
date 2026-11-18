@@ -1,6 +1,7 @@
 #include "GoogleWorkspaceApi.h"
 
 #include <QEventLoop>
+#include <QDate>
 #include <QDateTime>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -11,6 +12,7 @@
 #include <QSet>
 #include <QStandardPaths>
 #include <QTimer>
+#include <QTimeZone>
 #include <QUrlQuery>
 
 namespace GoogleWorkspaceSecurity {
@@ -39,6 +41,115 @@ bool safePageToken(const QString &token)
 {
     static const QRegularExpression safe(QStringLiteral("^[A-Za-z0-9_./+=-]{1,2048}$"));
     return safe.match(token).hasMatch();
+}
+
+bool validDraftAddress(const QString &raw)
+{
+    const QString address = raw.trimmed();
+    if (address.isEmpty() || address.size() > 254 || address.contains(QRegularExpression(
+            QStringLiteral("\\s|[\\x00-\\x1f\\x7f]"))))
+        return false;
+    const int at = address.indexOf(QLatin1Char('@'));
+    if (at <= 0 || at != address.lastIndexOf(QLatin1Char('@')) || at > 64)
+        return false;
+    const QString local = address.left(at);
+    if (local.startsWith(QLatin1Char('.')) || local.endsWith(QLatin1Char('.'))
+        || local.contains(QStringLiteral("..")))
+        return false;
+    static const QRegularExpression localPart(QStringLiteral(
+        "^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*$"));
+    if (!localPart.match(local).hasMatch()) return false;
+
+    const QString domain = address.mid(at + 1);
+    if (domain.size() > 253 || !domain.contains(QLatin1Char('.'))) return false;
+    static const QRegularExpression label(QStringLiteral(
+        "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$"));
+    const QStringList labels = domain.split(QLatin1Char('.'));
+    if (labels.size() < 2) return false;
+    for (const QString &part : labels)
+        if (!label.match(part).hasMatch()) return false;
+    return true;
+}
+
+bool validDraftAddresses(const QStringList &addresses, bool required)
+{
+    if (addresses.size() > 5 || (required && addresses.isEmpty())) return false;
+    QSet<QString> seen;
+    for (const QString &address : addresses) {
+        if (!validDraftAddress(address)) return false;
+        const QString normalized = address.trimmed().toLower();
+        if (seen.contains(normalized)) return false;
+        seen.insert(normalized);
+    }
+    return true;
+}
+
+QString foldedHeader(const QString &name, const QStringList &values,
+                     const QString &separator = QStringLiteral(", "))
+{
+    QString result = name + QStringLiteral(": ");
+    QString line = result;
+    for (int i = 0; i < values.size(); ++i) {
+        const QString delimiter = i == 0 ? QString() : separator;
+        const QString item = delimiter + values.at(i);
+        if (line.size() + item.size() > 78) {
+            if (i > 0 && separator == QLatin1String(", ")) result += QLatin1Char(',');
+            result += QStringLiteral("\r\n ");
+            line = QStringLiteral(" ");
+            result += values.at(i);
+            line += values.at(i);
+        } else {
+            result += item;
+            line += item;
+        }
+    }
+    return result + QStringLiteral("\r\n");
+}
+
+QString encodedSubject(const QString &subject)
+{
+    QStringList words;
+    QByteArray chunk;
+    for (qsizetype offset = 0; offset < subject.size();) {
+        const qsizetype count = subject.at(offset).isHighSurrogate()
+            && offset + 1 < subject.size() ? 2 : 1;
+        const QByteArray encoded = subject.mid(offset, count).toUtf8();
+        if (!chunk.isEmpty() && chunk.size() + encoded.size() > 42) {
+            words.append(QStringLiteral("=?UTF-8?B?%1?=")
+                .arg(QString::fromLatin1(chunk.toBase64())));
+            chunk.clear();
+        }
+        chunk += encoded;
+        offset += count;
+    }
+    if (!chunk.isEmpty())
+        words.append(QStringLiteral("=?UTF-8?B?%1?=")
+            .arg(QString::fromLatin1(chunk.toBase64())));
+    return words.join(QLatin1Char(' '));
+}
+
+QString foldedBase64Body(const QByteArray &body)
+{
+    const QByteArray encoded = body.toBase64();
+    QString result;
+    for (qsizetype offset = 0; offset < encoded.size(); offset += 76) {
+        if (!result.isEmpty()) result += QStringLiteral("\r\n");
+        result += QString::fromLatin1(encoded.mid(offset, 76));
+    }
+    return result;
+}
+
+QString uncertainDraftError()
+{
+    return QStringLiteral("No se pudo confirmar si Google guardó el borrador. Revisá la carpeta Borradores antes de volver a crearlo.");
+}
+
+QString uncertainMutationError(const QString &path)
+{
+    if (path.startsWith(QLatin1String("/gmail/"))) return uncertainDraftError();
+    if (path.startsWith(QLatin1String("/tasks/")))
+        return QStringLiteral("No se pudo confirmar si Google guardó la tarea. Revisá la lista de tareas antes de volver a crearla.");
+    return QStringLiteral("No se pudo confirmar si Google creó el evento. Revisá el calendario antes de volver a crearlo.");
 }
 
 QDateTime parseDateTime(const QString &value)
@@ -112,6 +223,121 @@ ApiResult GoogleWorkspaceApi::readGmailMessage(const QString &accessToken,
     parameters.addQueryItem(QStringLiteral("format"), QStringLiteral("full"));
     return get(Capability::GmailRead, accessToken, grantedScopes,
                QStringLiteral("/gmail/v1/users/me/messages/") + messageId, parameters);
+}
+
+ApiResult GoogleWorkspaceApi::createGmailDraft(const QString &accessToken,
+                                               const QStringList &grantedScopes,
+                                               const QStringList &recipients,
+                                               const QStringList &ccRecipients,
+                                               const QString &subject,
+                                               const QString &body) const
+{
+    static const QRegularExpression forbiddenHeaderCharacters(
+        QStringLiteral("[\\r\\n\\x00-\\x1f\\x7f]"));
+    static const QRegularExpression forbiddenBodyCharacters(
+        QStringLiteral("[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]"));
+    QStringList allRecipients = recipients;
+    allRecipients.append(ccRecipients);
+    QSet<QString> allRecipientIds;
+    bool duplicateAcrossRecipientGroups = false;
+    for (const QString &address : allRecipients) {
+        const QString normalized = address.trimmed().toLower();
+        if (allRecipientIds.contains(normalized)) duplicateAcrossRecipientGroups = true;
+        allRecipientIds.insert(normalized);
+    }
+    if (!validDraftAddresses(recipients, true)
+        || !validDraftAddresses(ccRecipients, false)
+        || duplicateAcrossRecipientGroups
+        || recipients.size() + ccRecipients.size() > 5
+        || subject.trimmed().isEmpty() || subject.size() > 300
+        || forbiddenHeaderCharacters.match(subject).hasMatch()
+        || body.trimmed().isEmpty() || body.size() > 8000
+        || forbiddenBodyCharacters.match(body).hasMatch())
+        return {false, 0, {}, QStringLiteral("El borrador tiene destinatarios, asunto o cuerpo inválidos o demasiado largos.")};
+
+    QByteArray mime;
+    mime += foldedHeader(QStringLiteral("To"), recipients).toUtf8();
+    if (!ccRecipients.isEmpty())
+        mime += foldedHeader(QStringLiteral("Cc"), ccRecipients).toUtf8();
+    mime += foldedHeader(QStringLiteral("Subject"), encodedSubject(subject).split(QLatin1Char(' ')),
+                         QStringLiteral(" ")).toUtf8();
+    mime += QByteArrayLiteral("MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n");
+    mime += foldedBase64Body(body.toUtf8()).toUtf8();
+    const QString raw = QString::fromLatin1(mime.toBase64(
+        QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals));
+    const QJsonObject payload{{QStringLiteral("message"),
+                               QJsonObject{{QStringLiteral("raw"), raw}}}};
+    return postMutation(Capability::GmailDraft, accessToken, grantedScopes,
+                        QStringLiteral("/gmail/v1/users/me/drafts"), payload);
+}
+
+ApiResult GoogleWorkspaceApi::createTask(const QString &accessToken,
+                                         const QStringList &grantedScopes,
+                                         const QString &taskListId,
+                                         const QString &title,
+                                         const QString &notes,
+                                         const QString &dueDate) const
+{
+    const QString normalizedTitle = title.trimmed();
+    const QString normalizedNotes = notes;
+    const QString normalizedDueDate = dueDate.trimmed();
+    if (!safePathId(taskListId) || normalizedTitle.isEmpty() || normalizedTitle.size() > 1024
+        || normalizedNotes.size() > 8192
+        || (!normalizedDueDate.isEmpty()
+            && (normalizedDueDate.size() != 10
+                || !QDate::fromString(normalizedDueDate, Qt::ISODate).isValid()
+                || QDate::fromString(normalizedDueDate, Qt::ISODate).toString(Qt::ISODate)
+                    != normalizedDueDate)))
+        return {false, 0, {}, QStringLiteral("La lista, el título, las notas o la fecha de la tarea son inválidos o demasiado largos.")};
+
+    QJsonObject payload{{QStringLiteral("title"), normalizedTitle}};
+    if (!normalizedNotes.trimmed().isEmpty()) payload.insert(QStringLiteral("notes"), normalizedNotes);
+    // Google Tasks treats this as an all-day due date and discards the time.
+    if (!normalizedDueDate.isEmpty())
+        payload.insert(QStringLiteral("due"), normalizedDueDate + QStringLiteral("T00:00:00.000Z"));
+    return postMutation(Capability::TasksWrite, accessToken, grantedScopes,
+                        QStringLiteral("/tasks/v1/lists/") + taskListId
+                            + QStringLiteral("/tasks"), payload);
+}
+
+ApiResult GoogleWorkspaceApi::createCalendarEvent(const QString &accessToken,
+                                                  const QStringList &grantedScopes,
+                                                  const QString &calendarId,
+                                                  const QString &summary,
+                                                  const QString &description,
+                                                  const QString &startDateTime,
+                                                  const QString &endDateTime,
+                                                  const QString &timeZone) const
+{
+    const QString normalizedSummary = summary.trimmed();
+    const QString normalizedTimeZone = timeZone.trimmed();
+    const QDateTime start = parseDateTime(startDateTime);
+    const QDateTime end = parseDateTime(endDateTime);
+    const QTimeZone zone(normalizedTimeZone.toUtf8());
+    const bool startOffsetMatchesZone = zone.isValid() && start.isValid()
+        && start.toTimeZone(zone).offsetFromUtc() == start.offsetFromUtc();
+    const bool endOffsetMatchesZone = zone.isValid() && end.isValid()
+        && end.toTimeZone(zone).offsetFromUtc() == end.offsetFromUtc();
+    if (!safePathId(calendarId) || normalizedSummary.isEmpty() || normalizedSummary.size() > 1024
+        || description.size() > 8192 || startDateTime.size() > 64 || endDateTime.size() > 64
+        || !explicitDateTime(startDateTime) || !explicitDateTime(endDateTime)
+        || !start.isValid() || !end.isValid() || start >= end
+        || normalizedTimeZone.isEmpty() || normalizedTimeZone.size() > 128 || !zone.isValid()
+        || !startOffsetMatchesZone || !endOffsetMatchesZone)
+        return {false, 0, {}, QStringLiteral("El calendario, título, intervalo o zona horaria del evento son inválidos o demasiado largos.")};
+
+    const QJsonObject payload{
+        {QStringLiteral("summary"), normalizedSummary},
+        {QStringLiteral("description"), description},
+        {QStringLiteral("start"), QJsonObject{
+             {QStringLiteral("dateTime"), startDateTime},
+             {QStringLiteral("timeZone"), normalizedTimeZone}}},
+        {QStringLiteral("end"), QJsonObject{
+             {QStringLiteral("dateTime"), endDateTime},
+             {QStringLiteral("timeZone"), normalizedTimeZone}}}};
+    return postMutation(Capability::CalendarEventWrite, accessToken, grantedScopes,
+                        QStringLiteral("/calendar/v3/calendars/") + calendarId
+                            + QStringLiteral("/events"), payload);
 }
 
 ApiResult GoogleWorkspaceApi::listCalendarEvents(const QString &accessToken,
@@ -210,6 +436,17 @@ ApiResult GoogleWorkspaceApi::post(Capability capability, const QString &accessT
                 QJsonDocument(body).toJson(QJsonDocument::Compact));
 }
 
+ApiResult GoogleWorkspaceApi::postMutation(Capability capability, const QString &accessToken,
+                                           const QStringList &grantedScopes,
+                                           const QString &path,
+                                           const QJsonObject &body) const
+{
+    // Mutations intentionally never use the transient retry loop: a timeout or
+    // 5xx may happen after Google has already committed the side effect.
+    return sendOnce(capability, accessToken, grantedScopes, QByteArrayLiteral("POST"),
+                    path, {}, QJsonDocument(body).toJson(QJsonDocument::Compact), true);
+}
+
 ApiResult GoogleWorkspaceApi::send(Capability capability, const QString &accessToken,
                                    const QStringList &grantedScopes, const QByteArray &method,
                                    const QString &path, const QUrlQuery &query,
@@ -256,16 +493,22 @@ ApiResult GoogleWorkspaceApi::send(Capability capability, const QString &accessT
 ApiResult GoogleWorkspaceApi::sendOnce(Capability capability, const QString &accessToken,
                                        const QStringList &grantedScopes, const QByteArray &method,
                                        const QString &path, const QUrlQuery &query,
-                                       const QByteArray &body) const
+                                       const QByteArray &body, bool externalMutation) const
 {
     if (m_cancellationFlag && m_cancellationFlag->load(std::memory_order_relaxed))
         return {false, 0, {}, QStringLiteral("La solicitud a Google fue cancelada.")};
     if (accessToken.trimmed().isEmpty())
         return {false, 0, {}, QStringLiteral("Conectá una cuenta Google antes de consultar.")};
     if (!grantsCapability(capability, grantedScopes))
-        return {false, 0, {}, QStringLiteral("La cuenta Google no concedió el permiso de lectura requerido.")};
+        return {false, 0, {}, QStringLiteral("La cuenta Google no concedió el permiso requerido para esta función.")};
 
     QUrl url = m_apiBase;
+    if (m_apiBase == kGoogleApiBase) {
+        if (path.startsWith(QLatin1String("/gmail/")))
+            url.setHost(QStringLiteral("gmail.googleapis.com"));
+        else if (path.startsWith(QLatin1String("/tasks/")))
+            url.setHost(QStringLiteral("tasks.googleapis.com"));
+    }
     url.setPath(path);
     url.setQuery(query);
     QNetworkRequest request(url);
@@ -288,6 +531,7 @@ ApiResult GoogleWorkspaceApi::sendOnce(Capability capability, const QString &acc
     cancellationCheck.setInterval(20);
     QByteArray payload;
     bool tooLarge = false;
+    bool timedOut = false;
     QObject::connect(reply, &QNetworkReply::readyRead, &loop, [&]() {
         const QByteArray chunk = reply->readAll();
         if (payload.size() + chunk.size() > kMaxResponseBytes) {
@@ -299,6 +543,7 @@ ApiResult GoogleWorkspaceApi::sendOnce(Capability capability, const QString &acc
     });
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     QObject::connect(&timeout, &QTimer::timeout, &loop, [&]() {
+        timedOut = true;
         reply->abort();
         loop.quit();
     });
@@ -337,10 +582,20 @@ ApiResult GoogleWorkspaceApi::sendOnce(Capability capability, const QString &acc
         tooLarge = true;
     reply->deleteLater();
 
+    if (tooLarge && externalMutation && status >= 200 && status < 300)
+        return {false, status, {}, uncertainMutationError(path)};
     if (tooLarge)
         return {false, status, {}, QStringLiteral("La respuesta de Google superó el límite de 4 MiB.")};
+    if ((cancelled || timedOut
+         || (networkError != QNetworkReply::NoError
+             && (status == 0 || status >= 500))) && externalMutation)
+        return {false, status, {}, uncertainMutationError(path)};
     if (cancelled)
         return {false, status, {}, QStringLiteral("La solicitud a Google fue cancelada.")};
+    if (timedOut)
+        return {false, status, {}, QStringLiteral("La solicitud a Google venció por tiempo.")};
+    if (externalMutation && status >= 500 && status <= 599)
+        return {false, status, {}, uncertainMutationError(path), retryAfterMs};
     if (timeout.isActive()) timeout.stop();
     if (status == 401 || status == 403 || status == 404 || status == 429 || status >= 500)
         return {false, status, {}, apiError(status), retryAfterMs};
@@ -351,8 +606,11 @@ ApiResult GoogleWorkspaceApi::sendOnce(Capability capability, const QString &acc
 
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(payload, &parseError);
-    if (parseError.error != QJsonParseError::NoError || !document.isObject())
+    if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
+        if (externalMutation && status >= 200 && status < 300)
+            return {false, status, {}, uncertainMutationError(path)};
         return {false, status, {}, QStringLiteral("Google devolvió una respuesta JSON inválida.")};
+    }
     return {true, status, document.object(), {}};
 }
 

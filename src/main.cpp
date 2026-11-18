@@ -343,6 +343,8 @@ int main(int argc, char *argv[])
         trayIcon = appIcon;
     }
     TrayController tray(trayIcon, &app);
+    QObject::connect(&controller, &AppController::localReminderNotificationRequested,
+                     &tray, &TrayController::showNotification);
     qInfo() << "System tray:" << (tray.isAvailable() ? "available" : "unavailable")
             << "iconNull=" << trayIcon.isNull();
 

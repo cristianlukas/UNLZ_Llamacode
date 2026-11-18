@@ -17,6 +17,7 @@ private slots:
     void callbackRequiresMatchingStateAndRedirect();
     void callbackRejectsDuplicatesAndNonGoogleIssuer();
     void approvalFingerprintBindsExactPayload();
+    void googleDraftToolAlwaysNeedsExplicitApproval();
 };
 
 void GoogleWorkspaceSecurityTests::scopesAreNarrowAndDeduplicated()
@@ -36,6 +37,8 @@ void GoogleWorkspaceSecurityTests::scopesAreNarrowAndDeduplicated()
     QCOMPARE(scopesFor({Capability::TasksRead, Capability::TasksRead}).size(), 1);
     QVERIFY(grantsCapability(Capability::TasksRead, scopesFor(Capability::TasksRead)));
     QVERIFY(!grantsCapability(Capability::TasksWrite, scopesFor(Capability::TasksRead)));
+    QCOMPARE(scopesFor(Capability::TasksWrite), QStringList{
+        QStringLiteral("https://www.googleapis.com/auth/tasks")});
 }
 
 void GoogleWorkspaceSecurityTests::writesAlwaysNeedApproval()
@@ -45,6 +48,7 @@ void GoogleWorkspaceSecurityTests::writesAlwaysNeedApproval()
     QVERIFY(requiresExplicitApproval(Capability::GmailSend));
     QVERIFY(requiresExplicitApproval(Capability::CalendarEventWrite));
     QVERIFY(requiresExplicitApproval(Capability::TasksWrite));
+    QVERIFY(requiresExplicitApproval(Capability::CalendarEventWrite));
 }
 
 void GoogleWorkspaceSecurityTests::pkceUsesS256AndRejectsBadVerifiers()
@@ -142,6 +146,16 @@ void GoogleWorkspaceSecurityTests::approvalFingerprintBindsExactPayload()
                                            QStringLiteral("me@example.com"), altered));
     QVERIFY(approved != approvalFingerprint(Capability::GmailDraft,
                                            QStringLiteral("me@example.com"), first));
+}
+
+void GoogleWorkspaceSecurityTests::googleDraftToolAlwaysNeedsExplicitApproval()
+{
+    QVERIFY(requiresExplicitApproval(QStringLiteral("google_gmail_create_draft")));
+    QVERIFY(requiresExplicitApproval(QStringLiteral("google_tasks_create")));
+    QVERIFY(requiresExplicitApproval(QStringLiteral("google_calendar_create_event")));
+    QVERIFY(!requiresExplicitApproval(QStringLiteral("google_gmail_search")));
+    QVERIFY(!requiresExplicitApproval(QStringLiteral("google_tasks_list")));
+    QVERIFY(!requiresExplicitApproval(QStringLiteral("google_calendar_events")));
 }
 
 QTEST_MAIN(GoogleWorkspaceSecurityTests)

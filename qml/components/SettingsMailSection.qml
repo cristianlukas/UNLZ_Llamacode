@@ -72,7 +72,7 @@ ColumnLayout {
                 font.bold: true
             }
             Text {
-                text: "Conexión OAuth de escritorio con permisos de lectura. No habilita enviar correo ni modificar eventos o tareas. Creá un OAuth Client ID de tipo aplicación de escritorio en Google Cloud."
+                text: "Conexión OAuth de escritorio: Gmail, Calendar y Tasks empiezan con permisos de lectura. Creá un OAuth Client ID de tipo aplicación de escritorio en Google Cloud."
                 color: Theme.textSecondary
                 font.pixelSize: 12
                 Layout.fillWidth: true
@@ -98,6 +98,24 @@ ColumnLayout {
                     }
                 }
                 LcButton {
+                    visible: App.googleWorkspaceConnected && !App.googleWorkspaceDraftsEnabled
+                    text: App.googleWorkspaceBusy ? "Autorizando…" : "Habilitar borradores Gmail"
+                    enabled: !App.googleWorkspaceBusy
+                    onClicked: App.connectGoogleWorkspaceDrafts()
+                }
+                LcButton {
+                    visible: App.googleWorkspaceConnected && !App.googleWorkspaceTaskCreateEnabled
+                    text: App.googleWorkspaceBusy ? "Autorizando…" : "Habilitar creación de tareas"
+                    enabled: !App.googleWorkspaceBusy
+                    onClicked: App.connectGoogleWorkspaceTaskCreate()
+                }
+                LcButton {
+                    visible: App.googleWorkspaceConnected && !App.googleWorkspaceEventCreateEnabled
+                    text: App.googleWorkspaceBusy ? "Autorizando…" : "Habilitar creación de eventos"
+                    enabled: !App.googleWorkspaceBusy
+                    onClicked: App.connectGoogleWorkspaceEventCreate()
+                }
+                LcButton {
                     visible: App.googleWorkspaceConnected
                     text: "Desconectar"
                     onClicked: App.disconnectGoogleWorkspace()
@@ -109,6 +127,30 @@ ColumnLayout {
                     font.pixelSize: 11
                     wrapMode: Text.WordWrap
                 }
+            }
+            Text {
+                visible: App.googleWorkspaceConnected && !App.googleWorkspaceTaskCreateEnabled
+                text: "El permiso adicional de Google Tasks puede ver, editar, organizar y borrar tareas de tus listas. LlamaCode sólo ofrece crear una tarea y pide aprobar cada una; no publica tools de edición ni borrado."
+                color: Theme.textMuted
+                font.pixelSize: 11
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+            }
+            Text {
+                visible: App.googleWorkspaceConnected && !App.googleWorkspaceEventCreateEnabled
+                text: "El permiso adicional calendar.events puede leer, editar y borrar eventos de tus calendarios. LlamaCode sólo ofrece crear eventos sin invitados, pide aprobación para cada uno y no publica tools de edición, invitación ni borrado."
+                color: Theme.textMuted
+                font.pixelSize: 11
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: App.googleWorkspaceConnected && !App.googleWorkspaceDraftsEnabled
+                text: "Opcional: Gmail compose permite gestionar borradores y enviar correo. LlamaCode sólo ofrece crear borradores; cada uno muestra destinatarios y contenido y requiere tu aprobación. No hay herramienta de envío."
+                color: Theme.warnText
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
             }
             Text {
                 Layout.fillWidth: true

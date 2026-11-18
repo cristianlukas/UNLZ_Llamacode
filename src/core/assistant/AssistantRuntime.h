@@ -36,7 +36,7 @@ public:
     bool completeMessage(const QString &id, const QString &response, bool ok,
                          const QString &detail = QString());
     bool cancelMessage(const QString &id, const QString &detail = QString());
-    void addNotification(const QVariantMap &event);
+    bool addNotification(const QVariantMap &event, bool *alreadyPresent = nullptr);
     Q_INVOKABLE void clearNotifications();
     QVariantList pendingMessages() const { return m_pending; }
     QVariantList notifications() const { return m_notifications; }
@@ -60,7 +60,7 @@ private:
     static QString newEventId();
     static QString notificationStorePath();
     void loadNotifications();
-    void persistNotifications() const;
+    bool persistNotifications() const;
 
     QTcpServer *m_server = nullptr;
     QString m_token;

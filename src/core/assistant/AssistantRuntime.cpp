@@ -14,6 +14,7 @@
 #include <QUrl>
 #include <QUrlQuery>
 #include <QUuid>
+#include <utility>
 
 namespace {
 constexpr int kMaxBodyBytes = 256 * 1024;
@@ -192,20 +193,32 @@ bool AssistantRuntime::cancelMessage(const QString &id, const QString &detail)
                            detail.isEmpty() ? QStringLiteral("cancelled") : detail);
 }
 
-void AssistantRuntime::addNotification(const QVariantMap &event)
+bool AssistantRuntime::addNotification(const QVariantMap &event, bool *alreadyPresent)
 {
+    if (alreadyPresent) *alreadyPresent = false;
     QVariantMap copy = event;
     if (copy.value(QStringLiteral("eventId")).toString().isEmpty())
         copy[QStringLiteral("eventId")] = newEventId();
+    const QString eventId = copy.value(QStringLiteral("eventId")).toString();
+    for (const QVariant &existing : std::as_const(m_notifications)) {
+        if (existing.toMap().value(QStringLiteral("eventId")).toString() != eventId) continue;
+        if (alreadyPresent) *alreadyPresent = true;
+        return true;
+    }
     if (copy.value(QStringLiteral("createdAt")).isNull())
         copy[QStringLiteral("createdAt")] =
             static_cast<double>(QDateTime::currentMSecsSinceEpoch());
+    const QVariantList previous = m_notifications;
     m_notifications.append(copy);
     while (m_notifications.size() > kMaxNotifications)
         m_notifications.removeFirst();
-    persistNotifications();
+    if (!persistNotifications()) {
+        m_notifications = previous;
+        return false;
+    }
     emit notificationsChanged();
     emit notificationAdded(copy);
+    return true;
 }
 
 void AssistantRuntime::clearNotifications()
@@ -237,15 +250,15 @@ void AssistantRuntime::loadNotifications()
         m_notifications.removeFirst();
 }
 
-void AssistantRuntime::persistNotifications() const
+bool AssistantRuntime::persistNotifications() const
 {
     QJsonArray array;
     for (const QVariant &value : m_notifications)
         array.append(QJsonObject::fromVariantMap(value.toMap()));
     QSaveFile file(notificationStorePath());
-    if (!file.open(QIODevice::WriteOnly)) return;
-    file.write(QJsonDocument(array).toJson(QJsonDocument::Compact));
-    file.commit();
+    if (!file.open(QIODevice::WriteOnly)) return false;
+    const QByteArray encoded = QJsonDocument(array).toJson(QJsonDocument::Compact);
+    return file.write(encoded) == encoded.size() && file.commit();
 }
 
 QString AssistantRuntime::bearerToken(const QString &header)

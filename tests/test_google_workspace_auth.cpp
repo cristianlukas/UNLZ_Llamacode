@@ -74,6 +74,7 @@ class GoogleWorkspaceAuthTests : public QObject
 private slots:
     void initTestCase();
     void authorizationCodeUsesPkceAndNoClientSecret();
+    void draftScopeCanBeRequestedIncrementally();
     void wrongStateIsRejectedAndCanRetry();
     void refreshKeepsExistingRefreshToken();
     void revokeUsesFormAndReportsServerFailure();
@@ -159,6 +160,8 @@ void GoogleWorkspaceAuthTests::authorizationCodeUsesPkceAndNoClientSecret()
     QVERIFY(!authorizationQuery.hasQueryItem(QStringLiteral("code_verifier")));
     QCOMPARE(authorizationQuery.queryItemValue(QStringLiteral("code_challenge_method")),
              QStringLiteral("S256"));
+    QCOMPARE(authorizationQuery.queryItemValue(QStringLiteral("include_granted_scopes")),
+             QStringLiteral("true"));
 
     QSignalSpy endpointSpy(&endpoint, &TokenEndpointStub::requestReceived);
     QVERIFY(deliverCallback(redirect, state, QStringLiteral("auth-code")));
@@ -181,6 +184,19 @@ void GoogleWorkspaceAuthTests::authorizationCodeUsesPkceAndNoClientSecret()
     QCOMPARE(form.queryItemValue(QStringLiteral("grant_type")), QStringLiteral("authorization_code"));
     QVERIFY(form.queryItemValue(QStringLiteral("code_verifier")).size() >= 43);
     QVERIFY(!form.hasQueryItem(QStringLiteral("client_secret")));
+}
+
+void GoogleWorkspaceAuthTests::draftScopeCanBeRequestedIncrementally()
+{
+    GoogleWorkspaceAuth auth;
+    QSignalSpy urlSpy(&auth, &GoogleWorkspaceAuth::authorizationUrlReady);
+    const QList<Capability> requested{Capability::GmailDraft};
+    QVERIFY(auth.start(QStringLiteral("client.apps.googleusercontent.com"), requested));
+    QCOMPARE(urlSpy.size(), 1);
+    const QUrlQuery query(urlSpy.constFirst().at(0).toUrl());
+    QCOMPARE(query.queryItemValue(QStringLiteral("scope")), scopesFor(Capability::GmailDraft).join(QLatin1Char(' ')));
+    QCOMPARE(query.queryItemValue(QStringLiteral("include_granted_scopes")), QStringLiteral("true"));
+    auth.cancel();
 }
 
 void GoogleWorkspaceAuthTests::wrongStateIsRejectedAndCanRetry()

@@ -17,6 +17,7 @@
 #include "core/tasks/EvidenceBundle.h"
 #include "core/downloads/DownloadHistoryStore.h"
 #include "core/tasks/TaskScheduler.h"
+#include "core/tasks/LocalReminderStore.h"
 #include "core/AuxiliaryJobScheduler.h"
 #include "core/ModelRoleRegistry.h"
 #include "core/assistant/AssistantRuntime.h"
@@ -201,6 +202,9 @@ class AppController : public QObject
     Q_PROPERTY(QString googleWorkspaceClientId READ googleWorkspaceClientId WRITE setGoogleWorkspaceClientId NOTIFY googleWorkspaceChanged)
     Q_PROPERTY(QString googleWorkspaceStatus READ googleWorkspaceStatus NOTIFY googleWorkspaceChanged)
     Q_PROPERTY(bool googleWorkspaceConnected READ googleWorkspaceConnected NOTIFY googleWorkspaceChanged)
+    Q_PROPERTY(bool googleWorkspaceDraftsEnabled READ googleWorkspaceDraftsEnabled NOTIFY googleWorkspaceChanged)
+    Q_PROPERTY(bool googleWorkspaceTaskCreateEnabled READ googleWorkspaceTaskCreateEnabled NOTIFY googleWorkspaceChanged)
+    Q_PROPERTY(bool googleWorkspaceEventCreateEnabled READ googleWorkspaceEventCreateEnabled NOTIFY googleWorkspaceChanged)
     Q_PROPERTY(bool googleWorkspaceBusy READ googleWorkspaceBusy NOTIFY googleWorkspaceChanged)
     Q_PROPERTY(bool googleWorkspaceCanRemember READ googleWorkspaceCanRemember CONSTANT)
     Q_PROPERTY(bool hitlDestructive READ hitlDestructive WRITE setHitlDestructive NOTIFY hitlDestructiveChanged)
@@ -1206,11 +1210,26 @@ public:
     void setGoogleWorkspaceClientId(const QString &clientId);
     QString googleWorkspaceStatus() const { return m_googleWorkspaceStatus; }
     bool googleWorkspaceConnected() const { return !m_googleAccessToken.isEmpty(); }
+    bool googleWorkspaceDraftsEnabled() const {
+        return GoogleWorkspaceSecurity::grantsCapability(
+            GoogleWorkspaceSecurity::Capability::GmailDraft, m_googleGrantedScopes);
+    }
+    bool googleWorkspaceTaskCreateEnabled() const {
+        return GoogleWorkspaceSecurity::grantsCapability(
+            GoogleWorkspaceSecurity::Capability::TasksWrite, m_googleGrantedScopes);
+    }
+    bool googleWorkspaceEventCreateEnabled() const {
+        return GoogleWorkspaceSecurity::grantsCapability(
+            GoogleWorkspaceSecurity::Capability::CalendarEventWrite, m_googleGrantedScopes);
+    }
     bool googleWorkspaceBusy() const {
         return m_googleWorkspaceAuth && m_googleWorkspaceAuth->busy();
     }
     bool googleWorkspaceCanRemember() const;
     Q_INVOKABLE void connectGoogleWorkspace();
+    Q_INVOKABLE void connectGoogleWorkspaceDrafts();
+    Q_INVOKABLE void connectGoogleWorkspaceTaskCreate();
+    Q_INVOKABLE void connectGoogleWorkspaceEventCreate();
     Q_INVOKABLE void disconnectGoogleWorkspace();
     bool hitlDestructive() const { return m_hitlDestructive; }
     void setHitlDestructive(bool on);
@@ -1798,6 +1817,7 @@ signals:
     void auxiliaryJobsChanged();
     void mailAutoSendChanged();
     void googleWorkspaceChanged();
+    void localReminderNotificationRequested(const QString &title, const QString &body);
     void hitlDestructiveChanged();
     void desktopIndicatorChanged();
     void autoStartAgentOnLaunchChanged();
@@ -1924,6 +1944,7 @@ private:
     AutomationStore   m_automations;
     DataLabStore      m_dataLab;
     TaskScheduler    *m_scheduler = nullptr;
+    LocalReminderScheduler *m_localReminderScheduler = nullptr;
     AuxiliaryJobScheduler *m_auxiliaryScheduler = nullptr;
     ModelRoleRegistry m_modelRoles;
     AssistantRuntime m_assistantRuntime;
@@ -2425,6 +2446,7 @@ private:
     QString m_googleAccessToken;                 // efímero, sólo memoria
     QString m_googleRefreshToken;                // memoria o keyring/DPAPI
     QStringList m_googleGrantedScopes;
+    bool m_googleWorkspaceKeepCredentialsOnAuthFailure = false;
     bool        m_hitlDestructive = true;        // guardrail Zero-Autonomy (destructivas → aprobación salvo super)
     bool        m_desktopIndicatorVisible = true;
     bool        m_desktopAgentActive = false;
