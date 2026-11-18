@@ -34,6 +34,7 @@ class TestVoice : public QObject
 private slots:
     void configRoundTrip();
     void turnModeDefaultsAndAliases();
+    void sttDeviceCpuFreesVoiceGpu();
     void cursorCommandParsesOrders();
     void cursorCommandIgnoresConversation();
     void wavHeaderAndExtract();
@@ -1296,6 +1297,57 @@ void TestVoice::sttServerCatalog()
     QCOMPARE(VoiceServerManager::whisperThreads(4), 4);
     QCOMPARE(VoiceServerManager::whisperThreads(64), 8);
     QVERIFY(VoiceController::kSttMaxSegmentMs < VoiceServerManager::whisperAudioCtxMs());
+}
+
+// Whisper en CPU (sttDevice=cpu): -ng en los args, round-trip del config y
+// "voz CPU-only" sólo cuando ni STT ni TTS pueden tocar la GPU.
+void TestVoice::sttDeviceCpuFreesVoiceGpu()
+{
+    VoiceConfig def;
+    QCOMPARE(def.sttDevice, QString("gpu"));
+    QVERIFY(!def.sttOnCpu());
+    // Un config viejo (sin la clave) sigue en GPU; valores raros también.
+    QCOMPARE(VoiceConfig::fromJson(QJsonObject{}).sttDevice, QString("gpu"));
+    QCOMPARE(VoiceConfig::fromJson(QJsonObject{{"sttDevice", "tpu"}}).sttDevice, QString("gpu"));
+    QCOMPARE(VoiceConfig::fromJson(QJsonObject{{"sttDevice", " CPU "}}).sttDevice, QString("cpu"));
+
+    VoiceConfig c;
+    c.sttManagedEngine = "whisper-small";
+    c.sttDevice = "cpu";
+    c.ttsMode = "piper";
+    const VoiceConfig back = VoiceConfig::fromJson(c.toJson());
+    QCOMPARE(back.sttDevice, QString("cpu"));
+    QVERIFY(back.voiceIsCpuOnly());
+
+    // TTS que puede usar GPU → la voz no es CPU-only aunque whisper sí lo sea.
+    VoiceConfig q = c; q.ttsMode = "qwen3";
+    QVERIFY(!q.voiceIsCpuOnly());
+    VoiceConfig autoTts = c; autoTts.ttsMode = "auto";
+    QVERIFY(!autoTts.voiceIsCpuOnly());
+    VoiceConfig infCuda = c; infCuda.ttsMode = "inflect"; infCuda.inflectProvider = "cuda";
+    QVERIFY(!infCuda.voiceIsCpuOnly());
+    VoiceConfig infCpu = c; infCpu.ttsMode = "inflect"; infCpu.inflectProvider = "cpu";
+    QVERIFY(infCpu.voiceIsCpuOnly());
+    VoiceConfig piperExt = c; piperExt.ttsManagedCommand = "/opt/tts-sidecar";
+    QVERIFY(!piperExt.voiceIsCpuOnly());
+    // sttDevice=cpu sólo vale para whisper: Parakeet y un sidecar siguen en GPU.
+    VoiceConfig para = c; para.sttManagedEngine = "parakeet-tdt-0.6b-v3";
+    QVERIFY(!para.voiceIsCpuOnly());
+    VoiceConfig side = c; side.sttManagedCommand = "/opt/stt-sidecar";
+    QVERIFY(!side.voiceIsCpuOnly());
+    VoiceConfig gpu = c; gpu.sttDevice = "gpu";
+    QVERIFY(!gpu.voiceIsCpuOnly());
+    // STT cloud + piper tampoco usa GPU local.
+    VoiceConfig cloud = gpu; cloud.sttProvider = "cloud"; cloud.sttManagedEngine.clear();
+    QVERIFY(cloud.voiceIsCpuOnly());
+
+    const QStringList onGpu = VoiceServerManager::buildWhisperArgs(
+        "m.bin", "127.0.0.1", 8081, "es", 8, VoiceServerManager::kWhisperAudioCtx);
+    QVERIFY(!onGpu.contains("-ng"));
+    const QStringList onCpu = VoiceServerManager::buildWhisperArgs(
+        "m.bin", "127.0.0.1", 8081, "es", 8, VoiceServerManager::kWhisperAudioCtx, true);
+    QVERIFY(onCpu.contains("-ng"));
+    QCOMPARE(onCpu.at(onCpu.indexOf("-t") + 1), QString("8"));
 }
 
 void TestVoice::voiceBinaryUrls()

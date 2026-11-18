@@ -301,7 +301,8 @@ int VoiceServerManager::whisperThreads(int idealThreadCount)
 
 QStringList VoiceServerManager::buildWhisperArgs(const QString &modelPath, const QString &host,
                                                  int port, const QString &language,
-                                                 int threads, int audioCtx)
+                                                 int threads, int audioCtx,
+                                                 bool cpuOnly)
 {
     QStringList a{QStringLiteral("-m"), modelPath,
                   QStringLiteral("--host"), host,
@@ -310,6 +311,9 @@ QStringList VoiceServerManager::buildWhisperArgs(const QString &modelPath, const
         a << QStringLiteral("-l") << language;
     if (threads > 0) a << QStringLiteral("-t") << QString::number(threads);
     if (audioCtx > 0) a << QStringLiteral("-ac") << QString::number(audioCtx);
+    // El whisper-server instalado es un build CUDA: sin -ng toma la GPU 0
+    // aunque no tenga máscara. -ng lo deja entero en CPU.
+    if (cpuOnly) a << QStringLiteral("-ng");
     return a;
 }
 

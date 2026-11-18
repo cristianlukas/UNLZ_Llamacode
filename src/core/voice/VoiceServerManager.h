@@ -105,7 +105,8 @@ public:
     static int whisperThreads(int idealThreadCount);
     static QStringList buildWhisperArgs(const QString &modelPath, const QString &host,
                                         int port, const QString &language,
-                                        int threads = 0, int audioCtx = 0);
+                                        int threads = 0, int audioCtx = 0,
+                                        bool cpuOnly = false);
     // endpointPath del motor (ej "/inference" para whisper.cpp).
     static QString endpointPath(const QString &engineId);
     // Args de piper (process-mode): -m <model> -f <outWav> (texto por stdin).

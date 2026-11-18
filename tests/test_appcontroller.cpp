@@ -313,6 +313,7 @@ private slots:
     void charlaRunsRequestsInParallelWithFreeSlots();
     void charlaParallelTaskAgainstRealServer();
     void charlaDoesNotSpeakProvisionalAnswers();
+    void charlaCpuVoiceReservesNoGpu();
     void charlaWarmsUpAgentThatStartsWhileListening();
     void ocrStatusAlwaysExplainsItself();
     void agentLevels_contextBudgetLadder();
@@ -4625,6 +4626,29 @@ void AppControllerTests::isLoopbackCloudUrlRequiresLocalHttpEndpoint()
     QVERIFY(!AppController::isLoopbackCloudUrl(QStringLiteral("http://192.168.1.50:8000")));
     QVERIFY(!AppController::isLoopbackCloudUrl(QStringLiteral("https://api.example.com")));
     QVERIFY(!AppController::isLoopbackCloudUrl(QStringLiteral("127.0.0.1:8000")));
+}
+
+void AppControllerTests::charlaCpuVoiceReservesNoGpu()
+{
+    // Whisper en CPU + piper: el plan de Charla no reserva GPU para la voz, así
+    // el LLM arranca con su reparto propio sobre las dos placas.
+    AppController app;
+    const QVariantMap cpu = app.voiceGpuPlanForConfigForTest({
+        {"sttManagedEngine", "whisper-small"}, {"sttDevice", "cpu"}, {"ttsMode", "piper"}});
+    QCOMPARE(cpu.value("mode").toString(), QString("cpu-only-voice"));
+    QVERIFY(!cpu.value("enabled").toBool());
+    QCOMPARE(cpu.value("voiceGpuMask").toString(), QString());
+    QCOMPARE(cpu.value("voiceReserveMb").toDouble(), 0.0);
+    QVERIFY(cpu.value("reason").toString().contains("Whisper en CPU"));
+
+    // Whisper en GPU (default) no toma ese atajo.
+    const QVariantMap gpu = app.voiceGpuPlanForConfigForTest({
+        {"sttManagedEngine", "whisper-small"}, {"ttsMode", "piper"}});
+    QVERIFY(gpu.value("mode").toString() != QString("cpu-only-voice"));
+    // Con un TTS que puede usar GPU, whisper en CPU no alcanza para liberar la placa.
+    const QVariantMap qwen = app.voiceGpuPlanForConfigForTest({
+        {"sttManagedEngine", "whisper-small"}, {"sttDevice", "cpu"}, {"ttsMode", "qwen3"}});
+    QVERIFY(qwen.value("mode").toString() != QString("cpu-only-voice"));
 }
 
 QTEST_MAIN(AppControllerTests)

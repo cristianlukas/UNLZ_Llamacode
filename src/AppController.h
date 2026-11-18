@@ -780,6 +780,8 @@ public:
     { beginLocalModelLoad(launchId, args); }
     void feedLocalModelLoadForTest(const QString &chunk);
     void finishLocalModelLoadForTest(bool ok) { finishLocalModelLoad(ok); }
+    QVariantMap voiceGpuPlanForConfigForTest(const QVariantMap &voice) const
+    { return voiceGpuPlanForConfig(VoiceConfig::fromJson(QJsonObject::fromVariantMap(voice))); }
     QJsonObject localModelLoadJson() const;
     // Pura: carga remota a mostrar segun /llamacode/v1/status. Vacio = listo
     // (deja de seguir). Un "ready" de OTRO modelo es el swap en curso: "starting".

@@ -574,8 +574,25 @@ double estimateVoiceModelVramMb(const CatalogModel &model, const RuntimePreset &
     return (weightsGb + kvAndGraphGb + headroomGb) * 1024.0;
 }
 
+QVariantMap cpuOnlyVoiceGpuPlan(const QString &reason)
+{
+    return {{QStringLiteral("enabled"), false},
+            {QStringLiteral("mode"), QStringLiteral("cpu-only-voice")},
+            {QStringLiteral("voiceGpuIndex"), -1},
+            {QStringLiteral("voiceGpuMask"), QString()},
+            {QStringLiteral("modelGpuMask"), QString()},
+            {QStringLiteral("modelTensorSplit"), QString()},
+            {QStringLiteral("voiceReserveMb"), 0.0},
+            {QStringLiteral("voiceReserveAvailable"), true},
+            {QStringLiteral("voicePlacementSafe"), true},
+            {QStringLiteral("modelPlacementSafe"), true},
+            {QStringLiteral("reason"), reason}};
+}
+
 double voiceReserveMbForConfig(const VoiceConfig &config)
 {
+    if (config.voiceIsCpuOnly())
+        return 0.0; // whisper -ng + TTS CPU: nada de la voz vive en VRAM.
     // 2 GiB is enough for the managed Whisper/Piper baseline. The local neural
     // TTS engines are heavier, so leave a larger explicit reservation when the
     // user selected one of them instead of letting the LLM consume that VRAM.
@@ -27381,20 +27398,13 @@ QVariantMap AppController::recommendedVoiceTts(const QString &profileId) const
 QVariantMap AppController::voiceGpuPlanForLaunch(const QString &launchId,
                                                  const VoiceConfig &config) const
 {
-    if (config.ttsMode == QLatin1String("pocket")) {
-        return {{QStringLiteral("enabled"), false},
-                {QStringLiteral("mode"), QStringLiteral("cpu-only-voice")},
-                {QStringLiteral("voiceGpuIndex"), -1},
-                {QStringLiteral("voiceGpuMask"), QString()},
-                {QStringLiteral("modelGpuMask"), QString()},
-                {QStringLiteral("modelTensorSplit"), QString()},
-                {QStringLiteral("voiceReserveMb"), 0.0},
-                {QStringLiteral("voiceReserveAvailable"), true},
-                {QStringLiteral("voicePlacementSafe"), true},
-                {QStringLiteral("modelPlacementSafe"), true},
-                {QStringLiteral("reason"), QStringLiteral(
-                    "Pocket TTS usa CPU y no reserva VRAM para la voz.")}};
-    }
+    if (config.ttsMode == QLatin1String("pocket"))
+        return cpuOnlyVoiceGpuPlan(QStringLiteral(
+            "Pocket TTS usa CPU y no reserva VRAM para la voz."));
+    if (config.voiceIsCpuOnly())
+        return cpuOnlyVoiceGpuPlan(QStringLiteral(
+            "Whisper en CPU y TTS en CPU: la voz no reserva GPU; "
+            "las placas quedan enteras para el LLM."));
     auto modelRequiredForLaunch = [this](const QString &id) {
         if (id.isEmpty()) return 0.0;
         const LaunchProfile launch = m_profiles.resolveLaunch(id);
@@ -27487,20 +27497,13 @@ QVariantMap AppController::voiceGpuPlanForLaunch(const QString &launchId,
 
 QVariantMap AppController::voiceGpuPlanForConfig(const VoiceConfig &config) const
 {
-    if (config.ttsMode == QLatin1String("pocket")) {
-        return {{QStringLiteral("enabled"), false},
-                {QStringLiteral("mode"), QStringLiteral("cpu-only-voice")},
-                {QStringLiteral("voiceGpuIndex"), -1},
-                {QStringLiteral("voiceGpuMask"), QString()},
-                {QStringLiteral("modelGpuMask"), QString()},
-                {QStringLiteral("modelTensorSplit"), QString()},
-                {QStringLiteral("voiceReserveMb"), 0.0},
-                {QStringLiteral("voiceReserveAvailable"), true},
-                {QStringLiteral("voicePlacementSafe"), true},
-                {QStringLiteral("modelPlacementSafe"), true},
-                {QStringLiteral("reason"), QStringLiteral(
-                    "Pocket TTS usa CPU y no reserva VRAM para la voz.")}};
-    }
+    if (config.ttsMode == QLatin1String("pocket"))
+        return cpuOnlyVoiceGpuPlan(QStringLiteral(
+            "Pocket TTS usa CPU y no reserva VRAM para la voz."));
+    if (config.voiceIsCpuOnly())
+        return cpuOnlyVoiceGpuPlan(QStringLiteral(
+            "Whisper en CPU y TTS en CPU: la voz no reserva GPU; "
+            "las placas quedan enteras para el LLM."));
     return voiceGpuPlanForLaunch(m_activeLaunchId, config);
 }
 
@@ -29104,18 +29107,28 @@ bool AppController::startManagedStt(const VoiceConfig &c)
         emit serverError(QStringLiteral("No hay un puerto libre para whisper-server."));
         return false;
     }
+    const bool sttOnCpu = c.sttOnCpu();
     const QStringList args = VoiceServerManager::buildWhisperArgs(
         VoiceServerManager::modelPath(c.sttManagedEngine),
         QStringLiteral("127.0.0.1"), port, c.sttLanguage,
         VoiceServerManager::whisperThreads(QThread::idealThreadCount()),
-        VoiceServerManager::kWhisperAudioCtx);
+        VoiceServerManager::kWhisperAudioCtx, sttOnCpu);
 
     m_sttProc = new QProcess(this);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert(QStringLiteral("LLAMACODE_MANAGED"), QStringLiteral("1"));
     env.insert(QStringLiteral("LLAMACODE_ROLE"), QStringLiteral("voice-stt"));
     const QVariantMap gpuPlan = voiceGpuPlanForConfig(c);
-    if (gpuPlan.value(QStringLiteral("enabled")).toBool()
+    if (sttOnCpu) {
+        // -ng ya lo deja en CPU; ocultar las GPU además evita que el runtime
+        // CUDA reserve contexto (~300 MiB) en la GPU 0 al arrancar.
+        env.insert(QStringLiteral("CUDA_VISIBLE_DEVICES"), QString());
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("Charla: STT whisper en CPU (-ng, %1 hilos); "
+                                         "no usa VRAM.")
+                              .arg(VoiceServerManager::whisperThreads(
+                                  QThread::idealThreadCount())));
+    } else if (gpuPlan.value(QStringLiteral("enabled")).toBool()
         && gpuPlan.value(QStringLiteral("voicePlacementSafe")).toBool()) {
         env.insert(QStringLiteral("CUDA_VISIBLE_DEVICES"),
                    gpuPlan.value(QStringLiteral("voiceGpuMask")).toString());

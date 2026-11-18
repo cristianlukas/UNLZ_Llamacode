@@ -92,6 +92,9 @@ QtObject {
               "Ingi-Charla muestra acceso a la configuración de Google")
         check(charla.indexOf("onClicked: googleWorkspaceDialog.open()") > 0,
               "el acceso de Ingi-Charla abre su diálogo de conexión")
+        check(charla.indexOf('objectName: "sttOnCpuSwitch"') > 0
+              && charla.indexOf('page.cfg.sttDevice = checked ? "cpu" : "gpu"') > 0,
+              "Charla: switch Whisper en CPU persiste sttDevice")
         check(charla.indexOf("GoogleWorkspaceSettingsSection") > 0,
               "el diálogo comparte los scopes y acciones de Configuración → Correo")
         const googleSettings = read("GoogleWorkspaceSettingsSection.qml")

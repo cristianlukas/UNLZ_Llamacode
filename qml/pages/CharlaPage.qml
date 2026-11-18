@@ -618,6 +618,21 @@ Item {
                             LcButton { text: "Descargar"; secondary: true; onClicked: App.installVoiceBinary("whisper-server", "") }
                             LcButton { text: "…"; secondary: true; onClicked: { App.pickVoiceWhisperServer(); page.whisperPath = App.voiceWhisperServerPath() } }
                         }
+                        Text { text: "Whisper en CPU"; color: Theme.textSecondary; visible: (page.cfg.sttManagedEngine || "") !== "" && !page.sttIsStreaming() && !page.sttIsNative() }
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            visible: (page.cfg.sttManagedEngine || "") !== "" && !page.sttIsStreaming() && !page.sttIsNative()
+                            LcSwitch {
+                                objectName: "sttOnCpuSwitch"
+                                checked: page.cfg.sttDevice === "cpu"
+                                onToggled: { page.cfg.sttDevice = checked ? "cpu" : "gpu"; page.save() }
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "Libera la GPU de voz: con piper (que ya es CPU) las placas quedan enteras para el LLM. Cuesta ~0,35 s por turno con whisper-small; turbo en CPU es lento (~1 s)."
+                                color: Theme.textMuted; font.pixelSize: 12; wrapMode: Text.WordWrap
+                            }
+                        }
                         Item { visible: page.binMsgWhisper.length > 0 && !page.sttIsStreaming(); width: 1; height: 1 }
                         Text {
                             visible: page.binMsgWhisper.length > 0 && !page.sttIsStreaming()

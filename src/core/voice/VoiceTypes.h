@@ -31,6 +31,14 @@ struct VoiceConfig {
     // (si falta) y se lanza este motor STT, fijando baseUrl/endpointPath. Id del
     // catálogo de VoiceServerManager (ej "whisper-base").
     QString sttManagedEngine;
+    // Dónde corre el whisper-server gestionado: "gpu" (default, en la GPU de voz
+    // del reparto de Charla) o "cpu" (`-ng`, sin GPU visible). Medido en un
+    // Ryzen 9 9950X3D con whisper-small: 0,42 s por frase de 6,5 s en CPU contra
+    // 0,07 s en una 3090, misma transcripción, y libera ~950 MiB de VRAM. Con
+    // piper (que ya es CPU) la voz entera deja de reservar GPU y las placas
+    // quedan enteras para el LLM. Sólo aplica a Whisper; Parakeet y los
+    // sidecars externos siguen en la GPU de voz.
+    QString sttDevice = QStringLiteral("gpu");     // gpu | cpu
     // Comando opcional para un endpoint STT externo local. Si se configura,
     // LlamaCode lo lanza y lo mata con la sesión de Charla, aislándolo con la
     // misma CUDA_VISIBLE_DEVICES de la GPU de voz. No controla procesos que ya
@@ -127,6 +135,12 @@ struct VoiceConfig {
     // la decisión de mirar la pantalla es del usuario, no nuestra.
     bool    cursorOcr = false;
 
+    // true si el STT gestionado es whisper-server forzado a CPU.
+    bool sttOnCpu() const { return sttDevice == QLatin1String("cpu"); }
+    // true si ni el STT ni el TTS configurados usan GPU: whisper en CPU (o STT
+    // cloud) + un TTS CPU-only (piper, pocket, inflect con provider cpu, o
+    // cloud). Con "auto" no se sabe qué TTS saldrá → se asume que puede usar GPU.
+    bool voiceIsCpuOnly() const;
     bool sttIsCloud() const { return sttProvider == QLatin1String("cloud"); }
     bool ttsIsCloud() const { return ttsProvider == QLatin1String("cloud"); }
 

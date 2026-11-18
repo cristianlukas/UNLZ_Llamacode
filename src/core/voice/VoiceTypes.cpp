@@ -14,6 +14,7 @@ QJsonObject VoiceConfig::toJson() const
     o["sttMode"]        = sttMode;
     o["sttEndpointPath"] = sttEndpointPath;
     o["sttManagedEngine"] = sttManagedEngine;
+    o["sttDevice"] = sttDevice;
     o["sttManagedCommand"] = sttManagedCommand;
     o["sttManagedArgs"] = QJsonArray::fromStringList(sttManagedArgs);
     o["ttsProvider"]    = ttsProvider;
@@ -80,6 +81,8 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.sttEndpointPath = o.value("sttEndpointPath").toString(c.sttEndpointPath);
     if (c.sttEndpointPath.isEmpty()) c.sttEndpointPath = QStringLiteral("/v1/audio/transcriptions");
     c.sttManagedEngine = o.value("sttManagedEngine").toString(c.sttManagedEngine);
+    c.sttDevice = o.value("sttDevice").toString(c.sttDevice).trimmed().toLower();
+    if (c.sttDevice != QLatin1String("cpu")) c.sttDevice = QStringLiteral("gpu");
     c.sttManagedCommand = o.value("sttManagedCommand").toString(c.sttManagedCommand);
     if (o.value("sttManagedArgs").isArray()) {
         for (const QJsonValue &value : o.value("sttManagedArgs").toArray())
@@ -156,4 +159,18 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     // estrena la captura de pantalla por actualizar la app.
     c.cursorOcr   = o.value("cursorOcr").toBool(c.cursorOcr);
     return c;
+}
+
+bool VoiceConfig::voiceIsCpuOnly() const
+{
+    const bool sttCpu = sttIsCloud()
+        || (sttOnCpu() && sttManagedEngine.startsWith(QLatin1String("whisper"))
+            && sttManagedCommand.trimmed().isEmpty());
+    if (!sttCpu) return false;
+    if (ttsIsCloud()) return true;
+    if (ttsMode == QLatin1String("piper") || ttsMode == QLatin1String("pocket"))
+        return ttsManagedCommand.trimmed().isEmpty();
+    if (ttsMode == QLatin1String("inflect"))
+        return inflectProvider == QLatin1String("cpu");
+    return false;
 }
