@@ -32,7 +32,7 @@ validada, no sólo que el modelo anuncie capacidad multimodal.
 | 4 | **QWEN35-A3B** | Qwen3.6-35B-A3B AutoRound INT4 · vLLM TP2/P2P · KV FP8 | 123,98 BCB / 134,4 directo | ★★★☆☆ · BCB 4/8 | 262K validado | **Sí · 4/4 hasta 262K** | Hasta 2×64K o 3×32K | Experimental |
 | 5 | **QWEN38-Q8** | Qwen3.8-27B UD-Q8_K_XL · **sin MTP · KV Q8** | **23,3 @8K / 23,2 @262K**; PP 160/144 | ★★★☆☆ · BCB directo 8/8; LC-H1 pendiente | 8K y 262K smoke; **64K/131K abortan** en la build actual | **QWEN38-VISION separado**; no transferir visión a esta ruta | Hasta 2×64K sólo como experimento | Experimental/inestable |
 | 6 | **TERRA** | ThinkingCap Qwen3.6-27B Q4 · MTP4 · KV Q8 | 56–58 tok/s | ★★★☆☆ · BCB 6/8 histórico | 64K | **Sí · smoke visual validado; MTP 4/4** | Hasta 2×32–64K | Razonamiento y visión |
-| 7 | **ASTRA DEFAULT** | ISTA-DASLab Qwen3.8 Flash-Next GSQ-RCO IQ2_XS · Strata 0.1.41 · MTP4 · KV int8 · 131K | **154,19 tok/s media** en Hard Mode; 11:05 por 28×3 | 77,98/100 en Hard Mode; HE0 1/1, HE20 20/20, BCB 8/8; TaskFlow 13/13 tras 3 reparaciones | 131K evaluado; 256K no probado | No evaluada localmente | No recomendar para subagentes con datos sensibles | **Predeterminado por pedido del usuario; TC-92 fuga cross-tenant 3/3, TC-74 falla 3/3.** |
+| 7 | **ASTRA DEFAULT** | ISTA-DASLab Qwen3.8 Flash-Next GSQ-RCO IQ2_XS · Strata 0.1.41 · MTP4 · KV int8 · YaRN ×4 · 1M configurado | **154,19 tok/s media** en Hard Mode; 11:05 por 28×3 | 77,98/100 en Hard Mode; HE0 1/1, HE20 20/20, BCB 8/8; TaskFlow 13/13 tras 3 reparaciones | 1M YaRN configurado; screen de 996K/NIAH 10/10 en una corrida; nativo 262K | No evaluada localmente | No recomendar para subagentes con datos sensibles | **Predeterminado por pedido del usuario; TC-92 fuga cross-tenant 3/3, TC-74 falla 3/3.** |
 | 8 | **NINFER-QWEN38** | Qwen3.8-27B `.ninfer` · MTP3 · INT8/Q8 | 73–75 @8K / 50–63 @80–120K | ★★☆☆☆ · BCB 3/8 | 120K probado / 131K operativo | No validada | Hasta 2×64K o 3×32K | Experimental |
 | 9 | **METEOR** | BigBang Q4_K_M · MTP histórico / control sin MTP · KV Q8 | **138–148 control; 211,18 histórico MTP** | ★★☆☆☆ · BCB 3/8 | 64K | **1/1 sin MTP**; 61,69 tok/s visual; MTP visual no validado | Hasta 2×32–64K | Throughput y lotes |
 | 10 | **LUNA** | Ling 3.0 Tiny Q6 · KV Q8 | **202–206**; PP 397–428 | ★★☆☆☆ · HE0 0/1 histórico | 131K medido | No: modelo text-only | Hasta 2×64K | Perfil rápido; HE0 pendiente |
@@ -40,6 +40,16 @@ validada, no sólo que el modelo anuncie capacidad multimodal.
 
 `★` = una estrella; `☆` = una estrella no obtenida. Las cifras históricas no
 se presentan como una nueva medición cuando la configuración cambió.
+
+El límite YaRN de ASTRA es una configuración local específica basada en el
+contexto nativo de 262K; no se traslada a los otros perfiles. Un holdout nuevo
+de ISTA Flash-Next IQ3_XXS con Strata 0.1.41 recuperó 9/9 campos exactos en tres
+prompts de 254.994 tokens, dentro del contexto nativo de 262K. Esto valida sólo
+ese retrieval sintético para ese quant/runtime. No mide calidad general ni
+justifica elevar defaults globales. Para ASTRA, 996.163 tokens de prompt y
+NIAH 10/10 corresponden a una sola corrida; el servidor debe reiniciarse para
+cargar YaRN 1M. Ver [informe de configuración ASTRA](../artifacts/evaluacion-modelos-llamacode/Q-20261014-ASTRA-YARN-1M/RESULTS.md)
+y [screen IQ3_XXS de este lote](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md).
 
 ## Orden de lanzamiento en LlamaCode
 

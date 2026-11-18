@@ -44,37 +44,6 @@
 #  include <shobjidl.h>
 #endif
 
-class TrayWindowCloseFilter final : public QObject
-{
-public:
-    TrayWindowCloseFilter(const TrayController *tray, QObject *parent = nullptr)
-        : QObject(parent), m_tray(tray) {}
-
-    void setForceQuit(bool forceQuit) { m_forceQuit = forceQuit; }
-
-protected:
-    bool eventFilter(QObject *watched, QEvent *event) override
-    {
-        if (!m_forceQuit && event->type() == QEvent::Close) {
-            auto *window = qobject_cast<QWindow *>(watched);
-            if (window
-                && m_tray && m_tray->isAvailable()
-                && QSettings().value(QStringLiteral("window/minimizeToTray"), false).toBool()) {
-                // Ignorar el cierre antes de que QQuickWindow destruya su handle
-                // nativo. Así el tray puede volver a mapear la misma ventana.
-                event->ignore();
-                window->hide();
-                return true;
-            }
-        }
-        return QObject::eventFilter(watched, event);
-    }
-
-private:
-    const TrayController *m_tray = nullptr;
-    bool m_forceQuit = false;
-};
-
 int main(int argc, char *argv[])
 {
     // Modo test: redirige AppData/AppLocalData a una ubicación de prueba. Es la
@@ -586,8 +555,6 @@ int main(int argc, char *argv[])
                      &app, restoreWindow);
     QObject::connect(&tray, &TrayController::openRequested, &app, restoreWindow);
     auto *trayCloseFilter = new TrayWindowCloseFilter(&tray, &app);
-    QObject::connect(&tray, &TrayController::quitRequested, &app,
-                     [trayCloseFilter]() { trayCloseFilter->setForceQuit(true); });
     if (win)
         win->installEventFilter(trayCloseFilter);
 

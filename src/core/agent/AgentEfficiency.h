@@ -5,13 +5,15 @@
 #include <QVariantMap>
 
 // Telemetria estable del harness. Acepta respuestas llama.cpp y OpenAI-compatible
-// incompletas: los campos desconocidos permanecen en cero en vez de inventarse.
+// incompletas: los campos desconocidos permanecen en cero; la caché usa -1
+// para distinguir explícitamente N/D de un cero reportado por el servidor.
 class AgentEfficiency
 {
 public:
     struct Request {
         QString phase;
         int promptTokens = 0;
+        int cachedPromptTokens = -1;
         int generatedTokens = 0;
         double promptMs = 0.0;
         double generatedMs = 0.0;

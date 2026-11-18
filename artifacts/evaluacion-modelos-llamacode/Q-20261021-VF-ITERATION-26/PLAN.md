@@ -113,3 +113,87 @@ El usuario pidió pausar todos los tests. HE20-05 permanece preregistrada, con 0
 Se auditó el Sheet autorizado sin lanzar pruebas. Se agregó el registro que faltaba de Q-20261016-CU-20-E2E (20/20 en el SHA certificado), se normalizaron los estados históricos de Evaluaciones LlamaCode!C156:C164 y se dejaron explícitos los resultados, bloqueos y pausa de Q26. Accionables contiene 41 tarjetas con resultados/evidencias/reconciliación; 28 fechas de creación no constan y no se inventaron. La pestaña Inventario de modelos conserva una sola ficha visible pese a la nota histórica de 53; quedan 52 por reconciliar. Evidencia de auditoría: `receipts/google-sheet-audit-20261021-02.json`.
 
 El lock de Q26 se libera tras guardar este estado. Reanudar sólo tras una instrucción explícita del usuario y luego de un preflight fresco con cero inference servers, memoria/swap en umbral y gate CPU exacto; ejecutar únicamente HE20-05 en serie.
+
+
+## Enmienda 16 — reanudación y orden P1–P5 (2026-10-21T23:50:32Z)
+
+El usuario reanudó explícitamente todos los tests y ordenó evaluar primero Qwen3.8 Flash-Next, luego Qwen3.8-27B, RCO Coder, Swift y después claims de Strata/velocidad/calidad. Q26 HE20-05 queda P1 y se ejecutará en GPU0 sólo tras preflight fresco y gate CPU/fingerprint; HE0 sigue válido 1/1 y HE20 tiene 0 requests al preregistrar. Runner SHA-256 `36ce629670321ff778db271cd29114bee9465761b41bb4c7dd61f0c9be0bce07`. Sin BCB en paralelo, retry automático, promoción, borrado o cambios productivos. Los candidatos P2–P5 siguen secuenciales; RCO exige artefacto/hash/espacio/sharding verificables y Swift queda condicionado a licencia comercial habilitante. Recibo: `attempts/he20-05/receipts/amendment-02-preregistration.json`.
+
+
+## Enmienda 17 — prioridad visible en Sheets y pruebas P2/P3 (2026-10-21)
+
+El usuario reiteró que el trabajo siga el orden Flash-Next, Qwen3.8-27B, RCO, Swift y Strata/otros claims. Se sincronizaron 64 Q-ID omitidos y se agregaron Q28 (P2, Qwen3.8-27B: canario de tools y suite matched sólo si pasa) y Q27 (P3, RCO: factibilidad CPU-only antes de cualquier descarga). En Accionables se ordenó Q26 P1, MTP Q4 P1.1 bloqueado, Q28 P2, OpenJet P2.1 bloqueado por incompatibilidad MTP, Q27 P3, Swift P4 con gate de licencia y Strata P5. La lectura posterior confirmó 43 tarjetas, 249 Q-ID operativos con 0 duplicados entre las 66 filas importadas, y navegación en IA local. La conciliación documental no inició inferencia; HE20-05 sigue 0 requests/score.
+
+Base de recomendación: los tests incompletos previos no producen score de calidad; el diagnóstico de tool-call para Qwen3.8-27B fue inválido; los resultados externos de RCO/OpenJet/Swift no son comparables directamente al setup local; los gates de compatibilidad, espacio y licencia preceden a descarga/inferencia. Recibo de reconciliación: `receipts/priority-order-sheet-sync-20261021.json`.
+
+
+## Enmienda 18 — P1 HE20-05 en ejecución (2026-10-22T00:04Z)
+
+Preflight inmediatamente antes del modelo: cero procesos de inferencia ajenos y cero listeners bloqueantes; el listener 18766 corresponde al controlador permitido. MemAvailable 109,75 GiB y SwapFree 4,62 GiB; el perfil exacto tuvo HE0 válido y HE20 pendiente. Runner SHA-256 `36ce629670321ff778db271cd29114bee9465761b41bb4c7dd61f0c9be0bce07`. Strata inició el modelo local sin descarga; tras ~466 s quedó ready e invocó HE20 con custom ID `267bb33d-4510-417b-ae3c-6dbbfb2cb08d`, un pase, agente `agent-maximo`, sin BCB. Último poll 00:04:46Z: prompt 1/20 en curso, aún sin respuesta ni score; guard 00:04:23Z MemAvailable 85,21 GiB, SwapFree 4,62 GiB, app RSS 0,06 GiB y server RSS 59,64 GiB. Continuar serialmente hasta resultado válido o gate/corte; sin retry automático. Recibo `attempts/he20-05/receipts/p1-progress-20261022T0004Z.json`.
+
+## HE20-06 — variante contenida de memoria · 2026-10-22T01:09:21Z
+
+Tras el abort seguro de HE20-05 (swap global 0,56 GiB; sin score), se preregistra una nueva ejecución materialmente distinta del mismo HE20: mantiene el modelo, la huella de perfil, los 32K, KV INT8, MTP4, agente y fixture; reduce sólo `resident_budget_gib` de 20 a 12 y contiene la copia aislada de LlamaCode + Strata en un scope propio (`MemoryHigh=86G`, `MemoryMax=96G`, `MemorySwapMax=1G`, `OOMPolicy=kill`). El wrapper compara el token del lock y hashes actuales de AGENTS/README/WORK_QUEUE, y exige que el cgroup v2 refleje exactamente esos límites antes de ejecutar el runner. Guardias globales 24 GiB MemAvailable / 1 GiB SwapFree permanecen iguales. No se mide velocidad comparativa ni se cambia producción. Si la suite no logra 20/20 válido, no habrá score y no habrá retry automático.
+
+Prerregistro y copia aislada: `attempts/he20-06/receipts/preregistration.json`, `attempts/he20-06/receipts/runtime-copy.json`.
+
+
+## Enmienda 19 — cerrar HE20 y preregistrar BCB8 · 2026-10-22T02:22:31Z
+
+HE20-06 completó la etapa válida a la huella `a56c723f…`: 20/20 finales, 14/20 en el primer intento, dos reparaciones, 3.507,073 s, sin timeout ni fallo de infraestructura. La mejora automática `elapsedVsBaselinePct` no se toma como evidencia de velocidad: su baseline tiene fingerprint distinto (`185d…`). Se conserva el resultado de HE20 como una sola corrida con reparaciones; todavía no hay motivo para cambiar el modelo productivo.
+
+Se preregistra `attempts/bcb-01/receipts/preregistration.json` para ejecutar únicamente BCB-Hard 8 ítems, que continúa pendiente y es la siguiente etapa autorizada de P1. Se revalidarán el mismo fingerprint, HE0/HE20 válidos y BCB pendiente antes de cargar el modelo; timeout máximo 1.800 s, recursos aislados en el mismo cgroup protector, resident budget 12 GiB, GPU0. Un score BCB aislado no demostrará superioridad; se requerirá un control ASTRA/SOL emparejado para cualquier recomendación de adopción. No se repetirá automáticamente si el gate falla o vence el tiempo.
+
+
+## Enmienda 20 — corregir fallo previo a inferencia de BCB8 · 2026-10-22T02:25:20Z
+
+El primer arranque de `bcb-01` superó los gates de cgroup, servidor/memoria y perfil: HE0 y HE20 válidos, BCB pendiente, fingerprint `a56c723f…`. Se detuvo antes de iniciar Strata al calcular SHA-256 del fixture por un `NameError` (`hashlib` no importado); no hubo carga de modelo, invocación de suite ni requests BCB. El controlador aislado fue terminado por el propio runner y el cleanup indica Strata no iniciado. Los recibos originales se conservaron en `attempts/bcb-01/receipts/pre-inference-failure-01/`.
+
+Se corrigió únicamente el import estándar, se actualizó el hash del runner en el prerregistro y wrapper, y `py_compile` pasó. Esto corrige el setup antes del único pase previsto; no es un retry de suite. Se repetirá el preflight completo desde cero. La regla permanece: ejecutar BCB8 una vez, timeout máximo 1.800 s; si la suite inicia y falla o vence, no repetir sin un cambio material.
+
+## Enmienda 21 — resultado del único pase BCB8 y siguiente prueba P1.1 · 2026-10-22T02:58:48Z
+
+El pase BCB8 invocó la suite congelada y alcanzó 8/8 prompts, pero venció el timeout de 1.800 s con la reparación 2/3 pendiente. El prompt 2 agotó su presupuesto de razonamiento y terminó por repetición sin respuesta final; no hay grade ni score. La última guarda seguía dentro de los umbrales y la unidad propia se limpió; el postflight no encontró procesos de inferencia ni GPU. No se repetirá esta invocation.
+
+HE20-06 permanece válido 20/20 con dos reparaciones; sus 3.507,073 s no se comparan con el baseline de otra huella. No basta para afirmar superioridad. La próxima prueba en orden es P1.1, MTP Q4/llama.cpp. Como TaskFlow MTP-on terminó 0/13 y MTP-off no cerró, se preregistró una pantalla pareada con una tarea reducida y primer paso de escritura explícito, idéntica entre ambos brazos. Cambia deliberadamente la tarea, así que sus puntuaciones no se compararán con TaskFlow ULTRA histórico; sólo se compararán MTP-off/on dentro de esta pantalla.
+
+Prerregistro `attempts/mtp-taskflow-v2-01/receipts/preregistration.json`; suite congelada `attempts/mtp-taskflow-v2-01/spec/taskflow-mini-v2.json`. Un pase por brazo, MTP-off primero y MTP-on después, 1.800 s por suite, misma cuantización/runtime/agent/sampling/contexto; sólo cambia el sidecar MTP. Si pasa, repetir semillas emparejadas antes de afirmar ventaja de calidad o velocidad.
+
+
+
+## Enmienda 22 — corrección de endpoint y gates antes de MTP-off · 2026-10-22T03:11:10Z
+
+La revisión final del wrapper detectó una diferencia antes de arrancar el modelo: el daemon aislado se configura con `LLAMACODE_CONTROL_PORT=18119` y los recibos históricos usan `http://127.0.0.1:18119`, mientras que el script nuevo apuntaba a 8877. Se corrigió el endpoint a 18119 antes de iniciar una solicitud. El preflight ahora comprueba el `profileConfigFingerprint` exacto esperado para el brazo MTP-off/on y fija SHA-256 de LlamaCode y llama-server; además contrasta el hash de `/proc/<pid>/exe` tras abrir el daemon y antes de la carga. `py_compile`, hashes de binarios y chequeos estáticos de suite/perfiles/modelos pasan. No hubo inferencia ni uso de GPU. La corrección está incorporada en el prerregistro antes de la primera corrida.
+
+
+## Enmienda 23 — dependencia del runner corregida antes de MTP-off · 2026-10-22T03:13:27Z
+
+El primer intento MTP-off alcanzó el gate de perfil exacto y verificó el scope, pero el runner salió porque faltaba `scripts/run_taskflow.py` en el nuevo intento. No llegó a cargar el modelo: sin llama-server hijo, sin `benchmark_start`, cero procesos GPU y postflight limpio. Se preservaron recibos/logs bajo `attempts/mtp-taskflow-v2-01/receipts/preflight-failure-01/`. Se copió el runner histórico sin cambios, se fijó SHA-256 `1cf43f5cafbfd83ff6357bd3dbd1d6986b68ee1499f7008f8ea2bf8f67df484c`, y se agregó su validación estática; `py_compile` pasó. El pase de control preregistrado sigue disponible.
+
+
+## Enmienda 24 — guardia de RSS desalineada corregida · 2026-10-22T03:18:32Z
+
+El primer intento que sí inició MTP-off fue abortado al alcanzar RSS de árbol 60 GiB, límite que el wrapper había añadido sin prerregistro. En la activación host MemAvailable 115.73 GiB, swap libre 2.71 GiB, cgroup 76.11/96 GiB y eventos max/OOM en cero. No quedó score. El postflight inmediato vio el llama-server propio después de detener la API, pero el scope systemd terminó de limpiarlo al salir; el chequeo posterior confirmó cero servidores, listeners reservados y compute apps. La guarda se corrigió para seguir exactamente el preregistro (<20 GiB MemAvailable por 15 muestras, swap <1 GiB), con límites 86/96 GiB y aborto ante evento max/OOM del cgroup. No se repetirá como pase de calidad; es una continuación para obtener una corrida válida tras corregir una instrumentación no autorizada.
+
+
+## Enmienda 25 — guardar última guarda y huellas de scripts · 2026-10-22T03:20:02Z
+
+
+
+## Enmienda 26 — control MTP-off pasa Mini v2 · 2026-10-22T03:28:26Z
+
+El brazo MTP-off completó el fixture y aprobó 7/7: cuatro archivos, compilación, ocho tests unitarios y self-test; cero reparaciones. Wall time 400,437 s; primera herramienta 157,224 s; primera escritura 157,456 s; cuatro llamadas. No hay TPS en la salida. Cleanup completo, sin servidores/puertos/GPU residuales ni eventos de cgroup/OOM. Este resultado confirma que el control puede realizar el fixture, pero una sola pantalla no establece ventaja de calidad/velocidad y no se compara con ULTRA. Actualizados accionable, Evaluaciones e Inventario en Sheets; el siguiente es MTP-on.
+
+
+## Enmienda 27 — resultado MTP-on y tres pares de repetición · 2026-10-22T03:47Z
+
+MTP-on también finalizó Mini v2 en 7/7, pero sólo después de dos reparaciones: 6/7 inicial, 14 tool calls y 850,805 s; primera herramienta/escritura 163,273/163,316 s. El control fue 7/7 a la primera con cuatro llamadas y 400,437 s. Ambos fingerprints y fixture coincidieron con el prerregistro; el MTP-on quedó 2,125× más lento E2E en esta única pareja. El campo `avgTps` 27,557 contra 20,957 es agregado y no desglosa prefill/decode, por lo que no revierte la lectura operativa. Recomendación provisional: mantener MTP-off y no migrar producción.
+
+Como ambos brazos llegaron a 7/7 final y el prerregistro de pantalla pide decidir si hacen falta repeticiones, se abre un follow-up de tres pares para estimar variabilidad: seeds de llama.cpp 4243, 4244 y 4245; cada seed igual dentro del par; orden OFF→ON, ON→OFF, OFF→ON; mismo prompt/suite/harness/perfiles y límite 1.800 s; reinicio aislado entre brazos. Antes de cada brazo: lock/docs intactos, cero otros servidores de inferencia/listeners/compute apps, fingerprints exactos y guardias 40 GiB de memoria disponible/1 GiB swap al inicio, aborto si MemAvailable <20 GiB por 15 muestras, SwapFree <1 GiB o evento OOM/max del cgroup; GUI permitida. No hay cambios a perfiles productivos, ASTRA/SOL ni PeritoSoft. Detener el follow-up ante cualquier desvío de configuración, timeout/infraestructura o contaminación externa, sin seguir con el siguiente seed hasta registrar y limpiar.
+
+Métricas: aceptación inicial/final, reparaciones, tool calls, wall E2E, primera herramienta/escritura, `avgTps` sólo como campo auxiliar, telemetría/cgroup y postflight. Gate de recomendación: mantener MTP-off salvo que el candidato repita 7/7 final sin regresión de aceptación inicial y mejore el tiempo E2E de modo consistente; tres pares no bastan para una afirmación estadística amplia. No comparar este fixture con TaskFlow ULTRA ni con Server Speed.
+
+
+## Enmienda 28 — réplica MTP seed 4243 · 2026-10-22
+
+El primer par repetido Mini v2 está completo y el segundo queda listo en orden ON→OFF. El seed 4243 favorece ON en aceptación (7/7 sin repair frente a 6/7 tras 3 repairs) y wall time (364,398 s frente a 1.161,152 s), pero contradice el primer screen y no aporta TPS desglosados. No activar MTP por un solo seed. Próximo: seed 4244 ON y luego OFF, usando fingerprints preregistrados, fresh server/memory gates y cleanup serial entre brazos. Gate de adopción sigue exigiendo consistencia entre pares sin regresión de calidad.

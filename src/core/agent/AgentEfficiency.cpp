@@ -23,8 +23,12 @@ static double firstNumber(const QJsonObject &a, const QJsonObject &b,
 
 QVariantMap AgentEfficiency::Request::toVariant() const
 {
+    const double cacheHitPct = cachedPromptTokens >= 0 && promptTokens > 0
+        ? 100.0 * cachedPromptTokens / promptTokens : -1.0;
     return {{QStringLiteral("phase"), phase},
             {QStringLiteral("promptTokens"), promptTokens},
+            {QStringLiteral("cachedPromptTokens"), cachedPromptTokens},
+            {QStringLiteral("cacheHitPct"), cacheHitPct},
             {QStringLiteral("generatedTokens"), generatedTokens},
             {QStringLiteral("promptMs"), promptMs},
             {QStringLiteral("generatedMs"), generatedMs},
@@ -42,12 +46,38 @@ AgentEfficiency::Request AgentEfficiency::Request::fromResponse(
 {
     const QJsonObject timings = root.value(QStringLiteral("timings")).toObject();
     const QJsonObject usage = root.value(QStringLiteral("usage")).toObject();
+    const QJsonObject promptDetails = usage.value(QStringLiteral("prompt_tokens_details")).toObject();
+    const QJsonObject inputDetails = usage.value(QStringLiteral("input_tokens_details")).toObject();
     Request r;
     r.phase = AgentEfficiency::normalizedPhase(phaseName);
-    r.promptTokens = qRound(firstNumber(timings, usage,
-        {QStringLiteral("prompt_n"), QStringLiteral("prompt_tokens")}));
+    const QJsonValue llamaPromptN = timings.value(QStringLiteral("prompt_n"));
+    const QJsonValue llamaCacheN = timings.value(QStringLiteral("cache_n"));
+    if (llamaPromptN.isDouble() && llamaPromptN.toDouble() >= 0.0
+        && llamaCacheN.isDouble() && llamaCacheN.toDouble() >= 0.0) {
+        // llama.cpp separates the prompt that had to be evaluated from the
+        // prefix reused from its KV cache. Public prompt-token totals include
+        // both, so keep efficiency and cache-hit percentages on that total.
+        r.promptTokens = qRound(llamaPromptN.toDouble() + llamaCacheN.toDouble());
+    } else {
+        r.promptTokens = qRound(firstNumber(timings, usage,
+            {QStringLiteral("prompt_n"), QStringLiteral("prompt_tokens"),
+             QStringLiteral("input_tokens")}));
+    }
     r.generatedTokens = qRound(firstNumber(timings, usage,
-        {QStringLiteral("predicted_n"), QStringLiteral("completion_tokens")}));
+        {QStringLiteral("predicted_n"), QStringLiteral("completion_tokens"),
+         QStringLiteral("output_tokens")}));
+    const auto reportedTokens = [](const QJsonValue &value) {
+        return value.isDouble() && value.toDouble() >= 0.0
+            ? qRound(value.toDouble()) : -1;
+    };
+    r.cachedPromptTokens = reportedTokens(
+        promptDetails.value(QStringLiteral("cached_tokens")));
+    if (r.cachedPromptTokens < 0)
+        r.cachedPromptTokens = reportedTokens(inputDetails.value(QStringLiteral("cached_tokens")));
+    if (r.cachedPromptTokens < 0)
+        r.cachedPromptTokens = reportedTokens(usage.value(QStringLiteral("cache_read_input_tokens")));
+    if (r.cachedPromptTokens < 0)
+        r.cachedPromptTokens = reportedTokens(timings.value(QStringLiteral("cache_n")));
     r.promptMs = firstNumber(timings, root, {QStringLiteral("prompt_ms")});
     r.generatedMs = firstNumber(timings, root, {QStringLiteral("predicted_ms")});
     r.draftTokens = qMax(0, qRound(firstNumber(
@@ -64,13 +94,21 @@ QVariantMap AgentEfficiency::summarize(const QVariantList &requests)
 {
     QVariantMap out{{QStringLiteral("requests"), requests.size()}};
     qint64 prompt = 0, generated = 0, toolBytes = 0;
+    qint64 cachedPrompt = 0, cacheEligiblePrompt = 0;
     qint64 draft = 0, draftAccepted = 0;
-    int tools = 0;
+    int tools = 0, cacheReportedRequests = 0;
     double promptMs = 0.0, generatedMs = 0.0, wallMs = 0.0;
     QVariantMap phases;
     for (const QVariant &v : requests) {
         const QVariantMap r = v.toMap();
         prompt += r.value(QStringLiteral("promptTokens")).toLongLong();
+        const qint64 cached = r.value(QStringLiteral("cachedPromptTokens"), -1).toLongLong();
+        if (cached >= 0) {
+            ++cacheReportedRequests;
+            cachedPrompt += cached;
+            const qint64 requestPrompt = r.value(QStringLiteral("promptTokens")).toLongLong();
+            if (requestPrompt > 0) cacheEligiblePrompt += requestPrompt;
+        }
         generated += r.value(QStringLiteral("generatedTokens")).toLongLong();
         promptMs += r.value(QStringLiteral("promptMs")).toDouble();
         generatedMs += r.value(QStringLiteral("generatedMs")).toDouble();
@@ -89,6 +127,13 @@ QVariantMap AgentEfficiency::summarize(const QVariantList &requests)
         phases[phase] = p;
     }
     out[QStringLiteral("promptTokens")] = prompt;
+    out[QStringLiteral("cachedPromptTokens")] = cachedPrompt;
+    out[QStringLiteral("cacheReportedRequests")] = cacheReportedRequests;
+    out[QStringLiteral("cacheUnknownRequests")] = requests.size() - cacheReportedRequests;
+    out[QStringLiteral("cacheEligiblePromptTokens")] = cacheEligiblePrompt;
+    out[QStringLiteral("cacheHitPct")] = cacheEligiblePrompt > 0
+        ? 100.0 * cachedPrompt / cacheEligiblePrompt : -1.0;
+    out[QStringLiteral("requestDetails")] = requests;
     out[QStringLiteral("generatedTokens")] = generated;
     out[QStringLiteral("promptMs")] = promptMs;
     out[QStringLiteral("generatedMs")] = generatedMs;

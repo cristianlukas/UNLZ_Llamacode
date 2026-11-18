@@ -87,3 +87,15 @@ procesos ajenos.
 El postflight a las 22:59Z registró MemAvailable 107,99 GiB, SwapFree 239,7 MiB,
 PSI some/full avg10 0, OOM 0, puertos de tarea libres y cero procesos de cómputo
 CUDA. Ver [`receipts/postflight-20261016T2259Z.json`](receipts/postflight-20261016T2259Z.json).
+
+## Enmienda Q130: cumplimiento del prerregistro de contexto
+
+La auditoría independiente Q130 encontró que `context262k-attempt-05.json` y
+`scripts/probe_q4_262k.py` contienen una sola `needle` (`LC-95P-7D3A9C`). La
+solicitud sí recuperó esa clave exactamente a 258.046 tokens, pero el plan
+Q-20261016-FLASHNEXT-FOLLOWUP especificaba diez valores sembrados en posiciones
+distintas. Por tanto, attempt05 es un screen de una clave, no el cumplimiento
+del screen de diez valores. Se abrirá Q131 para ese criterio; no se repiten
+pair03, visión, Computer Usage ni otras ramas ya completadas. El dictamen de
+pair03 se confirma por la campaña original, no por una inferencia nueva. Véase
+`artifacts/evaluacion-modelos-llamacode/Q-20261025-VF-ITERATION-130/RESULTS.md`.

@@ -54,3 +54,22 @@ El filtro aplicado es estricto: un artefacto sólo se puede marcar superseded si
 ## Conclusión
 
 El barrido amplió el inventario en cinco filas y corrigió rutas/estados que antes aparecían como ausentes. No encontró “muchos modelos inferiores” fuera del Sheet con pruebas completas: los pesos grandes no listados carecían de Q172/Q173, eran piezas auxiliares o estaban incompletos. Los promedios de TERRA y SOL/Gemma vienen de rangos de contexto distintos, así que no demuestran supersession; TERRA además sigue como launcher favorito/mejor, y Gemma 12B aparece en fixtures de PeritoSoft. No se borraron archivos. Para aplicar el filtro del usuario hace falta comparar los perfiles con niveles de contexto Q173 homologados; el resto de artefactos encontrados requiere sus propias mediciones Q173/Q172 antes de poder clasificarlos.
+
+
+## Retiro de dos perfiles SOL Flash-Next por instrucción del usuario (2026-10-31)
+
+Se retiraron los archivos locales de los dos perfiles pedidos y se preservó como único perfil instalado de esta comparación **SOL · Qwen3.8 Flash-Next RCO IQ2_XS · NInfer-all v3 · 2 GPU**. No se borraron sus archivos Q178/Q179.
+
+- Strata IQ2_XS: se borraron los dos GGUF (68.026.093.024 B), sus marcadores `.done` y el pack específico `strata-data/packs/iq2_xs/dense.bin` (1.538.035.200 B). Se dejaron tokenizer y metadatos pequeños.
+- NInfer preview Q171/Q173 de 1 GPU: se borraron `qwen4exp.ninfer` (32.000.000.000 B), `qwen4exp.ninfer.part-0001` (7.225.180.928 B) en HDD extra y el sidecar Q171 `qwen4exp.ninfer.ngram` (29.127.258.112 B) en D. Se conservaron JSON de conversión, logs, harness y recibos.
+- NInfer-all v3 Q178/Q179 permanece: target HDD `.../Q-20261028-VF-ITERATION-178/reconverted-v3/text/qwen4exp.ninfer` (32.000.000.000 B) y sidecar D `.../reconverted-v3/ngram/qwen4exp-ngram.ninfer` (28.800.142.336 B); ambos se verificaron presentes tras el borrado.
+- La fila `Modelos locales por peso` de Strata y la del preview quedaron marcadas `RETIRADO`, con peso local 0, rutas/estado actualizados y métricas históricas conservadas. El preview tiene `Superseded by` con enlace a la fila del perfil NInfer-all. Strata se retiró por decisión explícita: sus valores históricos de Prefill/Decode (2.880,75/117,75) son mayores que los de NInfer-all v3 (2.086,74/87,31), pero Q172 es 73 frente a 80; no satisface supersession en las tres métricas. Además, las cohortes/rangos de contexto no son idénticos. La fila NInfer-all quedó intacta. Lectura de vuelta de las cuatro zonas actualizadas aprobada.
+- Espacio libre D: 14.616.584.192 → 113.307.979.776 B (+98.691.395.584 B observados). HDD extra quedó con 67.871.305.728 B libres después de retirar el target Q171 (39.225.180.928 B).
+- No se ejecutaron benchmarks ni inferencias; sólo limpieza y verificación de archivos/Sheet.
+
+
+## Revisión de supersession TERRA frente a SOL NInfer-all
+
+Fecha: 2026-10-30T22:43:10-03:00. El renglón mostrado en `Modelos locales por peso` compara ahora TERRA Q173 A16 MTP-off (8K/32K/64K/128K/256K) con SOL NInfer-all v3 Q178/Q179 (8K/32K/64K/128K/261888), ambos en 2× RTX 3090. Los ladders son cercanos, aunque los runtimes son distintos y el último punto no es idéntico. En esta comparación de perfiles, SOL tiene mejores medias de prefill/decode (2086.74/87.31 vs 1743.98/49.51 tok/s) y mejor Q172 (80 vs 62; una semilla por perfil). TERRA queda supersedido en estas tres columnas; la evaluación no convierte a SOL en perfil seguro: Q179 registró divulgación cross-tenant TC-92.
+
+Se retiró el launch `177_TERRA · Qwen3.8 27B · vLLM TP2 P2P MTP4 · 262K` del uso operativo (`deprecated=true`, `best=false`, `favorite=false`), conservándolo en la vista de perfiles para historial. El archivo de pesos no se borró: el mismo `modelId`/`modelStableId=120` está referenciado por los launches activos 169, 170, 171 y 176 MEJOR QWEN 28B; borrar la carpeta de 18,996,706,072 bytes rompería esos perfiles compartidos. El escaneo de configuraciones de PeritoSoft no encontró referencias exactas a esta huella/ruta. No hubo inferencia, benchmark, build ni borrado de pesos.

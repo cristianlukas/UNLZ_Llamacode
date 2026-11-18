@@ -56,5 +56,75 @@
     "inbox_entries_after_sync": 70,
     "new_entry": "q182-xolotl-ista-gsq-iq2xs-dual3090-gate",
     "stale_qwen36_rerun_instruction_corrected": true
+  },
+  "revalidation_20261029_1246Z": {
+    "checked_at_utc": "2026-10-29T12:46:34Z",
+    "sources": [
+      {
+        "url": "https://github.com/Indras-Mirror/Xolotl/blob/main/docs/DEEPSEEK_V41.md",
+        "current_finding": "Current documentation still describes experimental performance on a single RTX 4090; it does not qualify this host’s dual RTX 3090 route."
+      },
+      {
+        "url": "https://github.com/Indras-Mirror/Xolotl/issues/2",
+        "current_finding": "Issue remains open. Latest relevant report dated 2026-10-26: on 2x RTX 5060 Ti, two guards allowed layer-split startup but simple outputs were incorrect in 0/3 checks, with empty/corrupt output and language drift; the author did not identify the root cause. Earlier 4x RTX 3090 report still records first-prompt SIGSEGV after the tested build. No dual-3090 correction/qualification is linked."
+      }
+    ],
+    "current_storage_bytes": {
+      "nvme_d_free": 145357176832,
+      "nvme_checkout_free": 121912016896,
+      "combined_nvme_free": 267269193728,
+      "required_gate": 300000000000,
+      "deficit_bytes": 32730806272,
+      "hdd_extra_free_excluded": 30834577408
+    },
+    "decision": "No gate changed. Keep Q182 blocked before download/build/inference; do not spend or use GPU. Reopen only when both the NVMe gate and an applicable corrected dual-3090 route are satisfied."
+  },
+  "revalidation_20261029_132952Z": {
+    "checked_at_utc": "2026-10-29T13:29:52Z",
+    "task": "Q188 revalidate Q182, no inference",
+    "host_state": {
+      "gpu": "2x RTX 3090",
+      "ram_gib": 128,
+      "c_drive_free_bytes": 121910718464,
+      "d_drive_free_bytes": 168210841600,
+      "model_volumes_c_plus_d_free_bytes": 290121560064,
+      "root_partition_free_bytes": 6421360640,
+      "hdd_extra_free_bytes": 7980912640,
+      "root_and_hdd_counted_for_model_payload": false,
+      "inference_server_or_listener_found": false,
+      "nvidia_compute_apps": [],
+      "peritosoft_gui_may_be_open": true
+    },
+    "xolotl_gate": {
+      "required_nvme_free_bytes": 300000000000,
+      "deficit_c_plus_d_bytes": 9878439936,
+      "decision": "Remain blocked before model download/build/inference. No applicable corrected dual-3090 runtime qualification was found.",
+      "current_primary_evidence": {
+        "docs": "Xolotl main advertises layer split, reports ISTA IQ2_XS working on one RTX 4090, and labels the measured PC as one RTX 4090.",
+        "issue": "Issue #2: 4x RTX 3090 still segfaulted on first prompt on d4f65068; separate 2x RTX 5060 Ti report after guards returned 0/3 correct simple answers. Neither is this host."
+      }
+    },
+    "new_distinct_candidate": {
+      "runtime": "Project Maya v1.1.37",
+      "model": "DeepSeek V4.1 Flash-1017 Maya-XS IQ1_S GGUF",
+      "files": "276.6 GB (five shards incl. Engram); optional XS drafter 4.3 GB; no-vision skips 1.1 GB encoder.",
+      "two_nvme_volumes_free_bytes": 290121560064,
+      "headroom_without_drafter_bytes": 13521560064,
+      "headroom_with_drafter_bytes": 9221560000,
+      "test_decision": "Do not download yet. Create Q189 with a disk-layout/build preflight and explicit safety floor before fetching files. This is separate from both Reddit Delta/nazeshinjite Q2 and Q182 ISTA/Xolotl."
+    },
+    "sources": [
+      "https://github.com/Indras-Mirror/Xolotl",
+      "https://github.com/Indras-Mirror/Xolotl/issues/2",
+      "https://github.com/mw00/project-maya/releases",
+      "https://github.com/mw00/project-maya/blob/main/docs/SETUP.md",
+      "https://huggingface.co/peasantsmith/DeepSeek-V4.1-Flash-1017-Maya-GGUF/blob/main/README.md"
+    ],
+    "execution": {
+      "download_started": false,
+      "build_started": false,
+      "inference_started": false,
+      "gpu_used": false
+    }
   }
 }

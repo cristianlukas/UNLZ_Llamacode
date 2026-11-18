@@ -62,6 +62,7 @@ private slots:
     void requestIdGeneratedWhenMissing();
     void appControllerEngineeringCatalogIsHeadless();
     void harnessSpecIsHeadless();
+    void benchmarkCoverageCanBeSelectedHeadlessly();
     void auxiliarySchedulerIsHeadless();
 
 private:
@@ -424,6 +425,45 @@ void ControlApiTests::harnessSpecIsHeadless()
         port, "POST", "/invoke",
         R"({"target":"profileManager","method":"setAgentProfileSpec","args":["agent-intermedio",{}]})");
     QVERIFY(!denied.value("result").toBool());
+}
+
+void ControlApiTests::benchmarkCoverageCanBeSelectedHeadlessly()
+{
+    QStandardPaths::setTestModeEnabled(true);
+    QCoreApplication::setOrganizationName(QStringLiteral("LlamaCode"));
+    QCoreApplication::setApplicationName(QStringLiteral("LlamaCode"));
+    AppController app;
+    ControlApi api(&app);
+    const quint16 port = freePort();
+    QVERIFY(api.start(port));
+
+    const QVariantList defaultCoverage = app.benchmarkCoverage();
+    QVERIFY(!defaultCoverage.isEmpty());
+    const QString profileId = defaultCoverage.first().toMap()
+                                  .value(QStringLiteral("profileId")).toString();
+    QVERIFY(!profileId.isEmpty());
+
+    const QJsonObject reply = requestJsonAt(
+        port, "POST", "/invoke",
+        R"({"method":"benchmarkCoverageForAgent","args":["agent-chat"]})");
+    QVERIFY(reply.value(QStringLiteral("ok")).toBool());
+    const QJsonArray rows = reply.value(QStringLiteral("result")).toArray();
+    QVERIFY(!rows.isEmpty());
+    QString selectedFingerprint;
+    for (const QJsonValue &value : rows) {
+        const QJsonObject row = value.toObject();
+        if (row.value(QStringLiteral("profileId")).toString() == profileId) {
+            QCOMPARE(row.value(QStringLiteral("agentProfileId")).toString(),
+                     QStringLiteral("agent-chat"));
+            selectedFingerprint = row.value(QStringLiteral("profileConfigFingerprint")).toString();
+            break;
+        }
+    }
+    QVERIFY(!selectedFingerprint.isEmpty());
+    QCOMPARE(app.benchmarkCoverage().first().toMap()
+                 .value(QStringLiteral("profileConfigFingerprint")).toString(),
+             defaultCoverage.first().toMap()
+                 .value(QStringLiteral("profileConfigFingerprint")).toString());
 }
 
 void ControlApiTests::auxiliarySchedulerIsHeadless()

@@ -3673,6 +3673,11 @@ QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePay
     };
     if (nativePayload.contains(QStringLiteral("temperature")))
         payload.insert(QStringLiteral("temperature"), nativePayload.value(QStringLiteral("temperature")));
+    // El turno real también debe conservar el control de reutilización del KV.
+    // No todos los callers lo envían; respetar presencia/valor evita cambiar
+    // explícitamente un A/B de caché o agregar un parámetro a servidores ajenos.
+    if (nativePayload.contains(QStringLiteral("cache_prompt")))
+        payload.insert(QStringLiteral("cache_prompt"), nativePayload.value(QStringLiteral("cache_prompt")));
     // El payload se arma de cero: sin copiar esto, en modo texto el server nunca
     // recibía "Pensar" apagado (enable_thinking/reasoning_budget) y un template que
     // razona por defecto (Qwen3) razonaba igual.
@@ -3686,6 +3691,8 @@ QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePay
 void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMode mode)
 {
     if (!m_running) return;
+    const bool hadCachePrompt = payload.contains(QStringLiteral("cache_prompt"));
+    const QJsonValue cachePromptValue = payload.value(QStringLiteral("cache_prompt"));
     const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
     QNetworkRequest req((QUrl(url)));
     applyHeaders(req);
@@ -3704,7 +3711,8 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMod
     m_reply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
     emit sessionsChanged();
     connect(m_reply, &QNetworkReply::readyRead, this, [this]() { handleStreamData(); });
-    connect(m_reply, &QNetworkReply::finished, this, [this, payload, mode]() {
+    connect(m_reply, &QNetworkReply::finished, this,
+            [this, payload, mode, hadCachePrompt, cachePromptValue]() {
         if (m_streamIdleTimer) m_streamIdleTimer->stop();
         QNetworkReply *r = m_reply;
         if (!r) return;
@@ -3755,7 +3763,14 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMod
             emit logAppended(QStringLiteral("[turn] server rechazó OpenAI tools (400); "
                                             "reintentando protocolo textual de tools headless%1\n").arg(why));
             m_textToolFallback = true;
-            postCompletionRequest(buildTextToolPayload(payloadForKnownContext(payload)), TextTools);
+            QJsonObject textFallbackPayload = payloadForKnownContext(payload);
+            // NativeCompat omite cache_prompt para mantener ese retry ampliamente
+            // compatible. Si el caller lo había pedido y después se cae al protocolo
+            // textual, restaurar su valor opcional para que el fallback no pierda la
+            // reutilización solicitada. No inventar el campo cuando estaba ausente.
+            if (hadCachePrompt)
+                textFallbackPayload.insert(QStringLiteral("cache_prompt"), cachePromptValue);
+            postCompletionRequest(buildTextToolPayload(textFallbackPayload), TextTools);
             return;
         }
         if (!ok && mode == NativeCompat && status == 400) {
@@ -4836,6 +4851,10 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("desktop_wait"), QStringLiteral("desktop_launch"),
         QStringLiteral("email_accounts"), QStringLiteral("email_send"),
         QStringLiteral("email_list"), QStringLiteral("email_read"),
+        QStringLiteral("google_gmail_search"), QStringLiteral("google_gmail_read"),
+        QStringLiteral("google_calendar_events"), QStringLiteral("google_calendar_freebusy"),
+        QStringLiteral("google_tasks_lists"),
+        QStringLiteral("google_tasks_list"),
         QStringLiteral("mcp_search_tools"), QStringLiteral("mcp_call_tool")};
     // Además de la lista explícita, toda tool con schema built-in es conocida.
     // La lista sola se desincronizaba: desktop_resize estaba en el catálogo (y en
@@ -4851,10 +4870,6 @@ void LlamaAgentBackend::processPendingCalls()
     if (!known.contains(name) && !schemaKnown.contains(name) && !name.startsWith(kMcpPrefix)) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
-        QStringLiteral("google_gmail_search"), QStringLiteral("google_gmail_read"),
-        QStringLiteral("google_calendar_events"), QStringLiteral("google_calendar_freebusy"),
-        QStringLiteral("google_tasks_lists"),
-        QStringLiteral("google_tasks_list"),
         AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
                               QJsonObject{{QStringLiteral("tool"), name},
                                           {QStringLiteral("toolCallId"), id},
@@ -8521,6 +8536,12 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("email_send", "Correo", "Envía un correo (SMTP). Requiere aprobación por defecto.", 150),
         mk("email_list", "Correo", "Lista correos recientes (IMAP/POP3).", 130),
         mk("email_read", "Correo", "Lee el cuerpo de un correo por uid.", 100),
+        mk("google_gmail_search", "Correo", "Busca Gmail vía OAuth; lectura solamente.", 125),
+        mk("google_gmail_read", "Correo", "Lee un mensaje Gmail por id.", 100),
+        mk("google_calendar_events", "Calendario", "Lista eventos Google Calendar.", 135),
+        mk("google_calendar_freebusy", "Calendario", "Consulta disponibilidad sin leer detalles de eventos.", 105),
+        mk("google_tasks_lists", "Tareas", "Lista Google Tasks.", 75),
+        mk("google_tasks_list", "Tareas", "Lista tareas de Google Tasks.", 90),
         mk("worker_call", "Plugins", "Invoca una operación de un worker Node/Python externo; requiere aprobación.", 135),
     };
 }
@@ -8536,12 +8557,6 @@ bool LlamaAgentBackend::escalateDesktopToolsIfRequested(const QString &prompt)
             == QLatin1String("desktop"))
             desktop << t.value(QStringLiteral("name")).toString();
     }
-        mk("google_gmail_search", "Correo", "Busca Gmail vía OAuth; lectura solamente.", 125),
-        mk("google_gmail_read", "Correo", "Lee un mensaje Gmail por id.", 100),
-        mk("google_calendar_events", "Calendario", "Lista eventos Google Calendar.", 135),
-        mk("google_calendar_freebusy", "Calendario", "Consulta disponibilidad sin leer detalles de eventos.", 105),
-        mk("google_tasks_lists", "Tareas", "Lista Google Tasks.", 75),
-        mk("google_tasks_list", "Tareas", "Lista tareas de Google Tasks.", 90),
     // Si el perfil ya expone alguna tool de escritorio, su selección manda.
     for (const QString &n : std::as_const(desktop))
         if (!m_disabledTools.contains(n)) return false;
@@ -8685,6 +8700,20 @@ void LlamaAgentBackend::setMailAccounts(const QVariantList &accounts)
                                   Q_ARG(QVariantList, m_mailAccounts));
 }
 
+void LlamaAgentBackend::setGoogleWorkspaceCredentials(const QString &accessToken,
+                                                      const QStringList &grantedScopes)
+{
+    m_googleAccessToken = accessToken;
+    m_googleGrantedScopes = grantedScopes;
+    if (m_worker)
+        QMetaObject::invokeMethod(m_worker, "setGoogleWorkspaceCredentials", Qt::QueuedConnection,
+                                  Q_ARG(QString, m_googleAccessToken),
+                                  Q_ARG(QStringList, m_googleGrantedScopes));
+    for (LlamaAgentBackend *runtime : std::as_const(m_sessionRuntimes)) {
+        if (runtime) runtime->setGoogleWorkspaceCredentials(accessToken, grantedScopes);
+    }
+}
+
 void LlamaAgentBackend::setWebProviders(const QVariantList &providers)
 {
     m_webProviders = providers;
@@ -8700,20 +8729,6 @@ void LlamaAgentBackend::setPortableSkillPolicy(const HarnessSkillsModule &policy
         QMetaObject::invokeMethod(m_worker, "setPortableSkillPolicy", Qt::QueuedConnection,
                                   Q_ARG(QStringList, m_skillPolicy.include),
                                   Q_ARG(QStringList, m_skillPolicy.exclude),
-void LlamaAgentBackend::setGoogleWorkspaceCredentials(const QString &accessToken,
-                                                      const QStringList &grantedScopes)
-{
-    m_googleAccessToken = accessToken;
-    m_googleGrantedScopes = grantedScopes;
-    if (m_worker)
-        QMetaObject::invokeMethod(m_worker, "setGoogleWorkspaceCredentials", Qt::QueuedConnection,
-                                  Q_ARG(QString, m_googleAccessToken),
-                                  Q_ARG(QStringList, m_googleGrantedScopes));
-    for (LlamaAgentBackend *runtime : std::as_const(m_sessionRuntimes)) {
-        if (runtime) runtime->setGoogleWorkspaceCredentials(accessToken, grantedScopes);
-    }
-}
-
                                   Q_ARG(bool, m_skillPolicy.set));
 }
 
@@ -8792,6 +8807,9 @@ void LlamaAgentBackend::configureWorker()
                               Q_ARG(QVariantList, m_masterChain));
     QMetaObject::invokeMethod(m_worker, "setMailAccounts", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_mailAccounts));
+    QMetaObject::invokeMethod(m_worker, "setGoogleWorkspaceCredentials", Qt::QueuedConnection,
+                              Q_ARG(QString, m_googleAccessToken),
+                              Q_ARG(QStringList, m_googleGrantedScopes));
     QMetaObject::invokeMethod(m_worker, "setWebProviders", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_webProviders));
     QMetaObject::invokeMethod(m_worker, "setPortableSkillPolicy", Qt::QueuedConnection,
@@ -8807,9 +8825,6 @@ void LlamaAgentBackend::restartWorkerAfterTimeout()
     if (m_workerThread) {
         disconnect(m_worker, nullptr, this, nullptr);
         m_workerThread->requestInterruption();
-    QMetaObject::invokeMethod(m_worker, "setGoogleWorkspaceCredentials", Qt::QueuedConnection,
-                              Q_ARG(QString, m_googleAccessToken),
-                              Q_ARG(QStringList, m_googleGrantedScopes));
         m_workerThread->quit();
         if (!m_workerThread->wait(300)) {
             m_workerThread->terminate();
@@ -8883,6 +8898,10 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
             QStringLiteral("context_status"), QStringLiteral("work_status"),
             QStringLiteral("context_scout"),
             QStringLiteral("context_fetch"), QStringLiteral("verify_claims"),
+            QStringLiteral("google_gmail_search"), QStringLiteral("google_gmail_read"),
+            QStringLiteral("google_calendar_events"), QStringLiteral("google_calendar_freebusy"),
+            QStringLiteral("google_tasks_lists"),
+            QStringLiteral("google_tasks_list"),
             QStringLiteral("browser_skill_list"), QStringLiteral("skill_list"),
             QStringLiteral("skill_load")};
         QJsonArray ro;
@@ -8898,10 +8917,6 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
     // The external lane is discovered only after nonce authentication. This
     // keeps legacy profiles identical and prevents the model from seeing a
     // callable tool while its worker is absent or still starting.
-            QStringLiteral("google_gmail_search"), QStringLiteral("google_gmail_read"),
-            QStringLiteral("google_calendar_events"), QStringLiteral("google_calendar_freebusy"),
-            QStringLiteral("google_tasks_lists"),
-            QStringLiteral("google_tasks_list"),
     if (m_harnessWorkerReady && !m_privacyModeEnabled) {
         QJsonObject operation;
         operation.insert(QStringLiteral("type"), QStringLiteral("string"));
@@ -9454,6 +9469,8 @@ void LlamaAgentBackend::copyRuntimeConfigurationTo(LlamaAgentBackend *runtime) c
     runtime->m_masterChain = m_masterChain;
     runtime->m_mcpConfig = m_mcpConfig;
     runtime->m_mailAccounts = m_mailAccounts;
+    runtime->m_googleAccessToken = m_googleAccessToken;
+    runtime->m_googleGrantedScopes = m_googleGrantedScopes;
     runtime->m_webProviders = m_webProviders;
     runtime->m_mailAutoSend = m_mailAutoSend;
     runtime->m_hitlDestructive = m_hitlDestructive;
@@ -9469,8 +9486,6 @@ void LlamaAgentBackend::copyRuntimeConfigurationTo(LlamaAgentBackend *runtime) c
     runtime->m_harnessSpecHash = m_harnessSpecHash;
     runtime->m_harnessWorkerModule = m_harnessWorkerModule;
 }
-    runtime->m_googleAccessToken = m_googleAccessToken;
-    runtime->m_googleGrantedScopes = m_googleGrantedScopes;
 
 void LlamaAgentBackend::syncRuntimeSession(const QString &sessionId,
                                            LlamaAgentBackend *runtime)

@@ -505,11 +505,13 @@ Para comparar los perfiles `Best`, seleccionar esta suite, target `agent`,
 de artefacto; todavía no reemplaza una validación browser/build, que debe
 ejecutarse como una segunda etapa cuando el entorno Node del workspace esté
 disponible.
-8. Antes de cambiar de perfil/modelo, cerrar la frontera de ejecución: detener
-   el `llama-server` anterior, esperar a que el proceso termine, verificar que
-   el puerto quede libre y limpiar cualquier `llama-server.exe` residual. Dar
-   un margen breve para que Windows/CUDA libere el contexto antes de cargar el
-   siguiente modelo. Registrar esa limpieza en `server.log`.
+8. Antes de cambiar de perfil/modelo, detener el servidor administrado por la
+   corrida, esperar a que termine y verificar que su puerto quede libre. La
+   recuperación automática sólo puede terminar el proceso que esa instancia de
+   LlamaCode lanzó; nunca barrer procesos `llama-server` globalmente. Si un
+   proceso externo ocupa el puerto o la GPU, dejarlo intacto y registrar el
+   bloqueo para resolverlo explícitamente. Dar un margen breve para que
+   Windows/CUDA libere el contexto y registrar la limpieza en `server.log`.
 9. Ejecutar una sola etapa a la vez: HE0, luego HE20 y finalmente BCB.
 
 La interfaz de Benchmark ofrece **Escalera HE0 → HE20 → BCB (custom)** para

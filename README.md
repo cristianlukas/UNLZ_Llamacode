@@ -1787,7 +1787,8 @@ semánticos mediante AT-SPI2 y OCR mediante Tesseract. Requiere una sesión X11
 desbloqueada para las funciones foreground; el resto de la aplicación también
 funciona en modo headless. Si el checkout está en NTFS o en un montaje Windows de
 WSL (`9p`, `drvfs` o `v9fs`), los scripts espejan el código en la caché nativa
-antes de invocar CMake/Ninja. Si la caché conserva otra ruta de fuente, se
+antes de invocar CMake/Ninja; el espejo conserva permisos y contenido, sin exigir
+que el filesystem destino reproduzca el grupo propietario de NTFS. Si la caché conserva otra ruta de fuente, se
 reconfigura descartando sólo sus archivos de configuración de CMake.
 
 Ubuntu incluye también `3090 HELPER`, una bandeja independiente que comprueba
@@ -2092,6 +2093,11 @@ benchmarks. Se muestran antes que los favoritos en todos los selectores de perfi
 
 Después de cada tramo de prueba de modelo —incluidos resultados válidos, fallidos, abortados y checkpoints medibles— sincronizar inmediatamente la fila del perfil en `Modelos locales por peso` y confirmar el cambio con una lectura de vuelta antes de iniciar el siguiente tramo. Cuando corresponda, actualizar también `Resultados` y `Accionables`; mantener vacías las métricas aún pendientes y conservar los resultados históricos identificados por su prueba, sin presentarlos como vigentes.
 
+La recuperación automática de benchmarks sólo puede forzar el proceso de inferencia
+administrado por esa instancia de LlamaCode. No busca ni termina procesos por nombre
+(`pkill`/`taskkill`); un servidor externo o ajeno queda intacto y se registra como
+bloqueo si ocupa el puerto o la GPU necesaria.
+
 En benchmarks de agente, la reparación BCB espera el `turnFinished` del turno
 correctivo y no considera estancado un backend que todavía está ocupado en
 prefill, herramientas o cierre de stream. El watchdog de reparación sólo actúa
@@ -2102,6 +2108,13 @@ durante los retries y sólo se detiene al terminar la pasada. Al vencer, se
 cancela la generación y el finalizador persiste la corrida como incompleta.
 
 Módulo para comparar quants y perfiles de forma sistemática: mide RAM, VRAM, velocidad y calidad relativa con resultados persistidos en tabla.
+
+Los runners headless que preregistran una pasada con un perfil de agente explícito
+deben consultar `benchmarkCoverageForAgent(agentProfileId)` y conservar el
+`profileConfigFingerprint` de esa respuesta. La consulta no altera la selección
+global. `startNextPendingBenchmark` usa la misma identidad de agente para decidir
+la etapa y para lanzar la pasada; así el fingerprint previsto incluye el harness
+que realmente ejecutará el benchmark.
 
 Cada perfil de benchmark usa una escalera adaptativa de VRAM. Primero intenta
 la mayor ocupación útil habilitando `fit` y quitando los flags explícitos de
@@ -2203,6 +2216,14 @@ ejecutable, primer intento, TTFT, tokens, tool calls, corrección de la secuenci
 defecto, semilla persistible y validación de balance; una cantidad menor sirve
 para smoke/A-B rapido. El control de Chat puro debe medirse aparte porque el runner de agente exige un
 artefacto de archivo por tarea.
+
+Las campañas custom de agente asignan una semilla distinta a cada pasada:
+`4242` como base por defecto y `LLAMACODE_AGENT_BENCHMARK_SEED_BASE` para fijar
+la primera semilla de una campaña reproducible. La pasada *n* usa base + n − 1;
+el resultado guarda la semilla efectiva por perfil y pasada.
+
+La evaluación agéntica secuencial interna **LHA-1** está separada de Q172 y
+documentada en [`docs/benchmark-lha1-long-horizon.md`](docs/benchmark-lha1-long-horizon.md).
 
 Los perfiles externos de vLLM siguen la misma escalera HE0 → HE20 → BCB, pero
 LlamaCode sólo conecta al endpoint OpenAI-compatible: no mide como `llama-server`

@@ -1,6 +1,6 @@
 # Q191 — voz, navegación web y control del escritorio
 
-**Estado:** preregistrado antes de descargar, ejecutar o modificar producto. Web A/B, voz por componentes y regresiones Linux completados; pipeline realtime/full-duplex y tenant E2E siguen en espera de condiciones externas. La tarea usa un solo lock y ejecuta recursos en serie. Los resultados de Q190 siguen separados.
+**Estado:** preregistrado antes de descargar, ejecutar o modificar producto. Web A/B, voz por componentes y regresiones Linux completados. HF Speech-to-Speech v1.1.0 y el script `scripts/prepare_s2s_assets.py` (SHA-256 `360e021d386cfb8eae46b3f2652e1e899c6944b819e2c440444beef5927661f8`, `py_compile` aprobado) quedaron fijados en `/dev/shm`. La planilla registra y confirma por lectura de vuelta la descarga: 26/26 archivos SHA verificados, 20/20 WAV mono float32 válidos, 48.61 GiB libres. No hubo inferencia todavía. Silero VAD quedó fijado al commit `066409f3d9db45a30d21dfcbf9147826ffdd7052`; checkout exacto verificado en tmpfs; `silero_vad.jit` SHA-256 `e1122837f4154c511485fe0b9c64455f7b929c96fbb8d79fbdb336383ebd3720`. No hubo audio ni inferencia. Después se podrá iniciar el smoke con un preflight de puertos/GPU y el piso de 8 GiB. Tenant E2E sigue pendiente de principal autenticado y policy server-side verificables. La tarea usa un solo lock y conserva resultados de Q190 separados. El cliente `scripts/s2s_realtime_screen.py` quedó sellado con SHA-256 `4b458b3ede7f56d2075e9acf29c9ae2fe107fc99c789fe66e7189d3fd624b63c`; compilación sintáctica y self-test aprobados con los 20 WAV PCM16 de referencia copiados/hash-verificados en tmpfs. El primer self-test falló al comparar FLOAT original contra SHA del derivado PCM16; quedó registrado y corregido antes de cualquier audio/inferencia.
 
 ## Controles y decisiones
 
@@ -38,6 +38,18 @@ TTS: diez frases fijadas a partir de las transcripciones del corpus; medir tiemp
 
 Frases exactas: `receipts/tts-phrases.json`, SHA-256 `41af7111c8f2cc13da2fe13ea84d2bd66592ac0bc535a4716903d0d648677afb`, primeras diez de la selección FLEURS fijada. Piper control: `piper-tts==1.8.0`, voz `es_AR-daniela-high.onnx` SHA-256 `7ceb1fc0dab349418c5b54a639ae9ee595212d7c9ea422220d8419163d5cc985` y config SHA-256 `aedbf69647e1d754c62ecf8e0366ca5f16af3e768e3c6b5329af6eb6bde3852b`, CPU. Cargar una vez, excluir un warmup corto, dos pasadas de diez frases; medir primer `AudioChunk` y fin de síntesis, duración PCM y RTF, RSS; conservar WAV de la primera pasada. Piper emite chunks por oración, de modo que el primer chunk no necesariamente es el primer sample de un stream de baja latencia.
 
+### HF Speech-to-Speech v1.1.0: prueba E2E/streaming preregistrada
+
+**Aislamiento y recursos:** paquete/venv, cachés, corpus descomprimido y checkpoints se ubican sólo bajo `/dev/shm/q191-s2s-20261030/` (tmpfs de 62 GiB). El preflight en 2026-10-30T10:12:45Z midió 62 GiB libres y 109 GiB de RAM disponible. Para la fase grande de instalación/modelos/corpus se exigieron ≥50 GiB libres antes de transferir y ≥8 GiB durante/después; esa fase se completó y verificó. Para el checkout de código fuente pinned restante (Silero VAD), exigir ≥10 GiB libres antes de transferir, limitar el checkout a 512 MiB y abortar si tmpfs cae debajo de 8 GiB. No guardar pesos ni audio en `/`, Disco local o HDD extra. Borrar únicamente esta carpeta temporal al cerrar; preservar resultados/recibos pequeños, hashes y métricas en `Q-20261030-VOICE-WEB-CU`.
+
+**Build/modelos fijados:** `speech-to-speech==1.1.0` oficial Hugging Face; release/tag `v1.1.0`. El venv aislado ya quedó instalado con Python 3.12.3, torch 2.15.0, torchaudio 2.11.1, Transformers 5.22.1, `faster-qwen3-tts` 0.5.4, `qwentts-cpp-python` 0.5.0, `nano-parakeet` 0.2.1; freeze completo en `receipts/s2s-pip-freeze.txt`. Se usa backend local `responses-api` a `llama.cpp` y GGUF Qwen3.5-4B Q4_K_M existente, SHA-256 `3874209241c9a397e2f62cd3f70f80fd2dfbf0dfccb6838416bdb48a714e8630`, servidor `0.8.0-dev` commit `2e0d86b`, SHA de binario `0f25065d4c5e304000b38c6e1d288b483aac0a1c8936f3bfdc130b5d44d15ae5`. Parakeet TDT v3: `nvidia/parakeet-tdt-0.6b-v3` snapshot `541d1f99c6b0c3cd0b11a95167540bb8edefd82b`, safetensors SHA-256 `3a2026366188c8c68598edbbff92f8d11590a08e0ae2e6775544e7b07d6a5e11`; Smart Turn v3.2 CPU ONNX: `pipecat-ai/smart-turn-v3` snapshot `f766f81d3cfdf7737ac64aad813d91bbfd56bf93`, SHA-256 `2bb026316b14a660486a75b1733cd3fbab8c2fd0314dc9af7be49f8cca967e4f`; Qwen3-TTS default CustomVoice 1.7B GGML BF16: `Serveurperso/Qwen3-TTS-GGUF` snapshot `b7ee2e8c7459c3bea99da23e3d178125a7d1713c`, talker SHA-256 `dd5d70d3f7d09ffc707f4c25eabb1773e0f1f568e02c17ca72a08592334c276c`, codec SHA-256 `cc04d7352ff4cb339435cdccf59cf38e6e92f3cf789bc94a6a1b467093bafa18`; TTS speaker Aiden and language Spanish. Todos los pesos están descargados en `/dev/shm`; `s2s-assets-download.json` registra 26 archivos verificados, 20 WAV mono 16 kHz FLOAT e índice/audio temporal. Silero VAD quedó fijado al commit `066409f3d9db45a30d21dfcbf9147826ffdd7052`; archivo fuente 29,325,979 B SHA-256 `ad33d84807fb1715af77239695ba83be624ad1130edba38202f8e1f38fc5a915`; el JIT de 2,272,526 B en el cache Torch Hub de tmpfs verificó SHA-256 `e1122837f4154c511485fe0b9c64455f7b929c96fbb8d79fbdb336383ebd3720`. No hubo inferencia. No duplicar el LLM; GPU1 llama.cpp y GPU0 voz, loopback, una sesión. Telemetría/HF token desactivados, transcripts completos desactivados; sin endpoints cloud.
+
+**Corpus y protocolo:** reutilizar la selección determinista de 20 clips FLEURS `es_419/dev`, revisión `70bb2e84b976b7e960aa89f1c648e09c59f894dd`, manifiesto y hashes en `receipts/fleurs-corpus-manifest.json`. Descargar y validar sólo en tmpfs; enviar cada clip como PCM16 mono 24 kHz por WebSocket Realtime, bloques de 40 ms en tiempo real, `server_vad`, sin `log_transcripts` ni persistir WAVs nuevos. Una pasada por cada uno de los 20 clips, más un warm-up excluido. Recolectar final transcript, deltas, `response.done`, `response.output_audio.delta`, tiempos y errores. Métricas: WER/CER del transcript completado frente a referencia (misma normalización del corpus); mediana/p95 desde fin de audio enviado hasta primer delta de audio y hasta `response.done`; tasa de turnos completos y de respuestas con audio; error de protocolo; pico VRAM y RSS. Los 20 ejemplos permiten screening descriptivo, no significancia ni generalización al acento rioplatense.
+
+**Barge-in protocol-level:** cinco réplicas con pares fijados de clips del mismo corpus. Tras recibir el primer delta de audio de la primera respuesta, comenzar a emitir el segundo clip en bloques a 40 ms con `interrupt_response=true`. Registrar VAD speech-start, cancelación de la primera respuesta, inicio del segundo transcript/respuesta y cualquier delta de audio del turno anterior más de 250 ms después de `speech_started`. Gate funcional: 5/5 primeras respuestas canceladas, segunda entrada termina con transcripción y respuesta de audio y no hay emisión antigua luego del margen; cualquier fallo se conserva y no se afirma barge-in robusto. Esto mide cancelación de protocolo con audio pregrabado, no eco acústico, micrófono/parlante real ni audio que el cliente ya hubiera reproducido.
+
+**Decisión predefinida:** resultado satisfactorio habilita un piloto opcional con INGI-Charla; por sí solo no cambia el default ni prueba superioridad frente al pipeline actual. Adoptar sólo con holdout rioplatense y comparación E2E pareada contra STT/TTS actual. Si falta modelo/espacio, falla el smoke, o la ruta no logra producir el evento de cancelación, registrar fallo/bloqueo y no sustituir componentes existentes. Preregistro completo y resultados de preflight en `receipts/s2s-preregistration-20261030.json`; las descargas todavía no comenzaron.
+
 Kitten-TTS2 candidato: modelo `KittenML/kitten-tts-2` revisión HF `c93cb7c271baa51d9ae8204d5277988906f235a2`, paquete `kitten_tts_cpp==0.2.0` con `torch==2.13.0+cpu`, decoder `student_w4`, 16 hilos y voz española disponible verificada en la lista del modelo. Elegir una voz antes de medir; dos pasadas de las mismas diez frases, una carga residente y un warmup excluido. El binding genera archivo WAV completo: reportar latencia hasta archivo completo como tal, no como primer sample audible. Comparar RTF y memoria con Piper sólo con esa diferencia de interfaz explícita. El repositorio C++ declara que su CLI es batch y que el streaming Python no está implementado; ninguna corrida batch prueba barge-in de Kitten. Si faltan dependencias o pesos íntegros, registrar bloqueo exacto sin fabricar latencia.
 
 Voz elegida antes de correr: `SpanishTango`, cuyo transcript oficial empieza «Mirá, pibe, el tango…», frente a Piper `es_AR Daniela high`; esto aproxima el acento objetivo pero no establece calidad acústica. `HF_HUB_DISABLE_TELEMETRY=1` y `DO_NOT_TRACK=1` en la corrida. Los archivos WAV del primer pase se conservan para escucha posterior; no puntuación MOS automática.
@@ -53,3 +65,102 @@ Fuentes: `Recursos!120`, `Enlaces revisados!601`, `IA local!30/32/38/55/80`, `Ev
 ### Computer-Usage Linux: probe visual acotado
 
 Antes de correr: usar el binario `qa_visual_automation` del build Release recompilado por `scripts/tests-linux.sh Release` (99/99 tests) y un Xvfb privado 1280×900×24. Ejecutar `--matrix --execute-click`: cuatro combinaciones preregistradas, tema claro/oscuro × dos botones con etiquetas y formas diferentes. Exigir en cada caso `found=true`, `ambiguous=false`, `click` entregado y contador de clics del target correcto incrementado; 4/4 para aprobar. Guardar stdout, código de salida, SHA del binario y configuración Xvfb. Esto prueba captura, matching y acción visual en una ventana Qt sintética; no certifica la suite 20/20 Windows, tenant, otra aplicación ni autonomía del agente.
+
+
+### Enmienda de lanzamiento exacto Q191 (2026-10-30)
+
+El `argv`, variables de entorno, hashes, puertos y gates exactos quedaron registrados en `receipts/s2s-exact-launch-preregistration.json`. El `llama-server` CUDA 12.8 coincide por SHA con el perfil fijado; se limita a GPU física 1, alias local, 8K de contexto, 128 tokens de salida, API key local de prueba y bind `127.0.0.1:18493`. Speech-to-Speech usa GPU física 0, sólo checkpoints locales, una pipeline, Realtime en `127.0.0.1:8765`, sin logging de transcripciones, telemetría ni token HF, y modo offline. El parseo de argumentos no inicia modelos: PASS. Todavía no se inició GPU ni inferencia. Antes de iniciar se exige preflight fresco y se conserva Artcraft.
+
+
+### Q191 recovery after host reboot (2026-10-30T12:22:50Z)
+The previous test setup lived wholly in volatile /dev/shm. The host reboot cleared that directory and stopped the two locally owned servers before any S2S audio/inference had been sent. System records show an unclean previous boot, but do not establish cause. Re-stage model files, pinned Silero checkout and the 20 FLEURS PCM16 files in persistent C: user cache; verify the same SHA-256 values. Keep the disposable venv and caches in tmpfs. After exact Sheet readback and a fresh resource preflight, resume the same 16 kHz input / 24 kHz output experiment.
+
+
+### Recuperación Q191 tras reinicio — 2026-11-02
+
+El entorno temporal fue reinstalado en `/dev/shm/q191-s2s-runtime-20261030/venv` desde `receipts/s2s-pip-freeze.txt`; SHA del freeze requerido y obtenido `08db164cd894d2d562e7bf0bf286f947bed72fc1ea0967bd557798ce28752ad1`, coincidencia exacta. Ocupa 6.7 GiB y quedan 59,183,714,304 B libres en tmpfs. No hubo GPU ni inferencia.
+
+Antes de restaurar assets se detectó que `scripts/prepare_s2s_assets.py` no coincide con el SHA histórico preregistrado: esperado `360e021d386cfb8eae46b3f2652e1e899c6944b819e2c440444beef5927661f8`, contenido actual `d7e2024cd68d0f3e892b5323aded14a7d16581fbc867f3d269f2ab38f89a95f7` (10,123 B). Es un archivo untracked y no hay copia local del contenido histórico para calcular diff. La descarga fue detenida antes de empezar. Se revisó la fuente actual: usa revisiones y SHA explícitos; aplica piso de 8 GiB en C antes/después de cada peso; limita el archivo de Silero a 512 MiB, valida rutas al extraer; copia audio desde el corpus local validando formato/hash; sus escrituras quedan en el cache Q191 y el recibo previsto. La búsqueda estática no encontró invocaciones a subprocess/shell, CUDA, borrados ni cargas GPU. `py_compile` pasó. El SHA `d7e2024cd68d0f3e892b5323aded14a7d16581fbc867f3d269f2ab38f89a95f7` ya se sincronizó y leyó de vuelta exactamente en `Accionables!D57/I57:K57`; esta versión queda autorizada para restaurar los activos fijados, pero no para inferencia hasta los hash checks y el preflight fresco. Receipts `receipts/s2s-script-review-20261102.json` y `receipts/sheet-sync-s2s-hash-amendment-20261102.json`. Recibos `receipts/s2s-recovery-preflight-20261101.json` y `receipts/s2s-venv-rebuild-20261102.json`.
+
+
+### Assets Q191 restaurados y verificados — 2026-11-02
+
+La recuperación restauró los cuatro targets de modelo fijados, el VAD Silero pinneado y los 20 WAV PCM16. Se recomputaron los SHA de Parakeet, Smart Turn, Qwen3-TTS, su tokenizer y el JIT de Silero; todos coinciden. Los 20 clips coinciden con el manifiesto y son mono/16 kHz/PCM16. C: conserva 10,928,513,024 B libres, por encima del piso 8 GiB por 2,338,578,432 B; el venv exacto del freeze continúa en tmpfs. No hubo audio, prompt, servidor, inferencia ni uso de GPU. El resultado de restauración ya se sincronizó y leyó de vuelta en Accionables fila57; el self-test CPU queda pendiente. Antes de iniciar el par de servidores se hará un preflight fresco de procesos, puertos, RAM, GPU y tres gates. Receipt independiente `receipts/s2s-assets-independent-verification-20261102.json`.
+
+
+### Self-test Q191 tras recuperación — 2026-11-02
+
+` s2s_realtime_screen.py --self-test` pasó en CPU: 20/20 clips, hashes correctos, PCM16 mono 16 kHz, salida solicitada 24 kHz, bloques 40 ms/1280 bytes; 5,930 chunks en total. No se abrió WebSocket, no se envió audio/prompt, no se lanzó servidor ni se usó GPU. Receipt `receipts/s2s-client-selftest-recovery-20261102.json`; log temporal en tmpfs. El siguiente gate es un preflight fresco del boot, worker, P2P, unlock, procesos/puertos y recursos antes del único ensayo medido.
+
+
+### Preflight de inferencia Q191 tras recuperación — 2026-11-02
+
+Gates frescos PASS: worker de cuarentena ASUS activo con 1636/1636, pending=0; unidad verify-boot habilitada y exit 0; log de boot confirma P2P y gpu_unlock; `nvidia-smi topo -p2p r/w` da OK en ambos sentidos; ambas PCI tienen unlock log/cmdline target. No había servidores de inferencia ni puertos 8765/18493 ocupados. Hash exacto del Qwen3.5-4B y llama-server PASS; RAM disponible 103,444,295,680 B; C: 10,928,488,448 B libres (margen 2,338,553,856 B sobre piso de 8 GiB); tmpfs 59,183,710,208 B libres. GPU0 ASUS conserva 826 MiB de escritorio, GPU1 108 MiB: se preserva la GUI y se usan solo los perfiles asignados. Preregistro operativo agrega salida única `runs/s2s-realtime-screen-recovery-20261102.json`, sin sobrescribir resultados anteriores. Aún no hubo inferencia. Receipt `receipts/s2s-fresh-preflight-20261102.json`.
+
+
+### Q191 backend lifecycle smoke — 2026-11-02
+
+The initial background launch loaded the model, bound loopback 18493, and briefly passed `/health` and `/v1/models`; it sent no prompt. After the controlling command returned, the PID and listener were absent. The log contains no shutdown cause; it is not enough to blame Codex or the OS. The Q191 screen stopped before starting the voice service. Retry the same preregistered profile with `llama-server` held in a foreground persistent exec session, confirm readiness, then proceed. GUI was preserved. Receipt `receipts/s2s-llm-backend-lifecycle-retry-20261102.json`.
+
+
+### Backend LLM Q191 persistente — 2026-11-02
+
+Se reintentó en sesión exec foreground persistente. PID 3212748 sigue activo; loopback 127.0.0.1:18493, health=200 y alias `q191-qwen35-4b`; carga observada GPU1 3568 MiB, GUI GPU0 826 MiB. La sesión exec 64100 queda adjunta durante el ensayo. No se mandó prompt. Este modo evita perder el proceso al cerrar el shell; no se registró tiempo de inicio. Receipt `receipts/s2s-llm-backend-foreground-ready-20261102.json`.
+
+Gate previo al servicio de voz: `speech-to-speech serve` parsea el argv fijado con `log_transcripts=False`; no se proporciona el flag opt-in `--log-transcripts`. El parser real devuelve `False` en prueba CPU (`CUDA_VISIBLE_DEVICES=''`). Mantener apagado durante el screen y revisar el log de arranque para descartar advertencia de logging habilitado.
+
+#### Amendment de loader Parakeet Q191 — 2026-11-02
+
+El intento de inicio mostró que la ruta local apuntaba a `model.safetensors`, pero el handler Linux llama `nano_parakeet.from_pretrained(model_name)`, cuyo loader usa el ID del repositorio para descargar `<repo-basename>.nemo`. El artefacto Transformers no es el formato consumido por ese loader. El metadata API de NVIDIA confirmó que la rama `main` todavía resuelve al commit preregistrado `541d1f99c6b0c3cd0b11a95167540bb8edefd82b`; ese commit publica el NeMo `.nemo` exacto de 2.509.332.480 B y SHA-256 `3cbdc85877e668ca7b82d0d56770eb1fac76691f55d6b97545e8d61ca588d10d`. Se enmienda `--parakeet_tdt_model_name` a `nvidia/parakeet-tdt-0.6b-v3`; descargar a cache HF aislada/persistente en HDD extra con revisión `main`, exigir que el snapshot devuelto sea ese commit y que size/SHA coincidan, y sólo después ejecutar offline. El `model.safetensors` local queda intacto. La matriz y los clips no cambian. Receipt `receipts/s2s-parakeet-loader-format-amendment-20261102.json`.
+
+La descarga prevista ya pasó: 2.509.332.480 B, SHA-256 `3cbdc85877e668ca7b82d0d56770eb1fac76691f55d6b97545e8d61ca588d10d`; snapshot y `refs/main` resuelven al commit fijado. Archivo en la caché HF persistente del HDD. Todavía no se inició el modelo. Receipt `receipts/s2s-parakeet-nemo-download-verified-20261102.json`.
+
+El lookup offline idéntico al usado por `nano_parakeet` pasó con `HF_HUB_OFFLINE=1`, devolviendo esa misma ruta/hash en HDD; proceso CPU-only sin cargar modelo. El gate siguiente es preflight inmediato y arranque de voz GPU0. Receipt `receipts/s2s-parakeet-offline-cache-resolution-20261102.json`.
+
+Preflight de inferencia renovado PASS a las 00:24Z: Qwen/loopback en GPU1 sano, 8765 libre, GPU0 GUI intacta, worker ASUS, helper al boot, P2P, gpu_unlock, hashes y pisos de almacenamiento/memoria verificados. El `.nemo` ya resuelve offline con commit/SHA exactos. Aún no hubo audio/inferencia; se permite iniciar el servicio de voz sobre GPU0 y comprobar readiness/handshake. Receipt `receipts/s2s-fresh-preflight-recovery-20261102.json`.
+
+El próximo arranque foreground enviará stdout/stderr operacional a `C:/Users/cristian/.cache/LlamaCode/Q191-s2s-20261030/speech-to-speech-recovery-20261102.log` (sin contenido de transcript porque el gate sigue apagado); el terminal persistente queda asociado para mantener el proceso. No sobrescribir logs/resultados anteriores.
+
+### Readiness foreground Q191 tras recuperación — 2026-11-02
+
+Servicio local listo en GPU0; el backend Qwen permanece en GPU1. El paquete fijado no expone GET `/health`, así que se verificó la ruta real del protocolo: handshake WebSocket loopback, subprotocolo `realtime`, primer evento `session.created` en 13 ms y cierre normal, sin enviar audio. No cuenta como turno de prueba. Sheet actualizado y leído de vuelta antes de continuar. Próximo gate: preflight fresco tras el arranque de ambos modelos y luego el único screen preregistrado de 20 clips FLEURS es_419 más 5 interrupciones, sin persistir clips/transcripciones y sin micrófono.
+
+### Aclaración de retención de resultados antes del screen Q191 — 2026-11-02
+
+La inspección de `s2s_realtime_screen.py` confirma que el JSON final sí conserva el texto STT del corpus FLEURS público, referencias normalizadas y eventos por turno para calcular WER/CER. El servicio operativo mantiene `log_transcripts=false`; no se guardan WAV/PCM entrantes ni audio TTS. No se usa micrófono, audio del usuario ni fuente externa. La matriz se aclara antes de enviar clips. Receipt `receipts/s2s-retention-clarification-pre-screen-20261102.json`.
+
+### Desajuste de schema del session.update Q191 — 2026-11-02
+
+El primer inicio del screen se detuvo dentro del handshake y antes de enviar audio. `session.created` funciona; `session.update` fue rechazado. Validación CPU-only del tipo Pydantic del runtime reproduce la causa: el harness declara input PCM 16 kHz, mientras el SDK generado permite sólo 24 kHz en el campo opcional `rate`. El handler puede tomar el sample rate de pipeline si se omite, pero se verificará el valor por código antes de modificar el cliente. Próximo gate: validar el payload corregido en CPU y sincronizar Sheet antes de abrir otro WebSocket.
+
+### Candidato session.update validado — 2026-11-02
+
+La muestra entrante sigue siendo PCM16/16 kHz; el formato opcional omite `rate` porque el tipo generado sólo permite 24 kHz allí. El handler del server establece 16 kHz por `PIPELINE_SAMPLE_RATE` como fallback. El candidato pasó validación Pydantic CPU con salida explícita de 24 kHz; se añadirá esta regla a `--self-test` y se repetirá un handshake de configuración sin audio antes de continuar. Receipt `receipts/s2s-session-update-candidate-validation-20261102.json`.
+
+### Enmienda mínima preregistrada para session.update — 2026-11-02
+
+El cliente ahora omite `audio.input.format.rate`; el runtime fija 16 kHz mediante `PIPELINE_SAMPLE_RATE`, y los bloques enviados siguen siendo PCM16/16 kHz. Output continúa PCM/24 kHz. Se añadió una validación Pydantic del `SessionUpdateEvent` y una aserción en self-test para evitar regresión. Nuevo SHA del harness: `9c046334e8957861ea78fb690ea7077e56b61130530f9572635ff676e1c3ce14`; input, corpus, métricas, perfil, límites y salida única no cambian. Antes de abrir WebSocket de audio: compilar/self-test CPU, sincronizar Sheet; luego gate remoto de configuración sin audio y nueva sincronización. Receipt `receipts/s2s-harness-session-update-fix-prereg-20261102.json`.
+
+### Self-test CPU de la enmienda de protocolo — 2026-11-02
+
+Compilación y self-test PASS con CUDA oculta, 20/20 hashes y validación del payload `SessionUpdateEvent`; input PCM permanece a 16 kHz y rate omitido para activar el default del servidor; salida sigue 24 kHz. No se transmitió audio ni se abrió WS. Próximo: sincronizar el test y realizar solo handshake `session.created`/`session.updated` de configuración, sin audio. Receipt `receipts/s2s-client-selftest-session-schema-fix-20261102.json`.
+
+### Gate de configuración del WS Q191 PASS — 2026-11-02
+
+El payload enmendado pasa el handshake completo `session.created` + `session.updated` en 9 ms; se cerró con código normal sin audio, prompt ni inferencia. Este gate soluciona el error de schema, no mide voz-a-voz. Planilla leída de vuelta. Próximo: preflight fresco y único screen de FLEURS fijo, serial y sin audio de usuario.
+
+### Preflight inmediato antes del screen Q191 — 2026-11-02
+
+Backend Qwen health200/alias autorizado, voz foreground PID3238795 y pool de una plaza idle; gate WebSocket `session.created` + `session.updated` pasó. GPU0 7706/24576 MiB, incluyendo servicio y sesión X11 activa que se preserva; GPU1 3570/24576 MiB. P2P R/W OK, quarantine ASUS activa (última lectura 1636/1636, 0 fallas), verificador al boot enabled/result success/exit0 (oneshot ya completado). C mantiene margen sobre piso 8 GiB; HDD conserva 264,550,998,016 B; salida recovery no existe; SHA harness exacto. Todavía no se enviaron clips. Receipt `receipts/s2s-fresh-post-start-preflight-20261102.json`.
+
+### Desvío de logging durante warmup — 2026-11-02
+
+El primer warmup público del screen produjo una respuesta completa, pero el cliente no avanzó a los 20 turnos puntuados y quedó esperando con la plaza activa; no se puntuó el warmup. Se detectó que INFO operacional persiste texto FLEURS STT y texto del asistente a pesar del flag `log_transcripts=false`. No es audio privado pero contradice la retención preregistrada. Detener solo el cliente/harness Q191, modificar prereg del nivel de logging y verificar supresión usando un warmup público aislado antes de repetir screen.
+
+### Contención del console print Qwen TTS — 2026-11-02
+
+El texto `ASSISTANT` se emite por `rich.Console.print` a stdout y no respeta `log_transcripts=false`; no basta cambiar el nivel de logs. Mantener INFO operacional en stderr y redirigir sólo stdout del proceso de voz a `/dev/null`, con log nuevo en stderr. Reemitir un solo warmup público sin score y verificar que stderr contiene eventos/timing sin transcripción ni `ASSISTANT:` antes del screen completo. El intento anterior y su log quedan preservados.
+
+### Reinicio de voz con salida TTS aislada — 2026-11-02
+
+Servicio Q191 PID3266052 listo en loopback con stdout redirigido a `/dev/null`, INFO operacional en log stderr nuevo y `log_transcripts=false`. Qwen backend PID3212748 health200/alias PASS; voz pool 1/1 libre. X11 activo. El nuevo stderr de arranque no contiene marcador `ASSISTANT:` ni eventos de transcripción (solo warmup interno). Todavía no se envió corpus ni audio de usuario. Próximo: una prueba pública no puntuada y revisar el stderr redacted antes del screen completo. Receipt `receipts/s2s-voice-stdio-split-startup-20261102.json`.

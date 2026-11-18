@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSignalSpy>
+#include <QSharedPointer>
 #include <QSet>
 #include <QStandardPaths>
 #include <QTcpServer>
@@ -22,8 +23,8 @@ class AgentWireTests : public QObject
     Q_OBJECT
 private slots:
     void initTestCase();
-    void computerUse_asksBeforeDesktopTurnThenRunsInBackground();
     void googleWorkspaceReadToolsAreCataloged();
+    void computerUse_asksBeforeDesktopTurnThenRunsInBackground();
     void computerUse_superAgentAndPlainChatDoNotAsk();
     void computerUse_cancelDropsTheRequest();
     void computerUse_backgroundMarksDesktopArgs();
@@ -92,6 +93,7 @@ private slots:
     void toolWatchdogIsTypeAware();
     void streamRepetitionDetectsLongTripleBlockOnly();
     void textToolPayloadCapsGenerationAndStopsAtToolCall();
+    void textToolPayloadPreservesPromptCacheFlag();
     void adaptiveSubagentLimit_respectsProfileContextAndVram();
     void isDestructiveAction_gatesShellDesktopMemory();
     void completionErrorClassification_isSelective();
@@ -107,8 +109,6 @@ void AgentWireTests::initTestCase()
     QStandardPaths::setTestModeEnabled(true);
 }
 
-void AgentWireTests::stablePhasePrefix_keepsSystemPromptInvariant()
-{
 void AgentWireTests::googleWorkspaceReadToolsAreCataloged()
 {
     LlamaAgentBackend backend;
@@ -145,6 +145,8 @@ void AgentWireTests::googleWorkspaceReadToolsAreCataloged()
     QFAIL("google_calendar_freebusy schema not found");
 }
 
+void AgentWireTests::stablePhasePrefix_keepsSystemPromptInvariant()
+{
     LlamaAgentBackend be;
     be.setStablePhasePrefix(true);
     be.setApprovalPolicy(QStringLiteral("ask"));
@@ -822,6 +824,7 @@ public:
     int textRequests = 0;
     int secondTextBodySize = 0;
     bool secondTextBodyWasTruncated = false;
+    QList<QByteArray> completionBodies;
 
 protected:
     void incomingConnection(qintptr socketDescriptor) override
@@ -849,6 +852,7 @@ protected:
                 writeJson(sock, QByteArrayLiteral("{\"n_ctx\":4096}"));
                 return;
             }
+            completionBodies.append(body);
             if (body.contains("\"tools\"")) {
                 ++nativeRejects;
                 writeRaw(sock, QByteArrayLiteral(
@@ -950,6 +954,19 @@ void AgentWireTests::fallsBackToTextToolsWhenServerRejectsNativeTools()
     QTRY_VERIFY_WITH_TIMEOUT(finished.count() == 1, 10000);
     QCOMPARE(server.nativeRejects, 2);
     QCOMPARE(server.textRequests, 2);
+    QCOMPARE(server.completionBodies.size(), 4);
+    const QJsonObject nativeFull = QJsonDocument::fromJson(server.completionBodies.at(0)).object();
+    const QJsonObject nativeCompat = QJsonDocument::fromJson(server.completionBodies.at(1)).object();
+    const QJsonObject textFirst = QJsonDocument::fromJson(server.completionBodies.at(2)).object();
+    const QJsonObject textFollowup = QJsonDocument::fromJson(server.completionBodies.at(3)).object();
+    QVERIFY(nativeFull.contains(QStringLiteral("tools")));
+    QCOMPARE(nativeFull.value(QStringLiteral("cache_prompt")).toBool(), true);
+    QVERIFY(nativeCompat.contains(QStringLiteral("tools")));
+    QVERIFY(!nativeCompat.contains(QStringLiteral("cache_prompt")));
+    QVERIFY(!textFirst.contains(QStringLiteral("tools")));
+    QCOMPARE(textFirst.value(QStringLiteral("cache_prompt")).toBool(), true);
+    QVERIFY(!textFollowup.contains(QStringLiteral("tools")));
+    QCOMPARE(textFollowup.value(QStringLiteral("cache_prompt")).toBool(), true);
     // Lo que se testea es que el TOOL_RESULT viaje truncado (el archivo crudo son
     // 50k). El techo es holgado a propósito: el prompt del protocolo textual
     // cambia de tamaño y no debe romper este test.
@@ -1697,25 +1714,42 @@ class FakeHangingServer : public QTcpServer
 {
 public:
     int postRequests = 0;
+    QList<QByteArray> completionBodies;
 protected:
     void incomingConnection(qintptr socketDescriptor) override
     {
         auto *sock = new QTcpSocket(this);
         sock->setSocketDescriptor(socketDescriptor);
-        connect(sock, &QTcpSocket::readyRead, this, [this, sock]() {
-            const QByteArray request = sock->readAll();
-            if (request.startsWith("GET /props")) {
-                const QByteArray body = QByteArrayLiteral("{\"n_ctx\":4096}");
+        const auto buffer = QSharedPointer<QByteArray>::create();
+        connect(sock, &QTcpSocket::readyRead, this, [this, sock, buffer]() {
+            buffer->append(sock->readAll());
+            const int headerEnd = buffer->indexOf("\r\n\r\n");
+            if (headerEnd < 0) return;
+            const QByteArray headers = buffer->left(headerEnd);
+            int contentLength = 0;
+            for (const QByteArray &line : headers.split('\n')) {
+                const QByteArray trimmed = line.trimmed();
+                if (trimmed.toLower().startsWith("content-length:"))
+                    contentLength = trimmed.mid(15).trimmed().toInt();
+            }
+            if (buffer->size() < headerEnd + 4 + contentLength) return;
+
+            const QByteArray firstLine = headers.split('\n').value(0).trimmed();
+            const QByteArray body = buffer->mid(headerEnd + 4, contentLength);
+            if (firstLine.startsWith("GET /props")) {
+                const QByteArray props = QByteArrayLiteral("{\"n_ctx\":4096}");
                 sock->write(QByteArrayLiteral(
                     "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ")
-                    + QByteArray::number(body.size())
-                    + QByteArrayLiteral("\r\nConnection: close\r\n\r\n") + body);
+                    + QByteArray::number(props.size())
+                    + QByteArrayLiteral("\r\nConnection: close\r\n\r\n") + props);
                 sock->disconnectFromHost();
+                return;
             }
-            if (request.startsWith("POST /v1/chat/completions")
+            if (firstLine.startsWith("POST /v1/chat/completions")
                 && !sock->property("countedPost").toBool()) {
                 sock->setProperty("countedPost", true);
                 ++postRequests;
+                completionBodies.append(body);
             }
             // POST /chat/completions queda abierto para simular el server que
             // desaparece/reinicia durante prompt processing.
@@ -1750,25 +1784,58 @@ void AgentWireTests::differentProjectsRunTurnsConcurrently()
     // Las dos sesiones arrancan con historia: una sesión sin ningún mensaje no
     // sobrevive a que la dejes (se descarta como vacía). Cada semilla cuesta un
     // POST al server falso, de ahí que el conteo esperado sea 4.
-    backend.sendMessage(QStringLiteral("semilla maritima"));
+    backend.sendMessage(QStringLiteral("Q249_SESSION_A_SEED_42a9"));
     QTRY_COMPARE_WITH_TIMEOUT(server.postRequests, 1, 3000);   // el POST no es sincrónico
     backend.cancelGeneration();
     QTRY_VERIFY_WITH_TIMEOUT(!backend.isBusy(), 3000);
     backend.newSessionInProject(stellar.path());
     const QString stellarId = backend.currentSessionId();
     QVERIFY(maritimeId != stellarId);
-    backend.sendMessage(QStringLiteral("semilla stellar"));
+    backend.sendMessage(QStringLiteral("Q249_SESSION_B_SEED_97f2"));
     QTRY_COMPARE_WITH_TIMEOUT(server.postRequests, 2, 3000);   // esperar el POST antes de cortar
     backend.cancelGeneration();
     QTRY_VERIFY_WITH_TIMEOUT(!backend.isBusy(), 3000);
 
     backend.switchSession(maritimeId);
-    backend.sendMessage(QStringLiteral("turno maritima"));
+    backend.sendMessage(QStringLiteral("Q249_SESSION_A_TURN_c81a"));
     QVERIFY(backend.isBusy());
     backend.switchSession(stellarId);
-    backend.sendMessage(QStringLiteral("turno stellar"));
+    backend.sendMessage(QStringLiteral("Q249_SESSION_B_TURN_6bb4"));
 
     QTRY_COMPARE_WITH_TIMEOUT(server.postRequests, 4, 3000);
+    QCOMPARE(server.completionBodies.size(), 4);
+    const auto requestAt = [&server](int index) {
+        return QJsonDocument::fromJson(server.completionBodies.at(index)).object();
+    };
+    const auto hasUserText = [](const QJsonObject &request, const QString &needle) {
+        for (const QJsonValue &value : request.value(QStringLiteral("messages")).toArray()) {
+            const QJsonObject message = value.toObject();
+            if (message.value(QStringLiteral("role")).toString() == QLatin1String("user")
+                && message.value(QStringLiteral("content")).toString().contains(needle))
+                return true;
+        }
+        return false;
+    };
+    const QString aSeed = QStringLiteral("Q249_SESSION_A_SEED_42a9");
+    const QString bSeed = QStringLiteral("Q249_SESSION_B_SEED_97f2");
+    const QString aTurn = QStringLiteral("Q249_SESSION_A_TURN_c81a");
+    const QString bTurn = QStringLiteral("Q249_SESSION_B_TURN_6bb4");
+    for (int i = 0; i < server.completionBodies.size(); ++i)
+        QCOMPARE(requestAt(i).value(QStringLiteral("cache_prompt")).toBool(), true);
+    QVERIFY(hasUserText(requestAt(0), aSeed));
+    QVERIFY(!hasUserText(requestAt(0), bSeed));
+    QVERIFY(!hasUserText(requestAt(0), aTurn));
+    QVERIFY(hasUserText(requestAt(1), bSeed));
+    QVERIFY(!hasUserText(requestAt(1), aSeed));
+    QVERIFY(!hasUserText(requestAt(1), bTurn));
+    QVERIFY(hasUserText(requestAt(2), aSeed));
+    QVERIFY(hasUserText(requestAt(2), aTurn));
+    QVERIFY(!hasUserText(requestAt(2), bSeed));
+    QVERIFY(!hasUserText(requestAt(2), bTurn));
+    QVERIFY(hasUserText(requestAt(3), bSeed));
+    QVERIFY(hasUserText(requestAt(3), bTurn));
+    QVERIFY(!hasUserText(requestAt(3), aSeed));
+    QVERIFY(!hasUserText(requestAt(3), aTurn));
     QVERIFY(backend.selectedSessionBusy());
     QCOMPARE(backend.currentSessionId(), stellarId);
 
@@ -2775,6 +2842,29 @@ void AgentWireTests::textToolPayloadCapsGenerationAndStopsAtToolCall()
                                    .first().toObject().value(QStringLiteral("content")).toString();
     QVERIFY(sysContent.contains(QStringLiteral("<think>")));
     QVERIFY(sysContent.contains(QStringLiteral("Nunca respondas vacío")));
+}
+
+void AgentWireTests::textToolPayloadPreservesPromptCacheFlag()
+{
+    LlamaAgentBackend be;
+    QJsonObject nativePayload{
+        {QStringLiteral("model"), QStringLiteral("local")},
+        {QStringLiteral("messages"), QJsonArray{
+            QJsonObject{{QStringLiteral("role"), QStringLiteral("system")},
+                        {QStringLiteral("content"), QStringLiteral("sys")}}}},
+        {QStringLiteral("cache_prompt"), true}};
+
+    // The real TextTools completion path sends buildTextToolPayload()'s result.
+    QCOMPARE(be.buildTextToolPayloadForTest(nativePayload)
+                 .value(QStringLiteral("cache_prompt")).toBool(), true);
+
+    nativePayload.insert(QStringLiteral("cache_prompt"), false);
+    QCOMPARE(be.buildTextToolPayloadForTest(nativePayload)
+                 .value(QStringLiteral("cache_prompt")).toBool(), false);
+
+    nativePayload.remove(QStringLiteral("cache_prompt"));
+    QVERIFY(!be.buildTextToolPayloadForTest(nativePayload)
+                 .contains(QStringLiteral("cache_prompt")));
 }
 
 void AgentWireTests::adaptiveSubagentLimit_respectsProfileContextAndVram()

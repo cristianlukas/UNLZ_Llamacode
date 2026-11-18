@@ -1,8 +1,11 @@
 #include "TrayController.h"
 
 #include <QAction>
+#include <QEvent>
 #include <QMenu>
+#include <QSettings>
 #include <QSystemTrayIcon>
+#include <QWindow>
 
 TrayController::TrayController(const QIcon &icon, QObject *parent)
     : QObject(parent), m_tray(new QSystemTrayIcon(icon, this)), m_menu(new QMenu)
@@ -27,7 +30,10 @@ TrayController::TrayController(const QIcon &icon, QObject *parent)
     m_tray->setContextMenu(m_menu);
 
     connect(m_openAction, &QAction::triggered, this, &TrayController::openRequested);
-    connect(m_quitAction, &QAction::triggered, this, &TrayController::quitRequested);
+    connect(m_quitAction, &QAction::triggered, this, [this]() {
+        m_quitting = true;
+        emit quitRequested();
+    });
     connect(m_pauseAction, &QAction::triggered, this, [this]() {
         emit pauseTeachRequested(m_teachState != QLatin1String("paused"));
     });
@@ -57,6 +63,7 @@ bool TrayController::isVisible() const
 
 bool TrayController::isAvailable() const
 {
+    if (m_availableForTest) return *m_availableForTest;
     return QSystemTrayIcon::isSystemTrayAvailable();
 }
 
@@ -103,4 +110,21 @@ void TrayController::rebuildMenu()
     m_pauseAction->setVisible(teachActive);
     m_finishAction->setVisible(teachActive);
     m_cancelAction->setVisible(teachActive);
+}
+
+bool TrayWindowCloseFilter::eventFilter(QObject *watched, QEvent *event)
+{
+    if (event->type() == QEvent::Close) {
+        auto *window = qobject_cast<QWindow *>(watched);
+        if (window
+            && m_tray && !m_tray->isQuitting() && m_tray->isAvailable()
+            && QSettings().value(QStringLiteral("window/minimizeToTray"), false).toBool()) {
+            // Ignorar el cierre antes de que QQuickWindow destruya su handle
+            // nativo. Así el tray puede volver a mapear la misma ventana.
+            event->ignore();
+            window->hide();
+            return true;
+        }
+    }
+    return QObject::eventFilter(watched, event);
 }

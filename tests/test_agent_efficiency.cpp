@@ -11,6 +11,8 @@ class AgentEfficiencyTests : public QObject
     Q_OBJECT
 private slots:
     void metrics_parsesLlamaAndOpenAI();
+    void metrics_parsesReportedCacheTokens();
+    void metrics_summarizesReportedCacheTokens();
     void metrics_summarizesAndCompares();
     void metrics_summarizesSpeculativeAcceptance();
     void metrics_extractsLifecycleToolCalls();
@@ -48,6 +50,97 @@ void AgentEfficiencyTests::metrics_parsesLlamaAndOpenAI()
     QCOMPARE(b.promptTokens, 60);
     QCOMPARE(b.generatedTokens, 10);
     QCOMPARE(b.draftTokens, 0);
+}
+
+void AgentEfficiencyTests::metrics_parsesReportedCacheTokens()
+{
+    const auto openAi = AgentEfficiency::Request::fromResponse(
+        QJsonObject{{"usage", QJsonObject{
+            {"prompt_tokens", 100}, {"completion_tokens", 8},
+            {"prompt_tokens_details", QJsonObject{{"cached_tokens", 32}}}}}},
+        "execute");
+    QCOMPARE(openAi.cachedPromptTokens, 32);
+    QCOMPARE(openAi.toVariant().value("cacheHitPct").toDouble(), 32.0);
+
+    const auto inputDetails = AgentEfficiency::Request::fromResponse(
+        QJsonObject{{"usage", QJsonObject{
+            {"input_tokens", 80}, {"output_tokens", 5},
+            {"input_tokens_details", QJsonObject{{"cached_tokens", 20}}}}}},
+        "execute");
+    QCOMPARE(inputDetails.promptTokens, 80);
+    QCOMPARE(inputDetails.cachedPromptTokens, 20);
+
+    const auto anthropic = AgentEfficiency::Request::fromResponse(
+        QJsonObject{{"usage", QJsonObject{
+            {"input_tokens", 100}, {"output_tokens", 7},
+            {"cache_read_input_tokens", 45}}}}, "execute");
+    QCOMPARE(anthropic.cachedPromptTokens, 45);
+
+    const auto llamaCache = AgentEfficiency::Request::fromResponse(
+        QJsonObject{{"timings", QJsonObject{{"prompt_n", 50}, {"cache_n", 10}}}},
+        "execute");
+    QCOMPARE(llamaCache.promptTokens, 60);
+    QCOMPARE(llamaCache.cachedPromptTokens, 10);
+    QVERIFY(qAbs(llamaCache.toVariant().value("cacheHitPct").toDouble()
+                 - (100.0 * 10.0 / 60.0)) < 0.001);
+
+    const auto llamaOpenAi = AgentEfficiency::Request::fromResponse(
+        QJsonObject{
+            {"timings", QJsonObject{{"prompt_n", 1}, {"cache_n", 236}, {"predicted_n", 1}}},
+            {"usage", QJsonObject{{"prompt_tokens", 237}, {"completion_tokens", 1},
+                                   {"prompt_tokens_details", QJsonObject{{"cached_tokens", 236}}}}}},
+        "execute");
+    QCOMPARE(llamaOpenAi.promptTokens, 237);
+    QCOMPARE(llamaOpenAi.cachedPromptTokens, 236);
+    QVERIFY(qAbs(llamaOpenAi.toVariant().value("cacheHitPct").toDouble()
+                 - (100.0 * 236.0 / 237.0)) < 0.001);
+
+    const auto absent = AgentEfficiency::Request::fromResponse(
+        QJsonObject{{"usage", QJsonObject{{"prompt_tokens", 25}}}}, "execute");
+    QCOMPARE(absent.cachedPromptTokens, -1);
+    QCOMPARE(absent.toVariant().value("cacheHitPct").toDouble(), -1.0);
+}
+
+void AgentEfficiencyTests::metrics_summarizesReportedCacheTokens()
+{
+    const QVariantList rows{
+        AgentEfficiency::Request::fromResponse(
+            QJsonObject{{"usage", QJsonObject{
+                {"prompt_tokens", 100},
+                {"prompt_tokens_details", QJsonObject{{"cached_tokens", 32}}}}}},
+            "execute").toVariant(),
+        AgentEfficiency::Request::fromResponse(
+            QJsonObject{{"usage", QJsonObject{
+                {"prompt_tokens", 80},
+                {"prompt_tokens_details", QJsonObject{{"cached_tokens", 20}}}}}},
+            "execute").toVariant(),
+        AgentEfficiency::Request::fromResponse(
+            QJsonObject{{"usage", QJsonObject{{"prompt_tokens", 25}}}},
+            "execute").toVariant()
+    };
+    const QVariantMap total = AgentEfficiency::summarize(rows);
+    QCOMPARE(total.value("cacheReportedRequests").toInt(), 2);
+    QCOMPARE(total.value("cacheUnknownRequests").toInt(), 1);
+    QCOMPARE(total.value("cachedPromptTokens").toLongLong(), 52);
+    QCOMPARE(total.value("cacheEligiblePromptTokens").toLongLong(), 180);
+    QVERIFY(qAbs(total.value("cacheHitPct").toDouble() - (100.0 * 52.0 / 180.0)) < 0.001);
+    QCOMPARE(total.value("requestDetails").toList().size(), 3);
+    QCOMPARE(total.value("requestDetails").toList().at(2).toMap()
+                 .value("cachedPromptTokens").toInt(), -1);
+
+    const auto llamaResponse = AgentEfficiency::Request::fromResponse(
+        QJsonObject{
+            {"timings", QJsonObject{{"prompt_n", 1}, {"cache_n", 236}}},
+            {"usage", QJsonObject{{"prompt_tokens", 237},
+                                   {"prompt_tokens_details", QJsonObject{{"cached_tokens", 236}}}}}},
+        "execute");
+    const QVariantMap llamaTotal = AgentEfficiency::summarize(
+        {llamaResponse.toVariant()});
+    QCOMPARE(llamaTotal.value("promptTokens").toLongLong(), 237);
+    QCOMPARE(llamaTotal.value("cachedPromptTokens").toLongLong(), 236);
+    QCOMPARE(llamaTotal.value("cacheEligiblePromptTokens").toLongLong(), 237);
+    QVERIFY(qAbs(llamaTotal.value("cacheHitPct").toDouble()
+                 - (100.0 * 236.0 / 237.0)) < 0.001);
 }
 
 void AgentEfficiencyTests::metrics_summarizesAndCompares()

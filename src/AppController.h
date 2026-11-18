@@ -547,6 +547,9 @@ public:
     QString benchmarkStatus() const { return m_benchmarkStatus; }
     QVariantList benchmarkResults() const { return m_benchmarkResults; }
     QVariantList benchmarkCoverage() const;
+    // Cobertura/fingerprints para un perfil de agente explícito. No cambia la
+    // selección global del benchmark; sirve para preregistros y runners headless.
+    Q_INVOKABLE QVariantList benchmarkCoverageForAgent(const QString &agentProfileId);
     QVariantList benchmarkRanking() const;
     QVariantList benchmarkBest25() const;
     QVariantList benchmarkBestModelosSpeed() const;
@@ -737,6 +740,9 @@ public:
     // se debe cancelar el stream al ver los primeros archivos correctos: el
     // cierre asincrónico del request puede contaminar el turno siguiente.
     static bool benchmarkAllowsEarlyAcceptanceForTest(const QVariantList &benchTasks);
+    // Produce a distinct, reproducible seed for each benchmark pass. The base
+    // can be overridden by LLAMACODE_AGENT_BENCHMARK_SEED_BASE for campaigns.
+    static int agentBenchmarkSeedForPass(int baseSeed, int passNo);
     static bool benchmarkTransportAfterEvaluationForTest(int evaluatedTaskCount,
                                                           int declaredTaskCount,
                                                           bool transportFailure);
@@ -1196,12 +1202,6 @@ public:
     Q_INVOKABLE QString testMailAccount(const QString &name) const;
     bool mailAutoSend() const { return m_mailAutoSend; }
     void setMailAutoSend(bool on);
-    bool hitlDestructive() const { return m_hitlDestructive; }
-    void setHitlDestructive(bool on);
-    bool desktopIndicatorVisible() const { return m_desktopIndicatorVisible; }
-    void setDesktopIndicatorVisible(bool on);
-    bool desktopAgentActive() const { return m_desktopAgentActive; }
-    QString desktopAgentAction() const { return m_desktopAgentAction; }
     QString googleWorkspaceClientId() const { return m_googleWorkspaceClientId; }
     void setGoogleWorkspaceClientId(const QString &clientId);
     QString googleWorkspaceStatus() const { return m_googleWorkspaceStatus; }
@@ -1212,6 +1212,12 @@ public:
     bool googleWorkspaceCanRemember() const;
     Q_INVOKABLE void connectGoogleWorkspace();
     Q_INVOKABLE void disconnectGoogleWorkspace();
+    bool hitlDestructive() const { return m_hitlDestructive; }
+    void setHitlDestructive(bool on);
+    bool desktopIndicatorVisible() const { return m_desktopIndicatorVisible; }
+    void setDesktopIndicatorVisible(bool on);
+    bool desktopAgentActive() const { return m_desktopAgentActive; }
+    QString desktopAgentAction() const { return m_desktopAgentAction; }
     Q_INVOKABLE QVariantMap desktopCursorState() const;
 
     bool autoStartAgentOnLaunch() const { return m_autoStartAgentOnLaunch; }
@@ -1662,6 +1668,7 @@ public:
                                                        bool workspaceChanged);
     static bool benchmarkHardTimeoutRemainsArmedForRepair(bool repairScheduled);
     static bool benchmarkRepairToolMayMutateForTest(const QString &toolName);
+    static QString benchmarkRepairAcceptanceGuidanceForTest(const QVariantList &acceptanceRows);
     static bool benchmarkRepairInspectionLoopForTest(bool agentBusy,
                                                        bool workspaceChanged,
                                                        bool mutationToolSeen,
@@ -1790,6 +1797,7 @@ signals:
     void agentAuxiliaryChanged();
     void auxiliaryJobsChanged();
     void mailAutoSendChanged();
+    void googleWorkspaceChanged();
     void hitlDestructiveChanged();
     void desktopIndicatorChanged();
     void autoStartAgentOnLaunchChanged();
@@ -1797,7 +1805,6 @@ signals:
     void lanClientsChanged();
     void lanServersChanged();
     void lanProfileReady(const QString &launchProfileId, const QString &error);
-    void googleWorkspaceChanged();
     void modelLoadStatusChanged();
     void idleAutoStopChanged();
     void agentContextChanged();
@@ -2411,13 +2418,6 @@ private:
     MasterCli m_masterCli;                      // detección de CLIs maestro (claude/codex)
     SecretStore m_secrets;                       // API keys cloud (fuera del repo)
     bool        m_mailAutoSend = false;          // permitir email_send sin aprobación
-    bool        m_hitlDestructive = true;        // guardrail Zero-Autonomy (destructivas → aprobación salvo super)
-    bool        m_desktopIndicatorVisible = true;
-    bool        m_desktopAgentActive = false;
-    bool        m_desktopTaskIndicatorActive = false;
-    QString     m_desktopAgentAction;
-    bool        m_autoStartAgentOnLaunch = false; // arrancar agente al abrir la app (tasks por horario)
-    bool        m_agentStartWithServer = false;   // arrancar agente cuando el server queda listo
     GoogleWorkspaceSecurity::GoogleWorkspaceAuth *m_googleWorkspaceAuth = nullptr;
     QTimer *m_googleWorkspaceRefreshTimer = nullptr;
     QString m_googleWorkspaceClientId;
@@ -2425,6 +2425,13 @@ private:
     QString m_googleAccessToken;                 // efímero, sólo memoria
     QString m_googleRefreshToken;                // memoria o keyring/DPAPI
     QStringList m_googleGrantedScopes;
+    bool        m_hitlDestructive = true;        // guardrail Zero-Autonomy (destructivas → aprobación salvo super)
+    bool        m_desktopIndicatorVisible = true;
+    bool        m_desktopAgentActive = false;
+    bool        m_desktopTaskIndicatorActive = false;
+    QString     m_desktopAgentAction;
+    bool        m_autoStartAgentOnLaunch = false; // arrancar agente al abrir la app (tasks por horario)
+    bool        m_agentStartWithServer = false;   // arrancar agente cuando el server queda listo
 
     // Gateway (proxy Anthropic/OpenAI + auto-load)
     LlmGateway *m_gateway = nullptr;
@@ -2623,6 +2630,8 @@ private:
     void saveBenchmarkResult(const QVariantMap &result);
     void decorateBenchmarkBaseline(QVariantMap *result) const;
     QString benchmarkProfileConfigFingerprint(const QString &profileId);
+    QString benchmarkProfileConfigFingerprint(const QString &profileId,
+                                               const QString &agentProfileId);
     QStringList benchmarkProfilesAllowedForStage(const QStringList &profileIds,
                                                   const QString &stage,
                                                   QStringList *blockedProfiles = nullptr);
@@ -2663,6 +2672,8 @@ public:
     // vivo y cuánto presupuesto queda. Pura para poder testearla sin proceso.
     enum class BenchStopStep { Proceed, Wait, Kill };
     static BenchStopStep benchmarkStopStep(bool stillRunning, int budgetLeftMs);
+    static bool benchmarkShouldForceStopManagedProcessForTest(bool hasManagedProcess,
+                                                              bool isRunning);
     // ¿El server que ya corre sirve para benchmarkear este perfil?
     static bool benchmarkCanReuseServer(const QString &activeLaunchId,
                                         const QString &wantedLaunchId,

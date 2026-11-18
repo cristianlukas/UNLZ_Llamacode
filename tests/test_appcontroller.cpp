@@ -6,6 +6,8 @@
 #include <QElapsedTimer>
 #include <memory>
 #include <QTcpSocket>
+#include <climits>
+
 #include <QRegularExpression>
 #include "core/voice/VoiceController.h"
 #include <QStandardPaths>
@@ -168,9 +170,9 @@ class AppControllerTests : public QObject
     Q_OBJECT
 private slots:
     void initTestCase();
+    void googleWorkspaceSettingsStayDisconnectedUntilExplicitConnect();
     void buildPlatformIsCompileTimeQtPlatform();
     void exportUserDataToWritesBackup();
-    void googleWorkspaceSettingsStayDisconnectedUntilExplicitConnect();
     void githubReleaseIsConvertedToUpdateFlag();
     void updateChannelDefaultsToBuildChannel();
     void githubDebugReleaseIsChannelScoped();
@@ -212,12 +214,16 @@ private slots:
     void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void benchmarkStopStepKillsWhenBudgetRunsOut();
+    void benchmarkForceStopRequiresOwnedRunningProcess();
     void benchmarkRestartErrorsAreInfrastructure();
     void benchmarkDisablesEarlyAcceptanceForBigCodeBench();
+    void benchmarkAgentSeedsVaryByPass();
+    void benchmarkCoverageUsesExplicitAgentWithoutMutation();
     void benchmarkBusyTurnIsRetryableNotInfrastructure();
     void benchmarkRepairPrefillIsNotStagnation();
     void benchmarkHardTimeoutSurvivesRepairAndStopsAtTerminal();
     void benchmarkRepairInspectionLoopGuard();
+    void benchmarkRepairGuidancePreservesPassedCriteria();
     void benchmarkMemoryPressureIsRecognized();
     void benchmarkUsesMaxVramBeforeReducingPressure();
     void benchmarkPreservesScoreAfterTransportTail();
@@ -1214,12 +1220,6 @@ void AppControllerTests::initTestCase()
             QFile::encodeName(QDir(m_tmp.path()).filePath(QStringLiteral("run_history"))));
 }
 
-void AppControllerTests::buildPlatformIsCompileTimeQtPlatform()
-{
-    AppController app;
-#if defined(Q_OS_WIN)
-    QCOMPARE(app.buildPlatform(), QStringLiteral("windows"));
-#elif defined(Q_OS_LINUX)
 void AppControllerTests::googleWorkspaceSettingsStayDisconnectedUntilExplicitConnect()
 {
     QSettings settings;
@@ -1240,6 +1240,12 @@ void AppControllerTests::googleWorkspaceSettingsStayDisconnectedUntilExplicitCon
     settings.remove(QStringLiteral("googleWorkspace/clientId"));
 }
 
+void AppControllerTests::buildPlatformIsCompileTimeQtPlatform()
+{
+    AppController app;
+#if defined(Q_OS_WIN)
+    QCOMPARE(app.buildPlatform(), QStringLiteral("windows"));
+#elif defined(Q_OS_LINUX)
     QCOMPARE(app.buildPlatform(), QStringLiteral("linux"));
 #elif defined(Q_OS_MACOS)
     QCOMPARE(app.buildPlatform(), QStringLiteral("macos"));
@@ -2626,6 +2632,14 @@ void AppControllerTests::benchmarkStopStepKillsWhenBudgetRunsOut()
     QCOMPARE(AppController::benchmarkStopStep(true, -300), Step::Kill);
 }
 
+void AppControllerTests::benchmarkForceStopRequiresOwnedRunningProcess()
+{
+    QVERIFY(AppController::benchmarkShouldForceStopManagedProcessForTest(true, true));
+    QVERIFY(!AppController::benchmarkShouldForceStopManagedProcessForTest(false, true));
+    QVERIFY(!AppController::benchmarkShouldForceStopManagedProcessForTest(true, false));
+    QVERIFY(!AppController::benchmarkShouldForceStopManagedProcessForTest(false, false));
+}
+
 // Los evaluadores miran texto libre de un LLM, así que no pueden puntuar el
 // FORMATO. En la primera corrida real, python_prime y code_refactor dieron False
 // en las 4 pasadas de todos los modelos: exigían el literal "n <= 1" y "**2", y
@@ -2859,6 +2873,15 @@ void AppControllerTests::benchmarkDisablesEarlyAcceptanceForBigCodeBench()
     QVERIFY(AppController::benchmarkAllowsEarlyAcceptanceForTest(humanEval));
 }
 
+void AppControllerTests::benchmarkAgentSeedsVaryByPass()
+{
+    QCOMPARE(AppController::agentBenchmarkSeedForPass(4242, 1), 4242);
+    QCOMPARE(AppController::agentBenchmarkSeedForPass(4242, 2), 4243);
+    QCOMPARE(AppController::agentBenchmarkSeedForPass(20601, 5), 20605);
+    QCOMPARE(AppController::agentBenchmarkSeedForPass(7, 0), 7);
+    QCOMPARE(AppController::agentBenchmarkSeedForPass(INT_MAX, 2), INT_MAX);
+}
+
 void AppControllerTests::benchmarkBusyTurnIsRetryableNotInfrastructure()
 {
     QVERIFY(AppController::benchmarkTurnBusyForTest(
@@ -2906,6 +2929,40 @@ void AppControllerTests::benchmarkRepairInspectionLoopGuard()
         false, false, false, 7));
     QVERIFY(AppController::benchmarkRepairInspectionLoopForTest(
         false, false, false, 8));
+}
+
+void AppControllerTests::benchmarkRepairGuidancePreservesPassedCriteria()
+{
+    const QVariantList rows{
+        QVariantMap{{QStringLiteral("taskId"), QStringLiteral("lha1_replan_update")},
+                    {QStringLiteral("type"), QStringLiteral("command")},
+                    {QStringLiteral("name"), QStringLiteral("replan_update")},
+                    {QStringLiteral("passed"), false},
+                    {QStringLiteral("output"), QStringLiteral("expected UPDATE-17")}},
+        QVariantMap{{QStringLiteral("taskId"), QStringLiteral("lha1_replan_update")},
+                    {QStringLiteral("type"), QStringLiteral("command")},
+                    {QStringLiteral("name"), QStringLiteral("replan_room_time")},
+                    {QStringLiteral("passed"), true},
+                    {QStringLiteral("output"), QStringLiteral("Room B 12:00-12:45")}},
+        QVariantMap{{QStringLiteral("taskId"), QStringLiteral("lha1_handoff")},
+                    {QStringLiteral("name"), QStringLiteral("handoff_invoice")},
+                    {QStringLiteral("passed"), false}}
+    };
+    const QJsonDocument guidance = QJsonDocument::fromJson(
+        AppController::benchmarkRepairAcceptanceGuidanceForTest(rows).toUtf8());
+    QVERIFY(guidance.isArray());
+    const QJsonArray values = guidance.array();
+    QCOMPARE(values.size(), 3);
+    QCOMPARE(values.at(0).toObject().value(QStringLiteral("name")).toString(),
+             QStringLiteral("replan_update"));
+    QVERIFY(!values.at(0).toObject().value(QStringLiteral("passed")).toBool());
+    QCOMPARE(values.at(1).toObject().value(QStringLiteral("name")).toString(),
+             QStringLiteral("replan_room_time"));
+    QVERIFY(values.at(1).toObject().value(QStringLiteral("passed")).toBool());
+    QCOMPARE(values.at(1).toObject().value(QStringLiteral("output")).toString(),
+             QStringLiteral("Room B 12:00-12:45"));
+    QCOMPARE(values.at(2).toObject().value(QStringLiteral("taskId")).toString(),
+             QStringLiteral("lha1_handoff"));
 }
 
 void AppControllerTests::benchmarkMemoryPressureIsRecognized()
@@ -3082,6 +3139,41 @@ void AppControllerTests::benchmarkFingerprintIncludesThinkingPolicy()
     QVERIFY(!fingerprintAfter.isEmpty());
     QVERIFY2(fingerprintBefore != fingerprintAfter,
              "Thinking policy must invalidate benchmark stage coverage.");
+}
+
+void AppControllerTests::benchmarkCoverageUsesExplicitAgentWithoutMutation()
+{
+    AppController app;
+    const QVariantList defaultBefore = app.benchmarkCoverage();
+    QVERIFY(!defaultBefore.isEmpty());
+
+    auto fingerprintFor = [](const QVariantList &rows, const QString &profileId) {
+        for (const QVariant &value : rows) {
+            const QVariantMap row = value.toMap();
+            if (row.value(QStringLiteral("profileId")).toString() == profileId)
+                return row.value(QStringLiteral("profileConfigFingerprint")).toString();
+        }
+        return QString();
+    };
+
+    const QString profileId = defaultBefore.first().toMap()
+                                  .value(QStringLiteral("profileId")).toString();
+    const QString defaultFingerprint = fingerprintFor(defaultBefore, profileId);
+    QVERIFY(!profileId.isEmpty());
+    QVERIFY(!defaultFingerprint.isEmpty());
+
+    const QVariantList agentRows = app.benchmarkCoverageForAgent(QStringLiteral("agent-chat"));
+    const QString agentFingerprint = fingerprintFor(agentRows, profileId);
+    QVERIFY(!agentRows.isEmpty());
+    QVERIFY(!agentFingerprint.isEmpty());
+    QVERIFY2(defaultFingerprint != agentFingerprint,
+             "An explicit agent profile must be part of the predicted benchmark fingerprint.");
+    QCOMPARE(agentRows.first().toMap().value(QStringLiteral("agentProfileId")).toString(),
+             QStringLiteral("agent-chat"));
+    QCOMPARE(fingerprintFor(app.benchmarkCoverage(), profileId), defaultFingerprint);
+    QCOMPARE(fingerprintFor(app.benchmarkCoverageForAgent(QStringLiteral("agent-chat")), profileId),
+             agentFingerprint);
+    QVERIFY(app.benchmarkCoverageForAgent(QStringLiteral("missing-agent-profile")).isEmpty());
 }
 
 void AppControllerTests::identicalBenchmarkCampaignsHaveStableFingerprint()

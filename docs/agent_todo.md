@@ -18,5 +18,8 @@ plan mode, checkpoint/rollback, list_dir recursivo, web_fetch, imágenes+visión
 - [x] Aislamiento = git REQUERIDO. Si git no está instalado → la UI pide instalarlo (winget Git.Git); la task falla con mensaje (no corre sin aislar). Si git está pero el cwd no es repo → `git init` + snapshot automático. (Antes había fallback de copia FS; reemplazado por pedir git, a pedido del usuario.)
 - [x] Conflicto de merge: `git merge --abort` (repo queda intacto) + se PRESERVA la rama `llamacode-sub/<id>` para merge manual. Verificado con repo de prueba (merge limpio + abort/preserve).
 - [x] Cap de concurrencia: `kMaxParallelSubs=3`; el resto se encola (m_subQueue) y se lanza al liberarse un slot (pumpSubs). No satura el server.
-- parallel_tool_calls =true global (necesario para varias task/turno; el loop serializa los tools normales igual). Comentado en runCompletion.
+- `parallel_tool_calls=true` permite que el modelo agrupe tareas. El backend
+  conserva el fan-out cuando todas son `task`; si la tanda incluye otra tool,
+  ejecuta la primera y replantea las restantes con el resultado nuevo antes de
+  continuar. La regresión loopback está en `nativeToolBatchReplansAfterFirstResult`.
 - Verificación GUI end-to-end (LLM manejando subs) pendiente — requiere server corriendo. El plumbing git/copy/merge/abort está validado.

@@ -51,6 +51,18 @@ y harness, no atribuirse al modelo sin medir colas y solicitudes concurrentes.
 - **Shard parcial de Orca:** se preserva. Hay dos shards completos verificados
   en la ruta de 7CFE…; el `.part` no participa en los resultados y no aporta una
   razón para reanudar o borrar la descarga en esta evaluación.
+- **Concurrencia de servidor, screen 2026-10-20:** el Qwen3.8 UD-IQ4_XS local
+  con Strata 0.1.41, RTX 3090 GPU0 y una secuencia completó 20 pares de
+  solicitudes seriales vs simultáneas. El throughput fue 48,45 vs 48,01 tok/s;
+  la latencia por solicitud subió de 1,91/2,55 s (p50/p95) a 2,70/4,59 s.
+  No hay ganancia repetible ni razón para cambiar la cola serial. Las 80
+  solicitudes medidas llegaron al límite de 96 tokens sin respuesta final;
+  esto sólo mide generación/servicio, no calidad. No se probó delegación real
+  del harness ni subagentes. Ver el [resultado y recibos](../artifacts/evaluacion-modelos-llamacode/Q-20261020-VF-20261019-01/RESULTS.md).
+
+### Reapertura Q98 · tareas aceptadas con dos slots
+
+La solicitud del usuario priorizó claims Strata/concurrencia. Q98 vuelve a abrir únicamente la pregunta de si dos slots del servidor ASTRA actual mejoran tareas aceptadas por segundo. El screen usará las mismas ocho tareas BCB y dos RTX 3090 +128 GB en ambas políticas; el servidor reportará y deberá demostrar dos slots activos. El resultado de 2026-10-20 se conserva como test de latencia/throughput HTTP, sin calidad. Q98 no equivale a la prueba E2E del harness/subagentes que aún requeriría medir delegación real. Prerregistro y gate: [Q98 PLAN](../artifacts/evaluacion-modelos-llamacode/Q-20261024-VF-ITERATION-98/PLAN.md).
 
 ## Próximas pruebas con valor informativo
 
@@ -62,11 +74,11 @@ y harness, no atribuirse al modelo sin medir colas y solicitudes concurrentes.
    referencia. Comparar SOL y Q4 en el mismo harness; guardar intervenciones,
    tiempo hasta los tests verdes, archivos y reparaciones. Esto se acerca al
    relato del auto-clicker sin depender de un juego/UI impredecible.
-3. En una campaña separada, comparar una solicitud serial frente a dos tareas
-   simultáneas con los mismos modelos/configs. Registrar slots, tiempo en cola,
-   throughput por tarea, RAM, VRAM e interacción del escritorio. Incluir control
-   de subagentes del harness para saber si la degradación viene de Strata, de la
-   política de delegación o de ambos.
+3. El screen directo de servidor ya comparó solicitudes seriales y simultáneas
+   en un slot, sin ganancia de throughput. Mantener la admisión serial. Sólo si
+   se planea permitir tareas de coding solapadas, medir en una prueba aparte el
+   tiempo hasta aceptación de dos tareas en el harness, la cola, subagentes,
+   reparaciones y recursos; el screen de solicitudes no responde esa pregunta.
 4. Cuando la máquina cumpla el umbral de RAM del fork, comparar Q4 70 GiB en una
    GPU con Q4 dual-GPU layer split sin límite residente. No adelantar la suite de
    calidad: primero smoke de arranque, monitoreo de memoria/estabilidad y prueba

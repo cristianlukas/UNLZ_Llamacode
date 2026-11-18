@@ -295,6 +295,11 @@ Mecanismos sobre la memoria de trabajo:
 son lo que ve la UI (barra "ctx N/M" y las métricas de poda). El límite sale de
 `/props` (`n_ctx`) salvo `ctxOverride` de un provider cloud, que no expone `/props`.
 
+Los turnos con herramientas envían `cache_prompt=true`; al convertir a protocolo
+text-tools, el payload conserva el campo sólo si estaba presente en el request
+base (incluido su valor `false`). El modo `NativeCompat` lo elimina para evitar
+enviar parámetros que ese servidor de compatibilidad no admite.
+
 En benchmarks del agente, el guard de salida previa a la primera herramienta
 cuenta caracteres crudos generados por mensaje (`reasoning_content` + `content`).
 No debe derivarse de `streamingText`, que es un snapshot de presentación con
@@ -616,6 +621,19 @@ y expone `efficiencySummary()` y `progressSummary()` (`progressEvents`,
 `stagnationEvents`, `replanEvents`). `setDeterministicSeed(n)` fija la semilla
 para benchmarks reproducibles.
 
+La eficiencia por request conserva `cachedPromptTokens` sólo cuando el runtime
+informa `usage.prompt_tokens_details.cached_tokens`,
+`usage.input_tokens_details.cached_tokens`, `usage.cache_read_input_tokens` o
+`timings.cache_n`. Un campo ausente se representa como `-1` (N/D), no como cero.
+El resumen LHA incluye `requestDetails`, los requests con contador reportado,
+los tokens cacheados reportados y `cacheHitPct`; el porcentaje usa únicamente
+requests con caché reportada y prompt positivo. Para `llama.cpp`, `timings.prompt_n`
+cuenta los tokens procesados y `timings.cache_n` los tokens de prefijo reutilizados;
+el total de entrada es su suma. El denominador incluye ambos, no sólo `prompt_n`.
+No se infiere reutilización a partir de la latencia. Este contador diagnostica el
+runtime y no es un score de calidad/agencia ni una medición de velocidad comparable
+por sí sola.
+
 ---
 
 ## 12. Cobertura de tests
@@ -714,13 +732,37 @@ Regla de lectura: un harness sólo es mejor si **no** baja calidad ni tasa de é
 
 El benchmark de agente permite hasta **tres** turnos de reparación cuando
 fallan criterios duros de aceptación (por ejemplo, comandos/tests o archivos
-requeridos). Cada turno recibe los checks fallidos y debe editarlos y volver a
-verificarlos. Un score parcial de calidad, por sí solo, no dispara reparaciones.
-El tope es finito: evita convertir la reparación en un loop ilimitado. Se subió
+requeridos). Cada turno recibe los checks fallidos y el estado `PASS`/`FAIL` con
+la salida de todos los criterios de cada tarea fallida. La guía pide conservar
+los valores que ya pasan, cambiar sólo lo necesario para los criterios fallidos
+y volver a comprobar ambos grupos. Si el archivo requerido no está en contexto,
+permite una lectura directa antes de editar; no permite búsquedas amplias ni
+crear archivos alternativos. Un score parcial de calidad, por sí solo, no
+dispara reparaciones. El tope es finito: evita convertir la reparación en un
+loop ilimitado. La regresión determinista
+`AppControllerTests::benchmarkRepairGuidancePreservesPassedCriteria` comprueba
+que el prompt incluya criterios aprobados y fallidos. Esa prueba valida la
+construcción de la guía, no garantiza que un modelo preserve los criterios en
+una ejecución agentiva real. Se subió
 de dos a tres tras dos repeticiones independientes de ASTRA IQ3_S en TaskFlow
 ULTRA: el límite 2 terminó 11/13; el límite 3 cerró 13/13 en ambas, con
 287–333 s totales. El coste adicional aparece sólo cuando el intento anterior
 sigue incumpliendo aceptación. Recibos y huellas: `artifacts/astra-comparable-retest-20261008/`.
+
+### LHA-1: revisión de contrato JSON
+
+LHA-1 tiene cuatro prompts encadenados y 25 checks deterministas. El bundle
+histórico `lha1_long_horizon_agent_v1.json` conserva su identidad y sus
+resultados. La revisión candidata `lha1_long_horizon_agent_v2.json` usa un ID
+nuevo y `bundledVersion: 3`; sólo agrega a cada prompt los enums exactos para
+factura y tickets y declara `APP-204.blocked_by` como arreglo JSON. Los 25
+comandos del grader se mantienen idénticos. La prueba
+`tools/test_lha1_v3_schema_contract.py` valida esos invariantes de forma
+estática. La integración CPU-only `LHA1-V3-APP-LOAD-CPU-01` confirmó que la app
+de pruebas carga el ID y la versión 3 y conserva el fingerprint explícito del
+perfil Q210. Ninguna de las dos pruebas ejecuta el agente, mide calidad
+agentiva ni valida seguridad conductual. Toda corrida real debe preregistrarse
+por separado y conservar el benchmark y la semilla en sus resultados.
 
 Para comparar harnesses que viven fuera de LlamaCode existe además
 `tools/harness_matrix.py`. Usa el contrato JSONL `llamacode-harness-v1`, ejecuta

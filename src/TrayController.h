@@ -2,6 +2,7 @@
 
 #include <QIcon>
 #include <QObject>
+#include <optional>
 
 class QMenu;
 class QAction;
@@ -19,6 +20,11 @@ public:
     bool isVisible() const;
     bool isAvailable() const;
     void setVisible(bool visible);
+    // true desde que se eligió "Salir" en el menú, ANTES de emitir
+    // quitRequested: el cierre de ventanas que dispara Qt.quit() puede llegar
+    // antes de que corran los demás slots conectados a la señal.
+    bool isQuitting() const { return m_quitting; }
+    void setAvailableForTest(bool available) { m_availableForTest = available; }
 
     Q_INVOKABLE void setTeachState(const QString &state);
     QMenu *menuForTest() const { return m_menu; }
@@ -37,6 +43,9 @@ signals:
 private:
     void rebuildMenu();
 
+    bool m_quitting = false;
+    std::optional<bool> m_availableForTest;
+
     QSystemTrayIcon *m_tray = nullptr;
     QMenu *m_menu = nullptr;
     QAction *m_openAction = nullptr;
@@ -51,4 +60,22 @@ private:
     QString m_finishText = QStringLiteral("Finalizar Teach");
     QString m_cancelText = QStringLiteral("Cancelar Teach");
     QString m_quitText = QStringLiteral("Salir");
+};
+
+// Con "minimizar a la bandeja", cerrar la ventana la oculta en vez de cerrarla.
+// Salvo que se esté saliendo: en Qt 6, QCoreApplication::quit() cierra todas las
+// ventanas y, si alguna rechaza el cierre, cancela la salida. Antes este filtro
+// se enteraba de "Salir" por un slot que corría DESPUÉS del Qt.quit() de la QML,
+// rechazaba el cierre y la app quedaba viva y oculta.
+class TrayWindowCloseFilter final : public QObject
+{
+public:
+    explicit TrayWindowCloseFilter(const TrayController *tray, QObject *parent = nullptr)
+        : QObject(parent), m_tray(tray) {}
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
+private:
+    const TrayController *m_tray = nullptr;
 };
