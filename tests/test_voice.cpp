@@ -1189,6 +1189,23 @@ void TestVoice::ttsSplitKeepsUrlsAndDecimals()
     const QStringList s = VoiceController::splitCompleteSentences(
         QStringLiteral("El dólar cerró a $1.245,50. Y el"), 12, &consumed);
     QCOMPARE(s, QStringList{QStringLiteral("El dólar cerró a $1.245,50.")});
+    // Abreviaturas no cortan la oración (el 27B dijo "...ciudad-estado en el s."
+    // como frase suelta); al final del texto sí cierran.
+    QCOMPARE(VoiceController::splitSentences(
+                 QStringLiteral("Roma nació en el s. VIII a.C. y creció. Después cayó."), 10),
+             (QStringList{QStringLiteral("Roma nació en el s. VIII a.C. y creció."),
+                          QStringLiteral("Después cayó.")}));
+    QCOMPARE(VoiceController::splitSentences(
+                 QStringLiteral("Lo atiende el Dr. Pérez, aprox. a las 10. Te aviso."), 10),
+             (QStringList{QStringLiteral("Lo atiende el Dr. Pérez, aprox. a las 10."),
+                          QStringLiteral("Te aviso.")}));
+    // Palabras de una letra que sí terminan oración, y "etc." al cerrar.
+    QCOMPARE(VoiceController::splitSentences(
+                 QStringLiteral("Elegí entre esto o aquello y. Listo, etc. Dale."), 5),
+             (QStringList{QStringLiteral("Elegí entre esto o aquello y."),
+                          QStringLiteral("Listo, etc."), QStringLiteral("Dale.")}));
+    QVERIFY(VoiceController::splitCompleteSentences(
+                QStringLiteral("Roma empezó como una ciudad-estado en el s. VI"), 12, &consumed).isEmpty());
     // Bloques de código fuera; uno abierto corta desde el fence.
     QCOMPARE(VoiceController::sanitizeForSpeech(
                  QStringLiteral("Te dejo el comando.\n```bash\nls -la\n```\nListo.")),

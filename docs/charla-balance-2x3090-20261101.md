@@ -204,6 +204,25 @@ Arreglos que salieron de estas pruebas (con tests):
 - **Parakeet**: mismo WER que whisper-small en este corpus, pero lanza un
   proceso por turno (461 ms en CPU).
 
+## Actualización 2026-11-18: primera frase corta
+
+`tools/charla/first_chunk_bench.py` (llama-server con el 27B en GPU1, sin audio)
+mide cuánto tarda, desde el primer texto del LLM, en aparecer el primer fragmento
+que Charla puede mandar al TTS (misma regla que `speakStreaming`). 12 pedidos
+de charla × 2 pasadas, sólo identidad + sección MODO VOZ (sin tools):
+
+| Prompt | 1er texto → 1er fragmento (mediana / p90) | TTFT | Largo de respuesta |
+|---|---:|---:|---:|
+| MODO VOZ de antes | 540 / 720 ms | 358 ms | 33 palabras |
+| + "La primera frase es lo que suena primero: corta (3 a 8 palabras)" | **291 / 392 ms** | 387 ms | 26 palabras |
+
+Las aperturas quedaron naturales ("Porque el aire dispersa la luz azul del
+sol.", "Canberra.", "Dormí en un cuarto oscuro y fresco."). Bajar el corte por
+coma de 40 a 20 caracteres no cambió nada (el modelo cierra con punto antes).
+La misma corrida mostró "…ciudad-estado en el s." hablado como frase suelta:
+`isSentenceEnd` ya no corta en abreviaturas ("s.", "Dr.", "aprox.", "a.C.",
+"EE. UU.").
+
 ## Pendiente
 
 - **Linux computer use**: los alias y el timeout de `desktop_observe` se

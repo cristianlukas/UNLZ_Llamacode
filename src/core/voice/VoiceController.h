@@ -163,6 +163,7 @@ public:
     // ¿El carácter i cierra una oración? Un "." sólo si lo sigue un espacio
     // (o es el final de un texto ya completo): no parte URLs ni "1.245,50".
     static bool isSentenceEnd(const QString &text, int i, bool textIsFinal);
+    static bool isAbbreviationBefore(const QString &text, int dot);
 
     // ── Pura (testeable) ── Corte anticipado de la PRIMERA porción hablada: si
     // todavía no cerró ninguna oración pero ya hay una pausa de cláusula

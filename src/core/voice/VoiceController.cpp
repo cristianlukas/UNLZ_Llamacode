@@ -1,4 +1,5 @@
 #include "VoiceController.h"
+#include <QSet>
 #include "AudioCodec.h"
 #include "SpeechTextNormalizer.h"
 #include <QRegularExpression>
@@ -786,8 +787,40 @@ bool VoiceController::isSentenceEnd(const QString &text, int i, bool textIsFinal
     // "$1.245,50" o "3.5" no se cortan a la mitad (el TTS recibía "$1." suelto).
     // Al final del texto en streaming todavía puede venir "245", así que se
     // espera al próximo delta o al flush.
-    if (i + 1 < text.size()) return text.at(i + 1).isSpace();
-    return textIsFinal;
+    if (i + 1 < text.size() && !text.at(i + 1).isSpace()) return false;
+    if (i + 1 >= text.size() && !textIsFinal) return false;
+    // Abreviaturas: "en el s. VIII", "el Dr. Pérez", "aprox. 30" no cierran la
+    // oración (medido con el 27B: "Roma empezó como una ciudad-estado en el s."
+    // salía como frase suelta). Al final del texto final sí cierran.
+    if (i + 1 < text.size() && isAbbreviationBefore(text, i)) return false;
+    return true;
+}
+
+bool VoiceController::isAbbreviationBefore(const QString &text, int dot)
+{
+    int start = dot;
+    while (start > 0 && text.at(start - 1).isLetter()) --start;
+    const QString word = text.mid(start, dot - start).toLower();
+    if (word.isEmpty()) return false;
+    // "a.C.", "EE.UU.": letra suelta pegada a otro punto.
+    if (start > 0 && text.at(start - 1) == QLatin1Char('.')) return true;
+    // Una letra sola ("s.", "p.", "J. R. R."), salvo las que son palabra: "y.",
+    // "o.", "a.", "e.", "u." pueden cerrar una oración en castellano.
+    if (word.size() == 1)
+        return !QStringLiteral("yoaeu").contains(word);
+    static const QSet<QString> abbr{
+        QStringLiteral("sr"), QStringLiteral("sra"), QStringLiteral("srta"),
+        QStringLiteral("dr"), QStringLiteral("dra"), QStringLiteral("lic"),
+        QStringLiteral("ing"), QStringLiteral("prof"), QStringLiteral("arq"),
+        QStringLiteral("av"), QStringLiteral("aprox"), QStringLiteral("ej"),
+        QStringLiteral("pág"), QStringLiteral("págs"), QStringLiteral("núm"),
+        QStringLiteral("nro"), QStringLiteral("tel"), QStringLiteral("ud"),
+        QStringLiteral("uds"), QStringLiteral("vs"), QStringLiteral("cap"),
+        QStringLiteral("dto"), QStringLiteral("depto"), QStringLiteral("gral"),
+        QStringLiteral("mr"), QStringLiteral("mrs"), QStringLiteral("ms"),
+        QStringLiteral("st"), QStringLiteral("ss"), QStringLiteral("ee"),
+        QStringLiteral("uu")};   // "EE. UU."
+    return abbr.contains(word);
 }
 
 QStringList VoiceController::splitSentences(const QString &text, int minLen)

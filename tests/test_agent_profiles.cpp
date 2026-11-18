@@ -730,6 +730,9 @@ void AgentProfilesTests::voiceMode_rewritesIdentityAndDropsListStyle()
     QVERIFY(fixed.contains(QStringLiteral("2026-10-08")));
     QVERIFY(fixed.contains(QStringLiteral("jueves")));
     QVERIFY(!LlamaAgentBackend::voiceModeSection().contains(QStringLiteral("Hoy es")));
+    // Primera frase corta: medido con el 27B, el primer fragmento hablable llega
+    // 250 ms antes (mediana 540 → 291 ms desde el primer texto).
+    QVERIFY(LlamaAgentBackend::voiceModeSection().contains(QStringLiteral("La primera frase es lo que suena primero")));
     // Listas y comandos del estilo conciso se leerían en voz alta: fuera.
     QVERIFY(!voice.contains(LlamaAgentBackend::styleSection()));
 
